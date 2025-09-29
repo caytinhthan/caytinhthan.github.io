@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cây Thông Điệp</title>
+  <link rel="preload" as="image" href="tree.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Panel trái -->
+    <section class="panel left-panel">
+      <div class="panel-header">
+        <h1>🌱 Cây Thông Điệp</h1>
+        <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
+      
+      <p class="panel-description">Click vào cây để đặt lá tại vị trí bất kỳ, hoặc tự động thêm lá ngẫu nhiên!</p>
+      
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-icon">🌿</div>
+          <div class="stat-content">
+            <div class="stat-number" id="counter">0</div>
+            <div class="stat-label">Lá trên cây</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="controls">
+        <button class="btn primary" id="add">
+          <span class="btn-icon">🎲</span>
+          <span class="btn-text">Tự động thêm</span>
+        </button>
+        <button class="btn secondary" id="toggleMode">
+          <span class="btn-icon">🎯</span>
+          <span class="btn-text">Click để đặt</span>
+        </button>
+      </div>
+      
+      <div class="list-section">
+        <div class="list-header">
+          <h3>📝 Danh sách lá</h3>
+          <button class="clear-all-btn" id="clearAll" title="Xóa tất cả lá" style="display: none;">
+            <span>🗑️</span>
+          </button>
+        </div>
+        <div class="list" id="list">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🌱</div>
+            <p>Chưa có lá nào trên cây</p>
+            <small>Hãy thêm lá đầu tiên!</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sân khấu phải -->
+    <section class="stage panel" id="stage">
+      <svg id="treeSvg" viewBox="0 0 553 666" preserveAspectRatio="xMidYMid meet" aria-label="Cây thông điệp">
+        <image href="tree.jpg" x="0" y="0" width="553" height="666" alt="Cây thông" />
+        
+        <!-- Nhánh vô hình để bám lá -->
+        <g id="branches" stroke="#0f172a" stroke-width="3" fill="none" opacity="0">
+          <path d="M278 420 C240 402 200 377 168 358 140 342 118 332 98 326" />
+          <path d="M282 420 C320 398 356 376 392 358 424 342 450 328 468 320" />
+          <path d="M282 362 C244 342 210 320 178 304" />
+          <path d="M286 358 C324 340 358 324 392 308" />
+          <path d="M286 308 C246 290 214 270 184 254" />
+          <path d="M290 304 C328 288 360 272 394 256" />
+          <path d="M292 260 C326 244 356 226 388 212" />
+          <path d="M288 258 C252 240 220 226 190 212" />
+          <path d="M294 212 C330 198 360 182 386 168" />
+          <path d="M286 214 C254 200 224 186 198 174" />
+          <path d="M294 172 C320 162 346 148 366 136" />
+          <path d="M284 172 C256 162 230 150 208 140" />
+        </g>
+        
+        <g id="leaves"></g>
+      </svg>
+      <div class="ground"></div>
+      <div class="tooltip" id="tip"></div>
+    </section>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="sheet">
+      <button class="x" id="closeAddModal" aria-label="Đóng modal">✕</button>
+      <h3 id="addModalTitle">🌿 Thêm lá mới</h3>
+      <div style="margin:16px 0">
+        <label style="display:block;margin-bottom:8px;font-weight:600">Thông điệp:</label>
+        <textarea id="addMessage" placeholder="Nhập thông điệp..." style="width:100%;min-height:80px;resize:vertical;padding:12px;border-radius:8px;border:1px solid #e2e8f0"></textarea>
+      </div>
+      <div style="margin:16px 0">
+        <label style="display:block;margin-bottom:8px;font-weight:600">Tên của bạn:</label>
+        <input type="text" id="addAuthor" placeholder="Nhập tên hoặc để trống (ẩn danh)" style="width:100%;padding:12px;border-radius:8px;border:1px solid #e2e8f0">
+      </div>
+      <div style="margin:16px 0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="isAnonymous" style="transform:scale(1.2)">
+          <span>Gửi ẩn danh</span>
+        </label>
+      </div>
+      
+      <div class="picker" id="leafPicker" style="margin:16px 0">
+        <div class="picker-row">
+          <label style="font-weight:600">Hình dáng lá</label>
+          <select id="leafShape">
+            <option value="oval">🍃 Oval</option>
+            <option value="round">⭕ Tròn</option>
+            <option value="oak">🌳 Sồi</option>
+            <option value="maple">🍁 Phong</option>
+            <option value="heart">💚 Trái tim</option>
+            <option value="willow">🌿 Liễu</option>
+            <option value="birch">🌲 Bạch dương</option>
+            <option value="ginkgo">🟡 Bạch quả</option>
+            <option value="elm">🌱 Du</option>
+            <option value="bamboo">🎋 Tre</option>
+            <option value="fern">🌿 Dương xỉ</option>
+            <option value="cherry">🌸 Anh đào</option>
+          </select>
+        </div>
+
+        <div class="picker-row">
+          <label style="font-weight:600">Bảng màu</label>
+          <select id="leafPalette">
+            <option value="0">🌸 Hồng pastel</option>
+            <option value="1">💙 Xanh dương pastel</option>
+            <option value="2">💚 Xanh lá pastel</option>
+            <option value="3">💛 Vàng nhạt</option>
+            <option value="4">💜 Tím nhạt</option>
+            <option value="5">🌹 Hồng rose</option>
+            <option value="6">🌿 Mint</option>
+            <option value="7">🍑 Peach</option>
+            <option value="8">🧡 Cam san hô</option>
+            <option value="9">🌱 Xanh chanh</option>
+            <option value="10">☁️ Xanh sky</option>
+            <option value="11">🌺 Hồng magenta</option>
+            <option value="12">🔮 Tím lavender</option>
+            <option value="13">🌳 Xanh spring</option>
+            <option value="14">🌼 Vàng cream</option>
+            <option value="15">🦋 Tím periwinkle</option>
+          </select>
+        </div>
+
+        <div class="picker-row">
+          <label style="font-weight:600">Kích cỡ</label>
+          <input type="range" id="leafScale" min="0.8" max="1.4" step="0.05" value="1">
+        </div>
+
+        <div class="picker-row">
+          <label style="font-weight:600">Góc xoay</label>
+          <input type="range" id="leafRotation" min="-25" max="25" step="1" value="0">
+        </div>
+
+        <div class="preview" id="leafPreview"></div>
+      </div>
+      
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn primary" id="saveLeaf" style="flex:1">💾 Lưu</button>
+        <button class="btn secondary" id="cancelAdd" style="flex:1">❌ Hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <button class="x" id="closeModal" aria-label="Đóng modal">✕</button>
+      <h3>💌 Thông điệp</h3>
+      <div class="leaf-card">
+        <div class="leaf-icon">🌿</div>
+        <div class="leaf-text">
+          <p id="modalText"></p>
+          <p id="modalAuthor"></p>
+        </div>
+      </div>
+      <div class="leaf-actions">
+        <button id="editLeaf" class="btn green">✏️ Sửa</button>
+        <button id="deleteLeaf" class="btn red">🗑️ Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBfr8tUEMT0jZpBe6Pl5NIOZlni2MWrYsM",
+    authDomain: "caytinhthan.firebaseapp.com",
+    databaseURL: "https://caytinhthan-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "caytinhthan",
+    storageBucket: "caytinhthan.firebasestorage.app",
+    messagingSenderId: "381361662805",
+    appId: "1:381361662805:web:07d1fe119151cb95f75ddc",
+    measurementId: "G-BHMHT2QGXN"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Expose ra global cho script.js dùng
+  window._firebase = { db, ref, set, remove, onValue };
+</script>
+<script src="script.js"></script>
+</body>
+</html>

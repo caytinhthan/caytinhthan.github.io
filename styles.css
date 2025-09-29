@@ -1,0 +1,897 @@
+:root{
+  --glass: rgba(255,255,255,.65);
+  --border: rgba(255,255,255,.35);
+  --ink:#0f172a; 
+  --muted:#475569;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --accent: #8b5cf6;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+[data-theme="dark"] {
+  --glass: rgba(15,23,42,.85);
+  --border: rgba(71,85,105,.35);
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent: #a855f7;
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{height:100%}
+
+body{
+  margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1000px 700px at 10% -10%, #e8f7ff, transparent 70%),
+    radial-gradient(1100px 800px at 120% 30%, #f6fff4, transparent 70%),
+    linear-gradient(180deg,#eef7ff,#effcf3 60%, #eaffea);
+  overflow:hidden;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+[data-theme="dark"] body {
+  background:
+    radial-gradient(1000px 700px at 10% -10%, #1e293b, transparent 70%),
+    radial-gradient(1100px 800px at 120% 30%, #0f172a, transparent 70%),
+    linear-gradient(180deg,#0f172a,#1e293b 60%, #334155);
+}
+
+.layout{display:grid; grid-template-columns:360px 1fr; gap:24px; height:100%; padding:24px}
+@media (max-width:900px){ .layout{grid-template-columns:1fr; grid-template-rows:auto 1fr} }
+
+.panel{
+  backdrop-filter:saturate(160%) blur(12px);
+  background:var(--glass); border:1px solid var(--border);
+  border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.08);
+  transition: all 0.3s ease;
+}
+
+/* Left Panel Specific */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.panel-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.panel-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 18px;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Stats Section */
+.stats-section {
+  margin: 12px 0;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  font-size: 28px;
+  opacity: 0.8;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+textarea, input[type="text"] {
+  width:100%; min-height:92px; resize:vertical; padding:12px 14px;
+  border-radius:12px; border:1px solid var(--border); 
+  background: var(--bg-primary);
+  font:500 14px/1.5 Inter,sans-serif; color:var(--ink);
+  transition: all 0.15s ease;
+}
+
+input[type="text"] {
+  min-height: auto;
+  height: 44px;
+}
+
+textarea:focus, input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+[data-theme="dark"] textarea:focus, 
+[data-theme="dark"] input[type="text"]:focus {
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  border: 0;
+  padding: 14px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.btn-text {
+  font-weight: 600;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), #10b981);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn.secondary {
+  background: var(--bg-secondary);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.btn.secondary:hover:not(:disabled) {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* List Section */
+.list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.list-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.clear-all-btn {
+  background: var(--danger);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  display: none !important;
+}
+
+.clear-all-btn:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  /* Tối ưu cuộn mượt */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Momentum scrolling cho iOS */
+  overscroll-behavior: contain;
+  /* Ngăn bounce effect */
+  transform: translateZ(0);
+  /* Hardware acceleration */
+  will-change: scroll-position;
+  /* Tối ưu repainting */
+}
+
+.list::-webkit-scrollbar {
+  width: 8px;
+  /* Mở rộng để dễ bắt hơn */
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+  /* Bo tròn nhiều hơn */
+  transition: all 0.2s ease;
+  /* Smooth transitions */
+  border: 1px solid transparent;
+  /* Tạo không gian */
+  background-clip: content-box;
+  /* Không fill border */
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+  transform: scaleX(1.2);
+  /* Phóng to khi hover */
+}
+
+.list::-webkit-scrollbar-thumb:active {
+  background: var(--foreground);
+  /* Tối màu khi click */
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0 0 4px 0;
+  font-weight: 500;
+}
+
+.empty-state small {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Leaf Chips */
+.chip {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  margin: 8px 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+  /* Tối ưu rendering */
+  contain: layout style paint;
+  will-change: transform;
+}
+
+.chip:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--accent);
+}
+
+/* Animation khi thêm chip mới */
+.chip.entering {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.chip b {
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.chip-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.chip-text {
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.chip-author {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.chip-timestamp {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.del {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+  display: none; /* Ẩn nút xóa mặc định */
+}
+
+.del:hover {
+  opacity: 1;
+  background: var(--danger);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Hiển thị nút xóa khi có mã bí mật */
+.admin-mode .del,
+.admin-mode .btn.red,
+.admin-mode .clear-all-btn {
+  display: block !important;
+  animation: revealDelete 0.3s ease-in-out;
+}
+
+@keyframes revealDelete {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 0.7; transform: scale(1); }
+}
+
+/* Visual indicator cho admin mode */
+.admin-mode::before {
+  content: '🔓 Admin Mode Active';
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 1000;
+  animation: adminPulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes adminPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Sân khấu SVG */
+.stage{position:relative; overflow:hidden; border-radius:16px; border:1px solid var(--border); background:#f7fff7}
+svg{width:100%; height:100%}
+
+.ground{
+  position:absolute; inset:auto 0 0 0; height:28%;
+  background:radial-gradient(70% 110% at 50% 110%, #b7f3b7 0%, #a8e5a8 40%, #95d895 65%, transparent 66%) bottom/100% 100% no-repeat
+}
+
+/* Lá tối ưu */
+.leaf{
+  cursor: pointer; 
+  transition: opacity 0.2s ease, filter 0.2s ease;
+  transform-origin: center center;
+}
+
+.leaf path{
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
+  transition: filter 0.2s ease;
+}
+
+.leaf:hover path{
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+}
+
+/* Trạng thái kéo thả lá */
+.leaf.grab { cursor: grab; }
+.leaf.grabbing { cursor: grabbing; }
+
+/* 4. Tooltip tối ưu */
+.tooltip{
+  position:absolute; z-index:30; 
+  background:#0b1220; color:#fff; padding:8px 12px; border-radius:8px;
+  font-size:12px; max-width:220px; box-shadow:0 4px 12px rgba(0,0,0,.2); 
+  display:none; pointer-events:none;
+}
+
+.tooltip:after{
+  content:""; position:absolute; left:50%; bottom:-5px; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:#0b1220;
+}
+
+/* Modal */
+.modal {
+  position: fixed; inset: 0;
+  display: none; place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,.3);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+[data-theme="dark"] .modal {
+  background: rgba(0,0,0,.5);
+}
+
+.modal.show {
+  opacity: 1;
+}
+
+.sheet {
+  width: min(680px,92vw);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 8px 8px;
+  padding: 32px 36px 28px 36px;
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  transform: scale(.9) translateY(20px);
+  opacity: 0;
+  transition: all .35s cubic-bezier(.25,.8,.25,1), background 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+/* Envelope design - top flap */
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 150px solid transparent;
+  border-right: 150px solid transparent;
+  border-bottom: 20px solid var(--bg-primary);
+  border-radius: 4px;
+  filter: drop-shadow(0 -2px 4px rgba(0,0,0,.1));
+}
+
+/* Envelope seal/stamp effect */
+.sheet::after {
+  content: '💌';
+  position: absolute;
+  top: -8px;
+  right: 36px;
+  font-size: 24px;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.15));
+}
+
+[data-theme="dark"] .sheet {
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+[data-theme="dark"] .sheet::before {
+  border-bottom-color: var(--bg-primary);
+  filter: drop-shadow(0 -2px 4px rgba(0,0,0,.2));
+}
+
+/* Paper texture - Fixed pattern that never stretches */
+.sheet {
+  background-color: var(--bg-primary);
+  position: relative;
+}
+
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 79px;
+  width: 2px;
+  height: 100%;
+  background: rgba(139,92,246,.1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sheet {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px, 
+      transparent 23px, 
+      rgba(139,92,246,.05) 23px, 
+      rgba(139,92,246,.05) 24px
+    );
+  background-size: 100% 24px;
+  background-position: 0 8px;
+  background-attachment: local;
+}
+
+[data-theme="dark"] .sheet::before {
+  background: rgba(168,85,247,.15);
+}
+
+[data-theme="dark"] .sheet {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px, 
+      transparent 23px, 
+      rgba(168,85,247,.08) 23px, 
+      rgba(168,85,247,.08) 24px
+    );
+}
+
+.modal.show .sheet {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  animation: letterOpen 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes letterOpen {
+  0% {
+    transform: scale(0.8) translateY(30px) rotateX(15deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.02) translateY(-5px) rotateX(0deg);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.x {
+  position: absolute; 
+  top: 12px; 
+  right: 16px;
+  background: rgba(239,68,68,.1); 
+  color: #dc2626; 
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 50%; 
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.x:hover {
+  background: rgba(239,68,68,.15);
+  border-color: rgba(239,68,68,.3);
+  transform: scale(1.1) rotate(90deg);
+}
+
+[data-theme="dark"] .x {
+  background: rgba(220,38,38,.15);
+  color: #f87171;
+  border-color: rgba(220,38,38,.25);
+}
+
+[data-theme="dark"] .x:hover {
+  background: rgba(220,38,38,.25);
+  border-color: rgba(220,38,38,.4);
+}
+
+/* Leaf card layout - letter content style */
+.leaf-card {
+  display: flex; gap: 20px;
+  padding: 24px 20px 20px 90px;
+  margin: 16px 0;
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--accent);
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.leaf-card::before {
+  content: '🌿';
+  position: absolute;
+  left: 20px;
+  top: 24px;
+  font-size: 28px;
+  opacity: 0.6;
+}
+
+.leaf-icon { 
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.leaf-text p { 
+  margin: 0 0 8px 0; 
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.leaf-text #modalText {
+  font-size: 20px;
+  color: var(--ink);
+  white-space: pre-wrap;
+  line-height: 1.8;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-weight: 400;
+  margin-bottom: 16px;
+  transition: color 0.15s ease;
+}
+
+.leaf-text #modalAuthor {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  font-family: Inter, system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  transition: color 0.15s ease;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.leaf-text #modalAuthor { 
+  font-size: 14px; 
+  color: #6b7280; 
+  font-style: italic; 
+  margin-bottom: 0;
+}
+
+.leaf-actions { 
+  margin-top: 20px; 
+  display: flex; 
+  gap: 12px; 
+}
+
+.btn.green { 
+  background: #10b981; 
+  color: #fff;
+  flex: 1;
+}
+
+.btn.red { 
+  background: #ef4444; 
+  color: #fff;
+  flex: 1;
+  display: none; /* Ẩn nút xóa trong modal */
+}
+
+/* Picker và preview */
+.picker{display:grid;gap:12px}
+.picker-row{display:grid;gap:6px}
+.picker select,.picker input[type=range]{
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background: var(--bg-primary);
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+.picker select:focus,.picker input[type=range]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.preview{
+  margin-top:8px;
+  padding:12px;
+  border:1px dashed var(--border);
+  border-radius:12px;
+  background: var(--bg-secondary);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview svg{
+  width:120px;
+  height:120px;
+  display:block;
+}
+
+/* UX modes */
+.stage.click-mode { 
+  cursor: crosshair; 
+  position: relative;
+}
+.stage.click-mode::after {
+  content: "🎯 Click để đặt lá tại vị trí bất kỳ";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(139, 92, 246, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Modal Form Elements */
+.sheet h2 {
+  margin: 0 0 20px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  font-family: Inter, system-ui, sans-serif;
+  letter-spacing: 1px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--accent);
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.sheet h2::after {
+  content: '✉️';
+  position: absolute;
+  right: -8px;
+  top: -2px;
+  font-size: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+  transition: color 0.15s ease;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.checkbox-group label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Dark theme enhancements for click mode */
+[data-theme="dark"] .stage.click-mode::after {
+  background: rgba(168, 85, 247, 0.9);
+}
