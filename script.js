@@ -33,7 +33,7 @@
   let currentEditingId = null, pendingPosition = null, dragging = null;
   let dragOffset = { x:0, y:0 }, clickToPlaceMode = false, dragModeEnabled = false, isAdminMode = false;
 
-  // ========= Tối ưu hiệu suất =========
+  // Debounce và throttle để tối ưu hiệu suất
   const debounce = (fn, delay) => {
     let timer;
     return (...args) => {
@@ -94,7 +94,7 @@
   function fb(){ return window._firebase; }
   function leavesRef(){ return fb().ref(fb().db, "leaves"); }
 
-  // ========= Theme =========
+  // Chuyển đổi theme sáng/tối
   function setTheme(theme){
     document.documentElement.setAttribute("data-theme", theme);
     try { localStorage.setItem("theme", theme); } catch {}
@@ -110,14 +110,14 @@
     setTheme(cur === "dark" ? "light" : "dark");
   });
 
-  // ========= Help Modal =========
+  // Modal hướng dẫn sử dụng
   if (helpBtn) helpBtn.addEventListener("click", ()=> showModal(helpModal));
   if (closeHelpModal) closeHelpModal.addEventListener("click", ()=> hideModal(helpModal));
   if (helpModal) helpModal.addEventListener("click", (e)=> { 
     if (e.target === helpModal) hideModal(helpModal); 
   });
 
-  // ========= View Only Mode =========
+  // Chế độ chỉ xem (view-only)
   function updateViewOnlyMode() {
     const isViewOnly = viewOnlyMode && viewOnlyMode.checked;
     if (actionButtons) {
@@ -214,7 +214,7 @@
   }
   function hideTip(){ tip.style.display = "none"; }
 
-  // ========= Shapes & colors =========
+  // Hình dạng và màu sắc cho lá cây
   function pickPalette(idx){
     const arr = [
       { fill:"#FFE5E5", stroke:"#FFB3B3", vein:"#FF8A80" }, // Pink pastel
@@ -293,7 +293,7 @@
     return "M0,-14 C0,-7 0,0 0,14 M0,-4 L-4,-1 M0,-4 L4,-1";
   }
 
-  // ========= Storage =========
+  // Lưu trữ dữ liệu với Firebase
   function loadFromStorage(){
     try {
       const data = JSON.parse(localStorage.getItem(storeKey) || "[]");
@@ -327,7 +327,7 @@
     }
   }
 
-  // ========= Geometry =========
+  // Tính toán hình học và khoảng cách
   function svgPoint(evt){
     const pt = svg.createSVGPoint();
     pt.x = evt.clientX; pt.y = evt.clientY;
@@ -346,7 +346,7 @@
     return { x: p.x + rand(-3,3), y: p.y + rand(-2,2), rotation: rand(-15,15) };
   }
 
-  // ========= UI bits =========
+  // Các utility function cho UI
   function updateCounter(){
     const c = leaves.querySelectorAll(".leaf").length;
     if (counter) counter.textContent = `${c} lá`;
@@ -357,7 +357,7 @@
     if (clearAll)   clearAll.style.display   = has ? "block" : "none";
   }
 
-  // ========= Add/Edit modal =========
+  // Modal thêm/sửa thông điệp
   function renderPreview(){
     if (!leafPreview) return;
     const { d } = pickLeafShape(leafShapeSel?.value);
@@ -400,7 +400,7 @@
     showModal(addModal);
   }
 
-  // ========= Render leaf =========
+  // Render lá cây lên cây
   function addLeafFromData(data, animate=false){
     const position = data.position || randomPositionInTree();
     const rotation = Number.isFinite(data.rotation) ? data.rotation : position.rotation;
@@ -482,14 +482,14 @@
     updateEmptyState();
   }
 
-  // ========= List item =========
+  // Tạo item trong danh sách
   function renderListItem(data){
     // Hàm này không còn cần thiết vì đã remove leaf list
     // Chỉ giữ lại để tránh lỗi khi được gọi
     return;
   }
 
-  // ========= Delete =========
+  // Xóa thông điệp
   function animateLeafFall(el){
     el.style.transition = "transform 1.2s cubic-bezier(.55,.085,.68,.53), opacity 1.2s";
     el.style.transform  = "translate(0, 120px) rotate(180deg)";
@@ -509,7 +509,7 @@
     updateEmptyState();
   }
 
-  // ========= Global pointer handlers for drag =========
+  // Xử lý sự kiện kéo thả toàn cục
   svg?.addEventListener("pointermove", (e)=>{
     if (!dragging) return;
     const p = svgPoint(e);
@@ -535,7 +535,7 @@
   svg?.addEventListener("pointercancel", endDrag);
   svg?.addEventListener("pointerleave", endDrag);
 
-  // ========= Click-to-place =========
+  // Chế độ click để đặt lá
   svg?.addEventListener("click", (e)=>{
     if (!clickToPlaceMode) return;
     if (viewOnlyMode && viewOnlyMode.checked) return;
@@ -545,7 +545,7 @@
     openAddModal("", "", false, null);
   });
 
-  // ========= Wiring toggleMode và dragMode =========
+  // Kết nối các chế độ toggle và drag
   if (toggleMode) {
     toggleMode.addEventListener("click", ()=>{
       // Không cho toggle nếu đang ở view only mode
@@ -588,7 +588,7 @@
     });
   }
 
-  // ========= Form wiring =========
+  // Kết nối form với sự kiện
   isAnonymous?.addEventListener("change", ()=>{
     if (isAnonymous.checked) {
       addAuthor.value = "";
@@ -717,7 +717,7 @@
     stage?.classList.add("click-mode");
   }
 
-  // ========= Clear all =========
+  // Xóa tất cả thông điệp
   clearAll?.addEventListener("click", ()=>{
     if (!confirm("Bạn có chắc muốn xóa tất cả lá không? Hành động này không thể hoàn tác!")) return;
     const allLeaves = [...leaves.querySelectorAll(".leaf")];
@@ -730,7 +730,7 @@
     }, allLeaves.length*80 + 500);
   });
 
-  // ========= Initial load =========
+  // Khởi tạo ứng dụng
   // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
   function attachRealtime(){
     if (!hasFB()) return;

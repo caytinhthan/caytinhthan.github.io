@@ -1,6 +1,9 @@
 :root{
   --glass: rgba(255,255,255,.65);
-  --border: rgba(255,255.panel-header {
+  --border: rgba(255,255,255,.15);
+}
+
+.panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -65,7 +68,10 @@
 
 .help-btn:hover::before {
   opacity: 1;
-}35);
+}
+
+/* Light theme CSS variables */
+:root {
   --ink:#0f172a; 
   --muted:#475569;
   --bg-primary: #ffffff;
