@@ -9,23 +9,29 @@
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
     return el;
   };
-  const addBtn = $("#add"), list = $("#list"), stage = $("#stage"), svg = $("#treeSvg");
+  const addBtn = $("#add"), stage = $("#stage"), svg = $("#treeSvg");
   const leaves = $("#leaves"), branches = $$("#branches path"), counter = $("#counter");
-  const tip = $("#tip"), themeToggle = $("#themeToggle"), clearAll = $("#clearAll");
-  const emptyState = $("#emptyState"), modal = $("#modal");
+  const list = document.querySelector("#list") || null;
+  const clearAll = document.querySelector("#clearAll") || null;
+  const emptyState = document.querySelector("#emptyState") || null;
+  const tip = $("#tip"), themeToggle = $("#themeToggle");
+  const modal = $("#modal"), helpModal = $("#helpModal"), helpBtn = $("#helpBtn");
   const modalText = $("#modalText"), modalAuthor = $("#modalAuthor");
-  const closeModal = $("#closeModal"), editLeafBtn = $("#editLeaf"), deleteLeafBtn = $("#deleteLeaf");
+  const closeModal = $("#closeModal"), closeHelpModal = $("#closeHelpModal");
+  const editLeafBtn = $("#editLeaf"), deleteLeafBtn = $("#deleteLeaf");
   const addModal = $("#addModal"), addModalTitle = $("#addModalTitle"), addMessage = $("#addMessage");
   const addAuthor = $("#addAuthor"), isAnonymous = $("#isAnonymous"), saveLeaf = $("#saveLeaf");
   const cancelAdd = $("#cancelAdd"), closeAddModal = $("#closeAddModal");
   const leafShapeSel = $("#leafShape"), leafPaletteSel = $("#leafPalette");
   const leafScaleInp = $("#leafScale"), leafRotationInp = $("#leafRotation");
   const leafPreview = $("#leafPreview"), toggleMode = $("#toggleMode");
+  const dragMode = $("#dragMode");
+  const viewOnlyMode = $("#viewOnlyMode"), actionButtons = $("#actionButtons");
 
   const storeKey = "leaf-messages-v3";
   const SECRET_CODE = "caytinhthan2025";
   let currentEditingId = null, pendingPosition = null, dragging = null;
-  let dragOffset = { x:0, y:0 }, clickToPlaceMode = true, isAdminMode = false;
+  let dragOffset = { x:0, y:0 }, clickToPlaceMode = false, dragModeEnabled = false, isAdminMode = false;
 
   // ========= Tối ưu hiệu suất =========
   const debounce = (fn, delay) => {
@@ -103,6 +109,51 @@
     const cur = document.documentElement.getAttribute("data-theme") || "light";
     setTheme(cur === "dark" ? "light" : "dark");
   });
+
+  // ========= Help Modal =========
+  if (helpBtn) helpBtn.addEventListener("click", ()=> showModal(helpModal));
+  if (closeHelpModal) closeHelpModal.addEventListener("click", ()=> hideModal(helpModal));
+  if (helpModal) helpModal.addEventListener("click", (e)=> { 
+    if (e.target === helpModal) hideModal(helpModal); 
+  });
+
+  // ========= View Only Mode =========
+  function updateViewOnlyMode() {
+    const isViewOnly = viewOnlyMode && viewOnlyMode.checked;
+    if (actionButtons) {
+      actionButtons.classList.toggle("disabled", isViewOnly);
+    }
+    
+    if (isViewOnly) {
+      // Tắt tất cả chức năng khi bật view only
+      clickToPlaceMode = false;
+      dragModeEnabled = false;
+      
+      // Update UI cho click mode
+      if (toggleMode) {
+        const icon = toggleMode.querySelector(".btn-icon");
+        const text = toggleMode.querySelector(".btn-text");
+        if (icon) icon.textContent = "🖱️";
+        if (text) text.textContent = "Click để đặt";
+      }
+      
+      // Update UI cho drag mode
+      if (dragMode) {
+        const icon = dragMode.querySelector(".btn-icon");
+        const text = dragMode.querySelector(".btn-text");
+        if (icon) icon.textContent = "✋";
+        if (text) text.textContent = "Kéo thả";
+      }
+      
+      // Remove tất cả CSS classes
+      stage?.classList.remove("click-mode", "drag-mode");
+    }
+  }
+  
+  if (viewOnlyMode) {
+    viewOnlyMode.addEventListener("change", updateViewOnlyMode);
+    updateViewOnlyMode(); // init
+  }
 
 
   function showModal(m){
@@ -254,17 +305,11 @@
   }
   function getLeafDataFromDOM(id){
     const leaf = leaves.querySelector(`.leaf[data-id="${id}"]`);
-    const row  = list.querySelector(`.chip[data-id="${id}"]`);
-    const textEl   = row?.querySelector(".chip-text")  || row?.querySelector("span");
-    const authorEl = row?.querySelector(".chip-author")|| row?.querySelector("small");
-    const text   = textEl?.textContent || leaf?.dataset.msg || "";
-    const author = (authorEl?.textContent || "").replace(/^- /,"") || leaf?.dataset.author || "";
-
     const position = leaf ? JSON.parse(leaf.dataset.position || '{"x":0,"y":0,"rotation":0}') : {x:0,y:0,rotation:0};
     return {
       id,
-      text,
-      author: author || "",
+      text: leaf?.dataset.msg || "",
+      author: leaf?.dataset.author || "",
       position,
       scale: Number(leaf?.dataset.scale || 1),
       rotation: Number(leaf?.dataset.rotation || 0),
@@ -274,11 +319,12 @@
     };
   }
   function syncLocalStorage(){
-    const rows = [...list.querySelectorAll(".chip")];
-    const data = rows.map(r => getLeafDataFromDOM(r.dataset.id));
-    try { localStorage.setItem(storeKey, JSON.stringify(data)); }
-    catch(e){ console.error("Error saving to localStorage:", e); }
-    // Firebase optional sync per-item nếu muốn
+    try {
+      const data = [...leaves.querySelectorAll(".leaf")].map(el => getLeafDataFromDOM(el.dataset.id));
+      localStorage.setItem(storeKey, JSON.stringify(data));
+    } catch(e){
+      console.error("Error saving to localStorage:", e);
+    }
   }
 
   // ========= Geometry =========
@@ -408,7 +454,8 @@
     // Drag & drop (tắt khi ở click mode)
     g.classList.add("grab");
     g.addEventListener("pointerdown", (e)=>{
-      if (clickToPlaceMode) return;
+      if (!dragModeEnabled) return;  // Chỉ kéo được khi drag mode bật
+      if (clickToPlaceMode) return;  // Không kéo khi đang ở click mode
       dragging = g;
       g.setPointerCapture(e.pointerId);
       g.classList.add("grabbing");
@@ -437,80 +484,22 @@
 
   // ========= List item =========
   function renderListItem(data){
-    const row = document.createElement("div");
-    row.className = "chip";
-    row.dataset.id = data.id;
-
-    const icon = document.createElement("b");
-    icon.textContent = "🌿";
-
-    const content = document.createElement("div");
-    content.className = "chip-content";
-
-    const text = document.createElement("div");
-    text.className = "chip-text";
-    text.textContent = data.text;
-
-    const author = document.createElement("div");
-    author.className = "chip-author";
-    author.textContent = data.author || "Ẩn danh";
-
-    const timestamp = document.createElement("div");
-    timestamp.className = "chip-timestamp";
-    timestamp.textContent = new Date(data.ts).toLocaleString("vi-VN");
-
-    content.append(text, author, timestamp);
-
-    const btn = document.createElement("button");
-    btn.className = "del";
-    btn.title = "Xóa lá này";
-    btn.textContent = "🗑️";
-    
-    // Debounce cho delete để tránh spam click
-    const debouncedDelete = debounce((e) => {
-      e.stopPropagation();
-      deleteLeafById(data.id);
-    }, 100);
-    
-    btn.addEventListener("click", debouncedDelete);
-
-    // Tối ưu click để scroll smooth đến lá
-    row.addEventListener("click", ()=>{
-      const leafEl = leaves.querySelector(`.leaf[data-id="${data.id}"]`);
-      if (leafEl) {
-        leafEl.click();
-        // Scroll smooth đến item trong list nếu cần
-        if (window.smoothScrollToItem) {
-          window.smoothScrollToItem(data.id);
-        }
-      }
-    });
-
-    row.append(icon, content, btn);
-    
-    // Animate vào với slight delay để mượt hơn
-    row.style.opacity = '0';
-    row.style.transform = 'translateX(-10px)';
-    list.prepend(row);
-    
-    // Trigger reflow để animation chạy
-    row.offsetHeight;
-    row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    row.style.opacity = '1';
-    row.style.transform = 'translateX(0)';
+    // Hàm này không còn cần thiết vì đã remove leaf list
+    // Chỉ giữ lại để tránh lỗi khi được gọi
+    return;
   }
 
   // ========= Delete =========
   function animateLeafFall(el){
     el.style.transition = "transform 1.2s cubic-bezier(.55,.085,.68,.53), opacity 1.2s";
-    el.style.transform  = "translate(0 120) rotate(180)"; // note: attribute style transform in CSS space; acceptable for effect
+    el.style.transform  = "translate(0, 120px) rotate(180deg)";
     el.style.opacity    = "0";
     setTimeout(()=> el.remove(), 1200);
   }
   function deleteLeafById(id){
     const leafEl = leaves.querySelector(`.leaf[data-id="${id}"]`);
     if (leafEl) animateLeafFall(leafEl);
-    list.querySelectorAll(".chip").forEach(r=> { if (r.dataset.id === id) r.remove(); });
+    if (list) list.querySelectorAll(".chip").forEach(r=> { if (r.dataset.id === id) r.remove(); });
 
     if (hasFB()) {
       fb().remove(fb().ref(fb().db, `leaves/${id}`)).catch(console.error);
@@ -549,24 +538,52 @@
   // ========= Click-to-place =========
   svg?.addEventListener("click", (e)=>{
     if (!clickToPlaceMode) return;
+    if (viewOnlyMode && viewOnlyMode.checked) return;
     if (e.target.closest && e.target.closest(".leaf")) return;
     const p = svgPoint(e);
     pendingPosition = { x:p.x, y:p.y, rotation:0 };
     openAddModal("", "", false, null);
   });
+
+  // ========= Wiring toggleMode và dragMode =========
   if (toggleMode) {
     toggleMode.addEventListener("click", ()=>{
+      // Không cho toggle nếu đang ở view only mode
+      if (viewOnlyMode && viewOnlyMode.checked) return;
+      
       clickToPlaceMode = !clickToPlaceMode;
       const icon = toggleMode.querySelector(".btn-icon");
       const text = toggleMode.querySelector(".btn-text");
+      
       if (clickToPlaceMode) {
-        icon && (icon.textContent = "🎯");
-        text && (text.textContent = "Click để đặt");
         stage?.classList.add("click-mode");
+        icon && (icon.textContent = "🎯");
+        text && (text.textContent = "Đang click để đặt");
       } else {
-        icon && (icon.textContent = "👁️");
-        text && (text.textContent = "Chế độ xem");
         stage?.classList.remove("click-mode");
+        icon && (icon.textContent = "🖱️");
+        text && (text.textContent = "Click để đặt");
+      }
+    });
+  }
+
+  if (dragMode) {
+    dragMode.addEventListener("click", ()=>{
+      // Không cho toggle nếu đang ở view only mode
+      if (viewOnlyMode && viewOnlyMode.checked) return;
+      
+      dragModeEnabled = !dragModeEnabled;
+      const icon = dragMode.querySelector(".btn-icon");
+      const text = dragMode.querySelector(".btn-text");
+      
+      if (dragModeEnabled) {
+        stage?.classList.add("drag-mode");
+        icon && (icon.textContent = "🤏");
+        text && (text.textContent = "Đang kéo thả");
+      } else {
+        stage?.classList.remove("drag-mode");
+        icon && (icon.textContent = "✋");
+        text && (text.textContent = "Kéo thả");
       }
     });
   }
@@ -590,6 +607,7 @@
   });
 
   saveLeaf?.addEventListener("click", ()=>{
+    console.log("Save leaf clicked");
     let text = addMessage.value.trim();
     const author = isAnonymous.checked ? "" : addAuthor.value.trim();
 
@@ -633,12 +651,14 @@
         leafEl.setAttribute("transform", `translate(${pos.x} ${pos.y}) rotate(${rot}) scale(${sc})`);
       }
       // list chip
-      const chip = list.querySelector(`.chip[data-id="${currentEditingId}"]`);
-      if (chip){
-        const t = chip.querySelector(".chip-text") || chip.querySelector("span");
-        const a = chip.querySelector(".chip-author") || chip.querySelector("small");
-        if (t) t.textContent = text;
-        if (a) a.textContent = author || "Ẩn danh";
+      if (list) {
+        const chip = list.querySelector(`.chip[data-id="${currentEditingId}"]`);
+        if (chip){
+          const t = chip.querySelector(".chip-text") || chip.querySelector("span");
+          const a = chip.querySelector(".chip-author") || chip.querySelector("small");
+          if (t) t.textContent = text;
+          if (a) a.textContent = author || "Ẩn danh";
+        }
       }
       const data = getLeafDataFromDOM(currentEditingId);
       if (hasFB()) fb().set(fb().ref(fb().db, `leaves/${currentEditingId}`), data).catch(console.error);
@@ -653,10 +673,11 @@
       }
     }
 
-    syncLocalStorage();
     pendingPosition = null;
     currentEditingId = null;
-    hideModal(addModal);
+    console.log("Đóng modal sau khi save leaf");
+    hideModal(addModal);              // ĐÓNG TRƯỚC
+    syncLocalStorage();               // Lưu sau, có lỗi cũng không giữ modal
     // reset form
     addMessage.value = "";
     addAuthor.value = "";
@@ -681,6 +702,9 @@
 
   // Add button = mở modal, auto chọn vị trí random
   addBtn?.addEventListener("click", ()=>{
+    // Không cho add nếu đang ở view only mode
+    if (viewOnlyMode && viewOnlyMode.checked) return;
+    
     pendingPosition = randomPositionInTree();
     openAddModal("", "", false, null);
   });
@@ -712,7 +736,8 @@
     if (!hasFB()) return;
     fb().onValue(leavesRef(), (snap)=>{
       const data = snap.val();
-      leaves.innerHTML = ""; list.innerHTML = "";
+      leaves.innerHTML = "";
+      if (list) list.innerHTML = "";
       if (data){
         Object.values(data)
           .sort((a,b)=> (a.ts||0) - (b.ts||0))
@@ -725,7 +750,9 @@
 
   initializeTheme();
   optimizeListScroll();
-
+  
+  // Không set mode mặc định nữa - chỉ khi user bật
+  
   if (hasFB()) {
     attachRealtime();
   } else {

@@ -14,9 +14,14 @@
     <section class="panel left-panel">
       <div class="panel-header">
         <h1>🌱 Cây Thông Điệp</h1>
-        <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
-          <span class="theme-icon">🌙</span>
-        </button>
+        <div class="header-buttons">
+          <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
+            <span class="theme-icon">🌙</span>
+          </button>
+          <button class="help-btn" id="helpBtn" title="Hướng dẫn sử dụng">
+            <span>❓</span>
+          </button>
+        </div>
       </div>
       
       <p class="panel-description">Click vào cây để đặt lá tại vị trí bất kỳ, hoặc tự động thêm lá ngẫu nhiên!</p>
@@ -26,34 +31,42 @@
           <div class="stat-icon">🌿</div>
           <div class="stat-content">
             <div class="stat-number" id="counter">0</div>
-            <div class="stat-label">Lá trên cây</div>
+            <div class="stat-label">Số lá trên cây</div>
           </div>
         </div>
       </div>
       
       <div class="controls">
-        <button class="btn primary" id="add">
-          <span class="btn-icon">🎲</span>
-          <span class="btn-text">Tự động thêm</span>
-        </button>
-        <button class="btn secondary" id="toggleMode">
-          <span class="btn-icon">🎯</span>
-          <span class="btn-text">Click để đặt</span>
-        </button>
-      </div>
-      
-      <div class="list-section">
-        <div class="list-header">
-          <h3>📝 Danh sách lá</h3>
-          <button class="clear-all-btn" id="clearAll" title="Xóa tất cả lá" style="display: none;">
-            <span>🗑️</span>
+        <div class="view-mode-section">
+          <label class="switch-container">
+            <input type="checkbox" id="viewOnlyMode">
+            <span class="switch-slider"></span>
+            <span class="switch-label">Chế độ chỉ xem</span>
+          </label>
+        </div>
+        
+        <div class="action-buttons" id="actionButtons">
+          <button class="btn primary" id="add">
+            <span class="btn-icon">🎲</span>
+            <span class="btn-text">Tự động thêm</span>
+          </button>
+          <button class="btn secondary" id="toggleMode">
+            <span class="btn-icon">🖱️</span>
+            <span class="btn-text">Click để đặt</span>
+          </button>
+          <button class="btn tertiary" id="dragMode">
+            <span class="btn-icon">✋</span>
+            <span class="btn-text">Kéo thả</span>
           </button>
         </div>
-        <div class="list" id="list">
-          <div class="empty-state" id="emptyState">
-            <div class="empty-icon">🌱</div>
-            <p>Chưa có lá nào trên cây</p>
-            <small>Hãy thêm lá đầu tiên!</small>
+      </div>
+      
+      <div class="additional-info">
+        <div class="info-card">
+          <div class="info-icon">💌</div>
+          <div class="info-content">
+            <h3>Gửi thông điệp yêu thương</h3>
+            <p>Mỗi chiếc lá mang một thông điệp đặc biệt. Hãy chia sẻ những lời yêu thương, động viên và hy vọng!</p>
           </div>
         </div>
       </div>
@@ -168,6 +181,39 @@
     </div>
   </div>
 
+  <!-- Help Modal -->
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <button class="x" id="closeHelpModal" aria-label="Đóng hướng dẫn">✕</button>
+      <h3>❓ Hướng dẫn sử dụng</h3>
+      <div class="help-content">
+        <div class="help-section">
+          <h4>🌿 Cách thêm lá:</h4>
+          <ul>
+            <li><strong>Tự động thêm:</strong> Nhấn nút "🎲 Tự động thêm" để thêm lá ở vị trí ngẫu nhiên</li>
+            <li><strong>Click để đặt:</strong> Bật chế độ này và click vào cây để đặt lá chính xác</li>
+          </ul>
+        </div>
+        <div class="help-section">
+          <h4>✏️ Tương tác với lá:</h4>
+          <ul>
+            <li><strong>Xem thông điệp:</strong> Click vào bất kỳ chiếc lá nào để đọc nội dung</li>
+            <li><strong>Kéo thả:</strong> Bật chế độ kéo thả và giữ lá để di chuyển vị trí</li>
+            <li><strong>Sửa nội dung:</strong> Trong popup xem lá, bạn có thể chỉnh sửa thông điệp</li>
+          </ul>
+        </div>
+        <div class="help-section">
+          <h4>👁️ Chế độ chỉ xem:</h4>
+          <p>Bật để khóa tất cả chức năng chỉnh sửa, chỉ cho phép xem thông điệp.</p>
+        </div>
+        <div class="help-section">
+          <h4>🎨 Tùy chỉnh lá:</h4>
+          <p>Khi thêm lá mới, bạn có thể chọn hình dáng, màu sắc, kích thước và góc xoay.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- View Modal -->
   <div class="modal" id="modal" role="dialog" aria-modal="true">
     <div class="sheet">
@@ -182,7 +228,7 @@
       </div>
       <div class="leaf-actions">
         <button id="editLeaf" class="btn green">✏️ Sửa</button>
-        <button id="deleteLeaf" class="btn red">🗑️ Xóa</button>
+        <button id="deleteLeaf" class="btn red" style="display: none;">🗑️ Xóa</button>
       </div>
     </div>
   </div>

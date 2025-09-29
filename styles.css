@@ -1,6 +1,71 @@
 :root{
   --glass: rgba(255,255,255,.65);
-  --border: rgba(255,255,255,.35);
+  --border: rgba(255,255.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.panel-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+}
+
+.help-btn {
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  position: relative;
+}
+
+.help-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.help-btn:hover {
+  background: linear-gradient(135deg, #a855f7, #c084fc);
+  color: white;
+  transform: scale(1.1) translateY(-1px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+}
+
+.help-btn:hover::before {
+  opacity: 1;
+}35);
   --ink:#0f172a; 
   --muted:#475569;
   --bg-primary: #ffffff;
@@ -51,8 +116,8 @@ body{
 
 .panel{
   backdrop-filter:saturate(160%) blur(12px);
-  background:var(--glass); border:1px solid var(--border);
-  border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.08);
+  background:var(--glass); border:2px solid var(--border);
+  border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.1), 0 4px 15px rgba(0,0,0,.05);
   transition: all 0.3s ease;
 }
 
@@ -90,7 +155,7 @@ body{
 /* Theme Toggle */
 .theme-toggle {
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -100,6 +165,7 @@ body{
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .theme-toggle:hover {
@@ -117,10 +183,11 @@ body{
   align-items: center;
   gap: 12px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .stat-card:hover {
@@ -179,7 +246,74 @@ textarea:focus, input[type="text"]:focus {
 .controls {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.view-mode-section {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
   gap: 12px;
+  cursor: pointer;
+}
+
+.switch-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border: 2px solid rgba(139,92,246,0.1);
+  border-radius: 24px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.switch-container input[type="checkbox"] {
+  display: none;
+}
+
+.switch-container input[type="checkbox"]:checked + .switch-slider {
+  background: var(--accent);
+}
+
+.switch-container input[type="checkbox"]:checked + .switch-slider::before {
+  transform: translateX(20px);
+}
+
+.switch-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.3s ease;
+}
+
+.action-buttons.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: grayscale(1);
 }
 
 .btn {
@@ -209,14 +343,22 @@ textarea:focus, input[type="text"]:focus {
 .btn.primary {
   background: linear-gradient(135deg, var(--accent), #10b981);
   color: white;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3), 0 2px 6px rgba(139, 92, 246, 0.2);
 }
 
 .btn.secondary {
   background: var(--bg-secondary);
   color: var(--ink);
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 2px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.btn.tertiary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .btn:disabled {
@@ -241,6 +383,75 @@ textarea:focus, input[type="text"]:focus {
 
 .btn:active {
   transform: translateY(0);
+}
+
+/* Additional Info Section */
+.additional-info {
+  margin-top: 24px;
+}
+
+.info-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(139,92,246,0.05) 100%);
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.info-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.info-content h3 {
+  margin: 0 0 8px 0;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.info-content p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Help Modal Styles */
+.help-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.help-section {
+  margin-bottom: 20px;
+}
+
+.help-section h4 {
+  margin: 0 0 8px 0;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.help-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.help-section li {
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.help-section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* List Section */
@@ -484,8 +695,26 @@ textarea:focus, input[type="text"]:focus {
 }
 
 /* Sân khấu SVG */
-.stage{position:relative; overflow:hidden; border-radius:16px; border:1px solid var(--border); background:#f7fff7}
-svg{width:100%; height:100%}
+.stage {
+  position: relative; 
+  overflow: hidden; 
+  border-radius: 16px; 
+  border: 1px solid var(--border); 
+  background: #f7fff7;
+  display: flex;
+  align-items: flex-end;    /* căn bottom để khớp với đất */
+  justify-content: center;
+}
+
+/* Cây to hơn và cắm vào đất */
+#treeSvg {
+  max-width: 700px;        /* tăng từ 600px → 700px */
+  width: 100%;
+  height: auto;
+  aspect-ratio: 553 / 666;
+  display: block;
+  margin-bottom: -10px;    /* đẩy cây xuống nhiều hơn: -2px → -10px */
+}
 
 .ground{
   position:absolute; inset:auto 0 0 0; height:28%;
@@ -546,6 +775,7 @@ svg{width:100%; height:100%}
 
 .sheet {
   width: min(680px,92vw);
+  max-height: calc(100dvh - 48px);
   background: #fff !important;
   border: 1px solid var(--border);
   border-radius: 20px 20px 8px 8px;
@@ -564,7 +794,9 @@ svg{width:100%; height:100%}
       transparent 1px 44px
     ) !important;
   background-size: auto !important;
-  overflow: hidden;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Envelope design - top flap */
@@ -798,7 +1030,7 @@ svg{width:100%; height:100%}
   position: relative;
 }
 .stage.click-mode::after {
-  content: "🎯 Click để đặt lá tại vị trí bất kỳ";
+  content: "🎯 Đang ở chế độ click để đặt - Click để thêm lá";
   position: absolute;
   top: 10px;
   left: 50%;
@@ -871,4 +1103,47 @@ svg{width:100%; height:100%}
 /* Dark theme enhancements for click mode */
 [data-theme="dark"] .stage.click-mode::after {
   background: rgba(168, 85, 247, 0.9);
+}
+
+/* Drag mode styling */
+.stage.drag-mode { 
+  cursor: grab; 
+  position: relative;
+}
+.stage.drag-mode::after {
+  content: "🤏 Đang ở chế độ kéo thả - Kéo lá để di chuyển";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(245, 158, 11, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 20;
+}
+
+[data-theme="dark"] .stage.drag-mode::after {
+  background: rgba(217, 119, 6, 0.9);
+}
+
+/* Modal Button Container - Sticky Footer */
+.sheet > div[style*="display:flex"]:last-child {
+  position: sticky;
+  bottom: -28px;
+  left: -36px;
+  right: -36px;
+  background: inherit;
+  padding: 16px 36px 28px 36px;
+  margin: 20px -36px -28px -36px;
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+[data-theme="dark"] .sheet > div[style*="display:flex"]:last-child {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
