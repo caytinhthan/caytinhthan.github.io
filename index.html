@@ -202,12 +202,14 @@
     measurementId: "G-BHMHT2QGXN"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  
+  // ÉP dùng đúng instance (asia-southeast1). Đừng để mặc định.
+  const db = getDatabase(app, firebaseConfig.databaseURL);
 
-  // Expose ra global cho script.js dùng
+  // Quăng ra global + phát tín hiệu "sẵn sàng"
   window._firebase = { db, ref, set, remove, onValue };
+  window.dispatchEvent(new Event("firebase-ready"));
 </script>
 <script src="script.js"></script>
 </body>

@@ -83,10 +83,10 @@
     window.smoothScrollToItem = smoothScrollToItem;
   };
 
-  // Firebase optional: expect window._firebase = { db, ref, set, remove, onValue }
-  const useFirebase = !!(window._firebase && window._firebase.db);
-  const fb = window._firebase || {};
-  const leavesRef = useFirebase ? fb.ref(fb.db, "leaves") : null;
+  // Firebase - function động thay vì const cứng
+  function hasFB(){ return !!(window._firebase && window._firebase.db); }
+  function fb(){ return window._firebase; }
+  function leavesRef(){ return fb().ref(fb().db, "leaves"); }
 
   // ========= Theme =========
   function setTheme(theme){
@@ -512,8 +512,8 @@
     if (leafEl) animateLeafFall(leafEl);
     list.querySelectorAll(".chip").forEach(r=> { if (r.dataset.id === id) r.remove(); });
 
-    if (useFirebase) {
-      fb.remove(fb.ref(fb.db, `leaves/${id}`)).catch(console.error);
+    if (hasFB()) {
+      fb().remove(fb().ref(fb().db, `leaves/${id}`)).catch(console.error);
     }
     syncLocalStorage();
     updateCounter();
@@ -533,12 +533,13 @@
   });
   function endDrag(e){
     if (!dragging) return;
+    const id = dragging.dataset.id;
+    const payload = getLeafDataFromDOM(id);
     dragging.classList.remove("grabbing");
     try { e && dragging.releasePointerCapture(e.pointerId); } catch {}
-    const id = dragging.dataset.id;
-    const data = getLeafDataFromDOM(id);
     dragging = null;
-    if (useFirebase) fb.set(fb.ref(fb.db, `leaves/${id}`), data).catch(console.error);
+    
+    if (hasFB()) fb().set(fb().ref(fb().db, `leaves/${id}`), payload).catch(console.error);
     syncLocalStorage();
   }
   svg?.addEventListener("pointerup", endDrag);
@@ -640,14 +641,16 @@
         if (a) a.textContent = author || "Ẩn danh";
       }
       const data = getLeafDataFromDOM(currentEditingId);
-      if (useFirebase) fb.set(fb.ref(fb.db, `leaves/${currentEditingId}`), data).catch(console.error);
+      if (hasFB()) fb().set(fb().ref(fb().db, `leaves/${currentEditingId}`), data).catch(console.error);
     } else {
       // Add new
       const pos = pendingPosition || randomPositionInTree();
       if (Number.isFinite(rotation)) pos.rotation = rotation;
       const data = { id: uuid(), text, author, ts: Date.now(), position: pos, shapeKey, paletteIdx, scale, rotation };
       addLeafFromData(data, true);
-      if (useFirebase) fb.set(fb.ref(fb.db, `leaves/${data.id}`), getLeafDataFromDOM(data.id)).catch(console.error);
+      if (hasFB()) {
+        fb().set(fb().ref(fb().db, `leaves/${data.id}`), getLeafDataFromDOM(data.id)).catch(console.error);
+      }
     }
 
     syncLocalStorage();
@@ -698,21 +701,19 @@
     setTimeout(()=>{
       list.innerHTML = '<div class="empty-state" id="emptyState"><div class="empty-icon">🌱</div><p>Chưa có lá nào trên cây</p><small>Hãy thêm lá đầu tiên!</small></div>';
       try { localStorage.removeItem(storeKey); } catch {}
-      if (useFirebase) fb.set(leavesRef, null).catch(console.error);
+      if (hasFB()) fb().set(leavesRef(), null).catch(console.error);
       updateCounter(); updateEmptyState();
     }, allLeaves.length*80 + 500);
   });
 
   // ========= Initial load =========
-  initializeTheme();
-  optimizeListScroll();
-
-  if (useFirebase) {
-    fb.onValue(leavesRef, (snap)=>{
+  // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
+  function attachRealtime(){
+    if (!hasFB()) return;
+    fb().onValue(leavesRef(), (snap)=>{
       const data = snap.val();
-      leaves.innerHTML = "";
-      list.innerHTML   = "";
-      if (data) {
+      leaves.innerHTML = ""; list.innerHTML = "";
+      if (data){
         Object.values(data)
           .sort((a,b)=> (a.ts||0) - (b.ts||0))
           .forEach(d => addLeafFromData(d, false));
@@ -720,6 +721,13 @@
       updateCounter(); updateEmptyState();
       try { localStorage.setItem(storeKey, JSON.stringify(Object.values(data||{}))); } catch {}
     }, console.error);
+  }
+
+  initializeTheme();
+  optimizeListScroll();
+
+  if (hasFB()) {
+    attachRealtime();
   } else {
     const existing = loadFromStorage();
     let migrated = false;
@@ -730,4 +738,6 @@
     if (migrated) try { localStorage.setItem(storeKey, JSON.stringify(existing)); } catch {}
     updateCounter(); updateEmptyState();
   }
+  
+  window.addEventListener("firebase-ready", attachRealtime, { once:true });
 })();
