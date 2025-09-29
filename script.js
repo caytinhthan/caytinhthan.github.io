@@ -711,10 +711,10 @@
 
   // Toggle click/place mode
   if (toggleMode) {
-    // khởi tạo trạng thái nút
-    toggleMode.querySelector(".btn-icon")?.replaceChildren(document.createTextNode("🎯"));
+    // khởi tạo trạng thái nút (mặc định tắt)
+    toggleMode.querySelector(".btn-icon")?.replaceChildren(document.createTextNode("🖱️"));
     toggleMode.querySelector(".btn-text")?.replaceChildren(document.createTextNode("Click để đặt"));
-    stage?.classList.add("click-mode");
+    // Không add click-mode class - để mặc định tắt
   }
 
   // Xóa tất cả thông điệp

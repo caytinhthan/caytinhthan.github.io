@@ -18,9 +18,6 @@
           <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
             <span class="theme-icon">🌙</span>
           </button>
-          <button class="help-btn" id="helpBtn" title="Hướng dẫn sử dụng">
-            <span>❓</span>
-          </button>
         </div>
       </div>
       
@@ -69,6 +66,11 @@
             <p>Mỗi chiếc lá mang một thông điệp đặc biệt. Hãy chia sẻ những lời yêu thương, động viên và hy vọng!</p>
           </div>
         </div>
+        
+        <button class="btn secondary" id="helpBtn" style="width: 100%; margin-top: 16px;">
+          <span class="btn-icon">📖</span>
+          <span class="btn-text">Hướng dẫn sử dụng</span>
+        </button>
       </div>
     </section>
 
@@ -220,7 +222,6 @@
       <button class="x" id="closeModal" aria-label="Đóng modal">✕</button>
       <h3>💌 Thông điệp</h3>
       <div class="leaf-card">
-        <div class="leaf-icon">🌿</div>
         <div class="leaf-text">
           <p id="modalText"></p>
           <p id="modalAuthor"></p>
@@ -250,10 +251,10 @@
 
   const app = initializeApp(firebaseConfig);
   
-  // ÉP dùng đúng instance (asia-southeast1). Đừng để mặc định.
+  // ÉP dùng đúng instance (asia-southeast1). KHÔNG để mặc định keke
   const db = getDatabase(app, firebaseConfig.databaseURL);
 
-  // Quăng ra global + phát tín hiệu "sẵn sàng"
+  // Quăng mịa ra global + phát tín hiệu "sẵn sàng"
   window._firebase = { db, ref, set, remove, onValue };
   window.dispatchEvent(new Event("firebase-ready"));
 </script>
