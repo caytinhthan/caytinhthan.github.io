@@ -132,6 +132,28 @@ body{
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  max-height: 100vh;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.left-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.left-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
 .panel-header {
@@ -367,6 +389,13 @@ textarea:focus, input[type="text"]:focus {
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
+.btn.info {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: white;
+  border: 2px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -405,6 +434,19 @@ textarea:focus, input[type="text"]:focus {
   border-radius: 16px;
   border: 2px solid var(--border);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-content p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .info-icon {
@@ -1281,6 +1323,11 @@ textarea:focus, input[type="text"]:focus {
   
   .additional-info {
     gap: 12px;
+  }
+  
+  .info-card {
+    padding: 16px;
+    font-size: 0.9rem;
   }
   
   .info-card {

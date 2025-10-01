@@ -16,8 +16,10 @@
   const emptyState = document.querySelector("#emptyState") || null;
   const tip = $("#tip"), themeToggle = $("#themeToggle");
   const modal = $("#modal"), helpModal = $("#helpModal"), helpBtn = $("#helpBtn");
+  const projectInfoModal = $("#projectInfoModal"), projectInfoBtn = $("#projectInfoBtn");
   const modalText = $("#modalText"), modalAuthor = $("#modalAuthor");
   const closeModal = $("#closeModal"), closeHelpModal = $("#closeHelpModal");
+  const closeProjectInfoModal = $("#closeProjectInfoModal");
   const editLeafBtn = $("#editLeaf"), deleteLeafBtn = $("#deleteLeaf");
   const addModal = $("#addModal"), addModalTitle = $("#addModalTitle"), addMessage = $("#addMessage");
   const addAuthor = $("#addAuthor"), isAnonymous = $("#isAnonymous"), saveLeaf = $("#saveLeaf");
@@ -117,6 +119,13 @@
     if (e.target === helpModal) hideModal(helpModal); 
   });
 
+  // Modal thông tin dự án
+  if (projectInfoBtn) projectInfoBtn.addEventListener("click", ()=> showModal(projectInfoModal));
+  if (closeProjectInfoModal) closeProjectInfoModal.addEventListener("click", ()=> hideModal(projectInfoModal));
+  if (projectInfoModal) projectInfoModal.addEventListener("click", (e)=> { 
+    if (e.target === projectInfoModal) hideModal(projectInfoModal); 
+  });
+
   // Chế độ chỉ xem (view-only)
   function updateViewOnlyMode() {
     const isViewOnly = viewOnlyMode && viewOnlyMode.checked;
@@ -169,7 +178,6 @@
     }, 300);
   }
 
-
   function checkSecretCode(text) {
     if (text.toLowerCase().includes(SECRET_CODE.toLowerCase())) {
       enableAdminMode();
@@ -217,22 +225,12 @@
   // Hình dạng và màu sắc cho lá cây
   function pickPalette(idx){
     const arr = [
-      { fill:"#FFE5E5", stroke:"#FFB3B3", vein:"#FF8A80" }, // Pink pastel
-      { fill:"#E5F3FF", stroke:"#B3D9FF", vein:"#80C7FF" }, // Blue pastel  
-      { fill:"#E5FFE5", stroke:"#B3FFB3", vein:"#80FF80" }, // Green pastel
-      { fill:"#FFFBE5", stroke:"#FFF4B3", vein:"#FFEB80" }, // Yellow pastel
-      { fill:"#F0E5FF", stroke:"#D9B3FF", vein:"#C780FF" }, // Purple pastel
-      { fill:"#FFE5F0", stroke:"#FFB3D9", vein:"#FF80C7" }, // Rose pastel
-      { fill:"#E5FFF0", stroke:"#B3FFD9", vein:"#80FFC7" }, // Mint pastel
-      { fill:"#FFF0E5", stroke:"#FFD9B3", vein:"#FFC780" }, // Peach pastel
-      { fill:"#FFE5CC", stroke:"#FFCC99", vein:"#FF9966" }, // Orange coral
-      { fill:"#F0F8E5", stroke:"#D4E8B3", vein:"#B8D480" }, // Light lime
-      { fill:"#E5F8FF", stroke:"#B3E8FF", vein:"#80D4FF" }, // Sky blue
-      { fill:"#FFE5F8", stroke:"#FFB3E8", vein:"#FF80D4" }, // Magenta pink
-      { fill:"#F8E5FF", stroke:"#E8B3FF", vein:"#D480FF" }, // Lavender
-      { fill:"#E5FFE8", stroke:"#B3FFB8", vein:"#80FF90" }, // Spring green
-      { fill:"#FFF8E5", stroke:"#FFE8B3", vein:"#FFD480" }, // Cream yellow
-      { fill:"#E8E5FF", stroke:"#C7B3FF", vein:"#A680FF" }  // Periwinkle
+      { fill:"#E8F5E8", stroke:"#A8D8A8", vein:"#7BC97B" }, // Tiền bạc → Xanh pastel
+      { fill:"#FFE5F0", stroke:"#FFB3D9", vein:"#FF80C7" }, // Tình yêu → Hồng pastel  
+      { fill:"#FFFBE5", stroke:"#FFF4B3", vein:"#FFEB80" }, // Học tập → Vàng pastel
+      { fill:"#E5F3FF", stroke:"#B3D9FF", vein:"#80C7FF" }, // Công việc → Xanh dương pastel
+      { fill:"#F0E5FF", stroke:"#D9B3FF", vein:"#C780FF" }, // Mối quan hệ → Tím pastel
+      { fill:"#F0FFF0", stroke:"#C8E6C8", vein:"#9ACD9A" }  // Khác → Xanh lá pastel nhạt
     ];
     const i = Number.isFinite(idx) ? clamp(idx,0,arr.length-1) : Math.floor(Math.random()*arr.length);
     return { palette: arr[i], idx: i };

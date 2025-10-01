@@ -63,13 +63,26 @@
           <div class="info-icon">💌</div>
           <div class="info-content">
             <h3>Gửi thông điệp yêu thương</h3>
-            <p>Mỗi chiếc lá mang một thông điệp đặc biệt. Hãy chia sẻ những lời yêu thương, động viên và hy vọng!</p>
+            <p>Trước khi viết lên cây tinh thần, chúng mình mong bạn luôn nhớ rằng: đây là cây của những lời động viên, yêu thương và niềm tin. Mỗi lời bạn để lại sẽ trở thành ánh sáng nhỏ sưởi ấm trái tim một ai đó. Hãy chọn màu sắc riêng cho chiếc lá ứng với vấn đề bạn muốn gửi lời động viên nhé:</p>
+            <div style="margin-top: 12px; font-size: 0.9rem; line-height: 1.4;">
+              💸 Tài chính → Xanh lá<br>
+              💕 Tình yêu → Hồng<br>
+              📚 Học tập → Vàng<br>
+              💼 Công việc → Xanh dương<br>
+              🤝 Mối quan hệ → Tím<br>
+              🌈 Khác → Xanh pastel
+            </div>
           </div>
         </div>
         
         <button class="btn secondary" id="helpBtn" style="width: 100%; margin-top: 16px;">
           <span class="btn-icon">📖</span>
           <span class="btn-text">Hướng dẫn sử dụng</span>
+        </button>
+        
+        <button class="btn info" id="projectInfoBtn" style="width: 100%; margin-top: 12px;">
+          <span class="btn-icon">🌿</span>
+          <span class="btn-text">Thông tin dự án</span>
         </button>
       </div>
     </section>
@@ -142,24 +155,14 @@
         </div>
 
         <div class="picker-row">
-          <label style="font-weight:600">Bảng màu</label>
+          <label style="font-weight:600">Chủ đề thông điệp</label>
           <select id="leafPalette">
-            <option value="0">🌸 Hồng pastel</option>
-            <option value="1">💙 Xanh dương pastel</option>
-            <option value="2">💚 Xanh lá pastel</option>
-            <option value="3">💛 Vàng nhạt</option>
-            <option value="4">💜 Tím nhạt</option>
-            <option value="5">🌹 Hồng rose</option>
-            <option value="6">🌿 Mint</option>
-            <option value="7">🍑 Peach</option>
-            <option value="8">🧡 Cam san hô</option>
-            <option value="9">🌱 Xanh chanh</option>
-            <option value="10">☁️ Xanh sky</option>
-            <option value="11">🌺 Hồng magenta</option>
-            <option value="12">🔮 Tím lavender</option>
-            <option value="13">🌳 Xanh spring</option>
-            <option value="14">🌼 Vàng cream</option>
-            <option value="15">🦋 Tím periwinkle</option>
+            <option value="0">💰 Tiền bạc → Xanh pastel</option>
+            <option value="1">💕 Tình yêu → Hồng pastel</option>
+            <option value="2">📚 Học tập → Vàng pastel</option>
+            <option value="3">💼 Công việc → Xanh dương pastel</option>
+            <option value="4">👥 Mối quan hệ → Tím pastel</option>
+            <option value="5">🌟 Khác → Xanh lá pastel nhạt</option>
           </select>
         </div>
 
@@ -216,6 +219,22 @@
     </div>
   </div>
 
+  <!-- Project Info Modal -->
+  <div class="modal" id="projectInfoModal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <button class="x" id="closeProjectInfoModal" aria-label="Đóng thông tin dự án">✕</button>
+      <h3>🌿 Cây tinh thần</h3>
+      <div class="help-content">
+        <p style="line-height: 1.6; margin-bottom: 16px;">
+          Trong guồng quay tất bật của cuộc sống, đôi khi chúng ta quên rằng hạnh phúc có thể đến từ những điều giản dị nhất. Dự án Peace by Piece ra đời để gửi gắm những lời yêu thương, động viên và hy vọng – như từng chiếc lá nhỏ mang trong mình thông điệp bình yên.
+        </p>
+        <p style="line-height: 1.6;">
+          Hãy để mỗi nụ cười, mỗi lời chia sẻ trở thành một mảnh ghép góp phần tạo nên bức tranh hạnh phúc trọn vẹn. 💌
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- View Modal -->
   <div class="modal" id="modal" role="dialog" aria-modal="true">
     <div class="sheet">
@@ -234,30 +253,7 @@
     </div>
   </div>
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-  import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBfr8tUEMT0jZpBe6Pl5NIOZlni2MWrYsM",
-    authDomain: "caytinhthan.firebaseapp.com",
-    databaseURL: "https://caytinhthan-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "caytinhthan",
-    storageBucket: "caytinhthan.firebasestorage.app",
-    messagingSenderId: "381361662805",
-    appId: "1:381361662805:web:07d1fe119151cb95f75ddc",
-    measurementId: "G-BHMHT2QGXN"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  
-  // ÉP dùng đúng instance (asia-southeast1). KHÔNG để mặc định keke
-  const db = getDatabase(app, firebaseConfig.databaseURL);
-
-  // Quăng mịa ra global + phát tín hiệu "sẵn sàng"
-  window._firebase = { db, ref, set, remove, onValue };
-  window.dispatchEvent(new Event("firebase-ready"));
-</script>
-<script src="script.js"></script>
+  <script type="module" src="./firebase-init.mjs"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
