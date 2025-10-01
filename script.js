@@ -9,7 +9,9 @@
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
     return el;
   };
-  const addBtn = $("#add"), stage = $("#stage"), svg = $("#treeSvg");
+
+  // DOM Elements
+  const add = $("#add"), stage = $("#stage"), svg = $("#treeSvg");
   const leaves = $("#leaves"), branches = $$("#branches path"), counter = $("#counter");
   const list = document.querySelector("#list") || null;
   const clearAll = document.querySelector("#clearAll") || null;
@@ -333,7 +335,12 @@
     return pt.matrixTransform(m);
   }
   function randomPositionInTree(){
-    if (!branches.length) return { x: 276 + rand(-60,60), y: 330 + rand(-120,40), rotation: rand(-15,15) };
+    const branchElements = document.querySelectorAll("#branches path");
+    if (!branchElements.length) {
+      console.warn("No branches found, using fallback position");
+      return { x: 276 + rand(-60,60), y: 330 + rand(-120,40), rotation: rand(-15,15) };
+    }
+    const branches = [...branchElements];
     const options = branches.map((path, i)=>({
       path, range: i<2 ? [0.2,0.8] : i<6 ? [0.15,0.85] : [0.3,0.7]
     }));
@@ -400,8 +407,14 @@
 
   // Render lá cây lên cây
   function addLeafFromData(data, animate=false){
-    const position = data.position || randomPositionInTree();
-    const rotation = Number.isFinite(data.rotation) ? data.rotation : position.rotation;
+    // Validate và fix corrupted data
+    if (!data.position || typeof data.position !== 'object' || data.position.x === undefined) {
+      console.warn("Invalid position data, generating new position", data);
+      data.position = randomPositionInTree();
+    }
+    
+    const position = data.position;
+    const rotation = Number.isFinite(data.rotation) ? data.rotation : (position.rotation || 0);
     const scale    = Number.isFinite(data.scale)    ? data.scale    : rand(0.9,1.2);
 
     const { palette, idx: paletteIdx } = pickPalette(data.paletteIdx);
@@ -699,7 +712,7 @@
   });
 
   // Add button = mở modal, auto chọn vị trí random
-  addBtn?.addEventListener("click", ()=>{
+  add?.addEventListener("click", ()=>{
     // Không cho add nếu đang ở view only mode
     if (viewOnlyMode && viewOnlyMode.checked) return;
     
@@ -729,17 +742,26 @@
   });
 
   // Khởi tạo ứng dụng
+  console.log("=== App initialization starting ===");
+  
   // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
   function attachRealtime(){
     if (!hasFB()) return;
+    console.log("Attaching Firebase realtime listener");
     fb().onValue(leavesRef(), (snap)=>{
       const data = snap.val();
+      console.log("Firebase data received:", data);
       leaves.innerHTML = "";
       if (list) list.innerHTML = "";
       if (data){
-        Object.values(data)
+        const leafData = Object.values(data);
+        console.log("Processing", leafData.length, "leaves");
+        leafData
           .sort((a,b)=> (a.ts||0) - (b.ts||0))
-          .forEach(d => addLeafFromData(d, false));
+          .forEach(d => {
+            console.log("Adding leaf:", d);
+            addLeafFromData(d, false);
+          });
       }
       updateCounter(); updateEmptyState();
       try { localStorage.setItem(storeKey, JSON.stringify(Object.values(data||{}))); } catch {}
@@ -752,17 +774,24 @@
   // Không set mode mặc định nữa - chỉ khi user bật
   
   if (hasFB()) {
+    console.log("Firebase available, attaching realtime");
     attachRealtime();
   } else {
+    console.log("Firebase not available, loading from localStorage");
     const existing = loadFromStorage();
+    console.log("Loaded from storage:", existing);
     let migrated = false;
     existing.forEach(d=>{
       if (!d.position){ d.position = randomPositionInTree(); migrated = true; }
+      console.log("Adding leaf from storage:", d);
       addLeafFromData(d, false);
     });
     if (migrated) try { localStorage.setItem(storeKey, JSON.stringify(existing)); } catch {}
     updateCounter(); updateEmptyState();
   }
   
-  window.addEventListener("firebase-ready", attachRealtime, { once:true });
+  window.addEventListener("firebase-ready", ()=>{
+    console.log("Firebase ready event received");
+    attachRealtime();
+  }, { once:true });
 })();
