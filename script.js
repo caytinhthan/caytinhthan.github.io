@@ -32,6 +32,58 @@
   const dragMode = $("#dragMode");
   const viewOnlyMode = $("#viewOnlyMode"), actionButtons = $("#actionButtons");
 
+  // ===== 3-mode controller (giữ 2 nút có sẵn) =====
+  const btnPlace = document.querySelector("#toggleMode");   // 🎯 Đặt lá
+  const btnDrag  = document.querySelector("#dragMode");     // 🤏 Kéo thả
+
+  const Mode = Object.freeze({ VIEW:"view", PLACE:"place", DRAG:"drag" });
+  let mode = Mode.VIEW;
+
+  // hard limits để lá to không phá UX
+  const MIN_SCALE = 0.7, MAX_SCALE = 1.8;
+  const clampScale = v => clamp(Number(v)||1, MIN_SCALE, MAX_SCALE);
+  const clampRot   = v => clamp(Number(v)||0, -45, 45);
+
+  // cập nhật UI + flags cho toàn app
+  function setMode(next){
+    if (!next || mode === next) { 
+      // bấm lại nút đang bật thì về VIEW cho dễ hiểu
+      if (mode !== Mode.VIEW) next = Mode.VIEW; else return;
+    }
+    mode = next;
+
+    document.documentElement.dataset.mode = mode;
+    stage?.classList.toggle("click-mode", mode === Mode.PLACE);
+    stage?.classList.toggle("drag-mode",  mode === Mode.DRAG);
+
+    // style nút active như radio-group + cập nhật text
+    [btnPlace, btnDrag].forEach(b=>{
+      if (!b) return;
+      const isActive = (b===btnPlace && mode===Mode.PLACE) ||
+                      (b===btnDrag  && mode===Mode.DRAG);
+      
+      b.classList.toggle("active", isActive);
+      b.setAttribute("aria-pressed", isActive);
+      
+      // Cập nhật text và icon cho từng nút
+      const icon = b.querySelector(".btn-icon");
+      const text = b.querySelector(".btn-text");
+      
+      if (b === btnPlace) {
+        if (icon) icon.textContent = mode === Mode.PLACE ? "🎯" : "🖱️";
+        if (text) text.textContent = mode === Mode.PLACE ? "🔥 Đang đặt lá" : "Click để đặt";
+      }
+      else if (b === btnDrag) {
+        if (icon) icon.textContent = mode === Mode.DRAG ? "🤏" : "✋";
+        if (text) text.textContent = mode === Mode.DRAG ? "🔥 Đang kéo thả" : "Kéo thả";
+      }
+    });
+  }
+
+  // gắn handler cho 2 nút, click lại để về VIEW
+  btnPlace?.addEventListener("click", ()=> setMode(mode === Mode.PLACE ? Mode.VIEW : Mode.PLACE));
+  btnDrag ?.addEventListener("click", ()=> setMode(mode === Mode.DRAG ? Mode.VIEW : Mode.DRAG));
+
   const storeKey = "leaf-messages-v3";
   const SECRET_CODE = "caytinhthan2025";
   let currentEditingId = null, pendingPosition = null, dragging = null;
@@ -136,25 +188,8 @@
     }
     
     if (isViewOnly) {
-      // Tắt tất cả chức năng khi bật view only
-      clickToPlaceMode = false;
-      dragModeEnabled = false;
-      
-      // Update UI cho click mode
-      if (toggleMode) {
-        const icon = toggleMode.querySelector(".btn-icon");
-        const text = toggleMode.querySelector(".btn-text");
-        if (icon) icon.textContent = "🖱️";
-        if (text) text.textContent = "Click để đặt";
-      }
-      
-      // Update UI cho drag mode
-      if (dragMode) {
-        const icon = dragMode.querySelector(".btn-icon");
-        const text = dragMode.querySelector(".btn-text");
-        if (icon) icon.textContent = "✋";
-        if (text) text.textContent = "Kéo thả";
-      }
+      // Tắt tất cả chức năng khi bật view only - chuyển về VIEW mode
+      setMode(Mode.VIEW);
       
       // Remove tất cả CSS classes
       stage?.classList.remove("click-mode", "drag-mode");
@@ -367,13 +402,13 @@
     if (!leafPreview) return;
     const { d } = pickLeafShape(leafShapeSel?.value);
     const { palette } = pickPalette(Number(leafPaletteSel?.value));
-    const s = Number(leafScaleInp?.value || 1);
-    const rot = Number(leafRotationInp?.value || 0);
+    const s = clampScale(leafScaleInp?.value || 1);
+    const rot = clampRot(leafRotationInp?.value || 0);
     leafPreview.innerHTML = `
       <svg viewBox="-40 -40 80 80" xmlns="http://www.w3.org/2000/svg">
         <g transform="rotate(${rot}) scale(${s})">
-          <path d="${d}" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="1.6"></path>
-          <path d="${getVeinForShape(d)}" fill="none" stroke="${palette.vein}" stroke-width="1"></path>
+          <path d="${d}" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="1.6" vector-effect="non-scaling-stroke"></path>
+          <path d="${getVeinForShape(d)}" fill="none" stroke="${palette.vein}" stroke-width="1" vector-effect="non-scaling-stroke"></path>
         </g>
       </svg>`;
   }
@@ -425,28 +460,41 @@
     g.dataset.msg       = data.text || "";
     g.dataset.author    = data.author || "";
     g.dataset.position  = JSON.stringify(position);
-    g.dataset.rotation  = String(rotation);
-    g.dataset.scale     = String(scale);
+    g.dataset.rotation  = String(clampRot(rotation));
+    g.dataset.scale     = String(clampScale(scale));
     g.dataset.shapeKey  = shapeKey;
     g.dataset.paletteIdx= String(paletteIdx);
     g.dataset.ts        = String(data.ts || Date.now());
 
-    // Transform SVG CHUẨN
-    const baseTransform = `translate(${position.x} ${position.y}) rotate(${rotation}) scale(${scale})`;
+    // Transform SVG CHUẨN với clamp
+    const sc = clampScale(scale);
+    const rot = clampRot(rotation);
+    const baseTransform = `translate(${position.x} ${position.y}) rotate(${rot}) scale(${sc})`;
     g.setAttribute("transform", baseTransform);
 
-    const body = mk("path", { d: leafShape, fill: palette.fill, stroke: palette.stroke, "stroke-width":"1.6" });
-    const vein = mk("path", { d: getVeinForShape(leafShape), fill:"none", stroke: palette.vein, "stroke-width":"1" });
+    const body = mk("path", { 
+      d: leafShape, fill: palette.fill, stroke: palette.stroke, 
+      "stroke-width":"1.6", "vector-effect":"non-scaling-stroke"
+    });
+    const vein = mk("path", { 
+      d: getVeinForShape(leafShape), fill:"none", stroke: palette.vein, 
+      "stroke-width":"1", "vector-effect":"non-scaling-stroke"
+    });
     g.append(body, vein);
     leaves.appendChild(g);
 
-    // Tooltip
+    // Tooltip - chỉ ở VIEW mode
     let tipTimeout;
-    g.addEventListener("mouseenter", ()=> { clearTimeout(tipTimeout); tipTimeout = setTimeout(()=> showTipForLeaf(g), 150); });
+    g.addEventListener("mouseenter", ()=> { 
+      if (mode !== Mode.VIEW) return;
+      clearTimeout(tipTimeout); 
+      tipTimeout = setTimeout(()=> showTipForLeaf(g), 150); 
+    });
     g.addEventListener("mouseleave", ()=> { clearTimeout(tipTimeout); hideTip(); });
 
-    // Click view
+    // Click view - chỉ ở VIEW mode
     g.addEventListener("click", ()=>{
+      if (mode !== Mode.VIEW) return;
       modalText.textContent   = g.dataset.msg || "";
       modalAuthor.textContent = g.dataset.author ? `💝 Từ: ${g.dataset.author}` : "👤 Ẩn danh";
       editLeafBtn.onclick = ()=>{
@@ -460,13 +508,13 @@
         }
       };
       showModal(modal);
+      requestAnimationFrame(()=> editLeafBtn?.focus());
     });
 
-    // Drag & drop (tắt khi ở click mode)
+    // Drag & drop (chỉ ở DRAG mode)
     g.classList.add("grab");
     g.addEventListener("pointerdown", (e)=>{
-      if (!dragModeEnabled) return;  // Chỉ kéo được khi drag mode bật
-      if (clickToPlaceMode) return;  // Không kéo khi đang ở click mode
+      if (mode !== Mode.DRAG) return;
       dragging = g;
       g.setPointerCapture(e.pointerId);
       g.classList.add("grabbing");
@@ -546,58 +594,15 @@
   svg?.addEventListener("pointercancel", endDrag);
   svg?.addEventListener("pointerleave", endDrag);
 
-  // Chế độ click để đặt lá
+  // Chế độ click để đặt lá - chỉ ở PLACE mode
   svg?.addEventListener("click", (e)=>{
-    if (!clickToPlaceMode) return;
+    if (mode !== Mode.PLACE) return;
     if (viewOnlyMode && viewOnlyMode.checked) return;
     if (e.target.closest && e.target.closest(".leaf")) return;
     const p = svgPoint(e);
     pendingPosition = { x:p.x, y:p.y, rotation:0 };
     openAddModal("", "", false, null);
   });
-
-  // Kết nối các chế độ toggle và drag
-  if (toggleMode) {
-    toggleMode.addEventListener("click", ()=>{
-      // Không cho toggle nếu đang ở view only mode
-      if (viewOnlyMode && viewOnlyMode.checked) return;
-      
-      clickToPlaceMode = !clickToPlaceMode;
-      const icon = toggleMode.querySelector(".btn-icon");
-      const text = toggleMode.querySelector(".btn-text");
-      
-      if (clickToPlaceMode) {
-        stage?.classList.add("click-mode");
-        icon && (icon.textContent = "🎯");
-        text && (text.textContent = "Đang click để đặt");
-      } else {
-        stage?.classList.remove("click-mode");
-        icon && (icon.textContent = "🖱️");
-        text && (text.textContent = "Click để đặt");
-      }
-    });
-  }
-
-  if (dragMode) {
-    dragMode.addEventListener("click", ()=>{
-      // Không cho toggle nếu đang ở view only mode
-      if (viewOnlyMode && viewOnlyMode.checked) return;
-      
-      dragModeEnabled = !dragModeEnabled;
-      const icon = dragMode.querySelector(".btn-icon");
-      const text = dragMode.querySelector(".btn-text");
-      
-      if (dragModeEnabled) {
-        stage?.classList.add("drag-mode");
-        icon && (icon.textContent = "🤏");
-        text && (text.textContent = "Đang kéo thả");
-      } else {
-        stage?.classList.remove("drag-mode");
-        icon && (icon.textContent = "✋");
-        text && (text.textContent = "Kéo thả");
-      }
-    });
-  }
 
   // Kết nối form với sự kiện
   isAnonymous?.addEventListener("change", ()=>{
@@ -631,8 +636,8 @@
 
     const shapeKey   = leafShapeSel ? leafShapeSel.value : undefined;
     const paletteIdx = leafPaletteSel ? Number(leafPaletteSel.value) : undefined;
-    const scale      = leafScaleInp ? Number(leafScaleInp.value) : undefined;
-    const rotation   = leafRotationInp ? Number(leafRotationInp.value) : undefined;
+    const scale      = leafScaleInp ? clampScale(leafScaleInp.value) : undefined;
+    const rotation   = leafRotationInp ? clampRot(leafRotationInp.value) : undefined;
 
     if (currentEditingId){
       // Update existing
@@ -771,7 +776,8 @@
   initializeTheme();
   optimizeListScroll();
   
-  // Không set mode mặc định nữa - chỉ khi user bật
+  // khởi tạo mode
+  setMode(Mode.VIEW);
   
   if (hasFB()) {
     console.log("Firebase available, attaching realtime");

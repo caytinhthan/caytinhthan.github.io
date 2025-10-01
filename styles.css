@@ -1368,3 +1368,28 @@ textarea:focus, input[type="text"]:focus {
     min-height: 32px;
   }
 }
+
+/* ===== 3-mode controller styling ===== */
+/* nhóm toolbar 3 nút */
+.action-buttons .btn { 
+  transition: transform .12s ease, box-shadow .12s ease; 
+}
+
+.action-buttons .btn.active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.12), 0 0 0 2px var(--accent, #22c55e) inset;
+}
+
+/* con trỏ theo mode */
+[data-mode="place"] #stage { 
+  cursor: crosshair; 
+}
+
+[data-mode="drag"] .leaf { 
+  cursor: grab; 
+  touch-action: none; 
+}
+
+[data-mode="drag"] .leaf.grabbing { 
+  cursor: grabbing; 
+}
