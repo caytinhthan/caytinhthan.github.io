@@ -18,6 +18,8 @@ export const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize App Check (optional - for production security)
+// Temporarily disabled due to CSP issues
+/*
 if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
   try {
     initializeAppCheck(app, {
@@ -28,6 +30,7 @@ if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     console.warn('App Check initialization failed:', error);
   }
 }
+*/
 
 export const db = getDatabase(app);
 export const auth = getAuth(app);

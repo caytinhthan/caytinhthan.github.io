@@ -107,21 +107,63 @@ export async function loginWithGoogle() {
 
 // Sign out
 export async function logout() {
+  console.log('🚪 Logout function called, current user:', currentUser);
+  
   try {
-    // Update user offline status
-    if (currentUser) {
-      const userRef = ref(db, `users/${currentUser.uid}`);
-      await set(userRef, {
-        ...currentUser,
-        isOnline: false,
-        lastActive: Date.now()
-      });
+    // Update user offline status first (if possible)
+    if (currentUser && db) {
+      try {
+        console.log('💾 Updating user offline status...');
+        const userRef = ref(db, `users/${currentUser.uid}`);
+        await set(userRef, {
+          ...currentUser,
+          isOnline: false,
+          lastActive: Date.now()
+        });
+        console.log('✅ User offline status updated');
+      } catch (dbError) {
+        // Continue with logout even if database update fails
+        console.warn('⚠️ Could not update user offline status:', dbError.message);
+      }
     }
     
+    // Always attempt to sign out from Firebase Auth
+    console.log('🔐 Signing out from Firebase Auth...');
     await signOut(auth);
+    console.log('✅ Firebase signOut successful');
+    
+    // Clear local session data after successful signOut
+    currentUser = null;
+    console.log('🧹 Local session cleared');
+    
+    // Dispatch auth state change event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth-state-updated', {
+        detail: { user: null }
+      }));
+      console.log('📡 Auth state change event dispatched');
+    }
+    
   } catch (error) {
-    throw new Error('Đăng xuất thất bại');
+    console.error('❌ Firebase signOut failed:', error);
+    
+    // Even if Firebase signOut fails, clear local session
+    currentUser = null;
+    console.log('🧹 Local session cleared despite error');
+    
+    // Dispatch auth state change event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth-state-updated', {
+        detail: { user: null }
+      }));
+      console.log('📡 Auth state change event dispatched despite error');
+    }
+    
+    // Don't throw error, just log it and continue with logout
+    console.warn('⚠️ Firebase signOut failed, but local session cleared:', error.message);
   }
+  
+  console.log('🏁 Logout function completed');
 }
 
 // Check current auth state
