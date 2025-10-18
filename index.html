@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://www.gstatic.com wss://*.firebaseio.com; frame-src https://www.google.com;">
   <title>Cây Tình Thần - Chia sẻ cảm xúc</title>
-  <link rel="preload" as="image" href="tree.jpg">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <!-- CSS Files -->
   <link rel="stylesheet" href="assets/styles.css">
@@ -27,36 +27,36 @@
       </div>
       
       <div class="header-right" id="headerRight">
-        <div class="auth-section" id="authSection">
-          <button class="header-btn login-btn" onclick="window.location.href='login.html'">
-            Đăng nhập
-          </button>
-          <button class="header-btn register-btn" onclick="window.location.href='register.html'">
-            Đăng ký
-          </button>
-        </div>
-        
-        <div class="user-section" id="userSection" style="display: none;">
-          <div class="user-greeting">
-            <span>Xin chào, </span>
-            <span id="userDisplayName"></span>
+        <!-- Auth Container - Centralized auth state management -->
+        <div class="auth-container" id="authContainer">
+          <!-- When logged out -->
+          <div class="auth-section" id="authSection">
+            <button class="header-btn login-btn" onclick="window.location.href='login.html'">
+              Đăng nhập
+            </button>
+            <button class="header-btn register-btn" onclick="window.location.href='register.html'">
+              Đăng ký
+            </button>
           </div>
           
-          <div class="user-menu">
-            <button class="header-btn settings-btn" id="settingsBtn">
-              <span>⚙️</span>
-              <span>Cài đặt</span>
-            </button>
-            
-            <button class="header-btn logout-btn" id="logoutBtn">
-              <span>🚪</span>
-              <span>Đăng xuất</span>
-            </button>
-            
-            <button class="header-btn logout-btn" id="logoutBtn">
-              <span>🚪</span>
-              <span>Đăng xuất</span>
-            </button>
+          <!-- When logged in -->
+          <div class="user-section" id="userSection" style="display: none;">
+            <div class="user-info">
+              <div class="user-greeting">
+                <span>Xin chào, </span>
+                <strong id="userDisplayName"></strong>
+              </div>
+              <div class="user-actions">
+                <button class="header-btn settings-btn" id="settingsBtn">
+                  <span>⚙️</span>
+                  <span>Cài đặt</span>
+                </button>
+                <button class="header-btn logout-btn" id="logoutBtn">
+                  <span>🚪</span>
+                  <span>Đăng xuất</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         

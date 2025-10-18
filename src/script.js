@@ -27,6 +27,8 @@
 
   // DOM Elements
   const add = $("#add"), stage = $("#stage");
+  const svg = $("#treeSvg") || document.querySelector("svg");
+  const leaves = $("#leaves");
   const canvas = document.getElementById('leafCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
   const tree = document.getElementById('tree');

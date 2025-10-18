@@ -52,6 +52,13 @@
   position: relative;
 }
 
+/* Auth Container - Centralized authentication UI */
+.auth-container {
+  min-width: 200px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .auth-section {
   display: flex;
   gap: 12px;
@@ -63,9 +70,25 @@
   gap: 16px;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .user-greeting {
   font-size: 14px;
   color: #64748b;
+}
+
+.user-greeting strong {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .user-menu {

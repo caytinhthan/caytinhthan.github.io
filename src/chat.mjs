@@ -500,4 +500,3 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-console.log('💬 Chat module loaded');

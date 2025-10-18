@@ -54,4 +54,3 @@ window._firebase = {
 // Notify that Firebase is ready
 window.dispatchEvent(new Event("firebase-ready"));
 
-console.log('Firebase initialized');

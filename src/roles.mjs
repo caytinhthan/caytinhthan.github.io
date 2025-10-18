@@ -222,4 +222,3 @@ export function clearRoleCache() {
   roleCache.clear();
 }
 
-console.log('👑 Roles module loaded');

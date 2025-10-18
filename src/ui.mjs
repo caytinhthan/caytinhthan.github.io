@@ -511,4 +511,3 @@ export function initializeUI() {
   console.log('🎨 UI components initialized');
 }
 
-console.log('🎨 UI module loaded');

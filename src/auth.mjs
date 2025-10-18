@@ -215,4 +215,3 @@ export function showLoading(isLoading) {
   }
 }
 
-console.log('Auth module loaded');
