@@ -19,10 +19,7 @@ const ADMIN_PAGES = [
 
 // Initialize auth guard
 export function initAuthGuard() {
-  console.log('🔒 Auth Guard initializing...');
-  
   onAuthStateChanged(auth, async (user) => {
-    console.log('🔄 Auth state changed:', user ? `User: ${user.email}` : 'No user');
     currentUser = user;
     
     if (user) {
@@ -31,9 +28,8 @@ export function initAuthGuard() {
       onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
         userRole = userData?.role || 'user';
-        console.log('👤 User role loaded:', userRole);
         updateUIBasedOnAuth();
-        checkPageAccess(); // FIX: Added missing checkPageAccess for logged-in users
+        checkPageAccess();
       });
     } else {
       userRole = 'user';
@@ -62,33 +58,33 @@ function checkPageAccess() {
 
 // Update UI based on authentication state
 function updateUIBasedOnAuth() {
-  console.log('🎨 Updating UI for user:', currentUser ? currentUser.email : 'No user');
-  
   const authSection = document.getElementById('authSection');
   const userSection = document.getElementById('userSection');
   const userDisplayName = document.getElementById('userDisplayName');
   
-  if (currentUser && authSection && userSection) {
-    console.log('✅ User logged in - hiding auth buttons, showing user section');
-    // Hide login/register buttons, show user info
-    authSection.style.display = 'none';
-    userSection.style.display = 'flex';
-    
-    if (userDisplayName) {
-      const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
-      userDisplayName.textContent = displayName;
-      console.log('📝 Set display name to:', displayName);
+  // Check if we're on a page with header elements
+  const hasHeaderElements = authSection && userSection;
+  
+  if (hasHeaderElements) {
+    if (currentUser) {
+      // Hide login/register buttons, show user info
+      authSection.style.display = 'none';
+      userSection.style.display = 'flex';
+      
+      if (userDisplayName) {
+        const displayName = currentUser.displayName || currentUser.email?.split('@')[0] || 'User';
+        userDisplayName.textContent = displayName;
+      }
+      
+      // Add admin badge if admin
+      if (userRole === 'admin') {
+        addAdminBadge();
+      }
+    } else {
+      // Show login/register buttons, hide user info
+      authSection.style.display = 'flex';
+      userSection.style.display = 'none';
     }
-    
-    // Add admin badge if admin
-    if (userRole === 'admin') {
-      addAdminBadge();
-    }
-  } else if (authSection && userSection) {
-    console.log('❌ No user - showing auth buttons, hiding user section');
-    // Show login/register buttons, hide user info
-    authSection.style.display = 'flex';
-    userSection.style.display = 'none';
   }
   
   // Force UI refresh

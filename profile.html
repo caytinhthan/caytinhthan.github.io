@@ -13,6 +13,45 @@
       min-height: 100vh;
     }
     
+    .profile-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .back-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+    
     .profile-container {
       max-width: 800px;
       margin: 100px auto 0;
@@ -67,6 +106,32 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+    
+    .logout-section {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .logout-button {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    
+    .logout-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
     }
     
     .profile-email {
@@ -248,10 +313,21 @@
       </div>
       
       <div class="header-right">
-        <button class="header-btn" onclick="history.back()">
-          <span>←</span>
-          <span>Quay lại</span>
-        </button>
+        <div class="auth-section" id="authSection" style="display: none;">
+          <button class="header-btn login-btn" onclick="window.location.href='login.html'">Đăng nhập</button>
+          <button class="header-btn register-btn" onclick="window.location.href='register.html'">Đăng ký</button>
+        </div>
+        
+        <div class="user-section" id="userSection" style="display: flex;">
+          <div class="user-greeting">
+            <span>Xin chào, </span>
+            <span id="userDisplayName"></span>
+          </div>
+          <button class="header-btn" onclick="navigateToPage('index.html')">
+            <span>←</span>
+            <span>Quay lại</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -338,6 +414,16 @@
           </div>
         </div>
 
+        <!-- Logout Section -->
+        <div class="profile-section">
+          <div class="logout-section">
+            <button class="logout-button" id="profileLogoutBtn">
+              <span>🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Thông tin khác -->
         <div class="profile-section">
           <h3 class="section-title">
@@ -394,14 +480,49 @@
       document.body.classList.add('page-transition');
     });
     
-    import { getCurrentUser } from './src/auth.mjs';
+    import { getCurrentUser, logout } from './src/auth.mjs';
     import { initAuthGuard } from './src/auth-guard.mjs';
     import { db, ref, onValue } from './src/firebase-init.mjs';
+    
+    // Function to update profile statistics
+    function updateProfileStats(userData, userId) {
+      // Update last active
+      const createdDate = new Date(userData.createdAt).toLocaleDateString('vi-VN');
+      
+      // TODO: Load actual leaf statistics from database
+      // For now, show account info
+      const statsElements = document.querySelectorAll('.stat-number');
+      if (statsElements.length >= 4) {
+        statsElements[0].textContent = '0'; // Leaves created - TODO: calculate from leaves collection
+        statsElements[1].textContent = '0'; // Healthy leaves - TODO: calculate 
+        statsElements[2].textContent = '0'; // Messages sent - TODO: calculate from chat
+        statsElements[3].textContent = createdDate; // Join date
+      }
+      
+      // Update role display
+      const roleText = userData.role === 'admin' ? 'Quản trị viên' : 
+                      userData.role === 'counselor' ? 'Tư vấn viên' : 'Người dùng';
+      console.log('👤 Role:', roleText);
+    }
     
     // Initialize auth guard
     document.addEventListener('DOMContentLoaded', () => {
       console.log('🔄 Profile page initializing auth guard...');
       initAuthGuard();
+      
+      // Setup logout button
+      const logoutBtn = document.getElementById('profileLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            await logout();
+            window.location.href = 'index.html';
+          } catch (error) {
+            console.error('Logout error:', error);
+            alert('Lỗi đăng xuất: ' + error.message);
+          }
+        });
+      }
       
       // Listen for auth state updates
       window.addEventListener('auth-state-updated', () => {
@@ -428,13 +549,24 @@
           if (userData) {
             console.log('📊 User data loaded:', userData);
             
+            // Update profile info with real data
+            document.getElementById('profileName').textContent = userData.displayName || user.displayName || 'Người dùng';
+            document.getElementById('profileEmail').textContent = userData.email || user.email;
+            
             // Show role badge if admin
             const roleBadge = document.getElementById('roleBadge');
             if (userData.role === 'admin' && roleBadge) {
               roleBadge.textContent = 'ADMIN';
               roleBadge.style.display = 'inline-block';
               console.log('👑 Admin badge displayed');
+            } else if (userData.role === 'counselor' && roleBadge) {
+              roleBadge.textContent = 'COUNSELOR';
+              roleBadge.style.backgroundColor = '#10b981';
+              roleBadge.style.display = 'inline-block';
             }
+            
+            // Update profile stats
+            updateProfileStats(userData, user.uid);
           }
         });
       }

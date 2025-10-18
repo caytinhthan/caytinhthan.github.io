@@ -674,7 +674,6 @@
   });
 
   saveLeaf?.addEventListener("click", ()=>{
-    console.log("Save leaf clicked");
     let text = addMessage.value.trim();
     let author = isAnonymous.checked ? "" : addAuthor.value.trim();
     
@@ -756,7 +755,7 @@
 
     pendingPosition = null;
     currentEditingId = null;
-    console.log("Đóng modal sau khi save leaf");
+
     hideModal(addModal);              // ĐÓNG TRƯỚC
     syncLocalStorage();               // Lưu sau, có lỗi cũng không giữ modal
     // reset form
@@ -812,7 +811,7 @@
   });
 
   // Khởi tạo ứng dụng
-  console.log("=== App initialization starting ===");
+
   
   // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
   function attachRealtime(){

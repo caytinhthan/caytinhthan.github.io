@@ -52,6 +52,11 @@
               <span>🚪</span>
               <span>Đăng xuất</span>
             </button>
+            
+            <button class="header-btn logout-btn" id="logoutBtn">
+              <span>🚪</span>
+              <span>Đăng xuất</span>
+            </button>
           </div>
         </div>
         
@@ -328,7 +333,25 @@
   <script src="src/script.js" defer></script>
   <script type="module">
     import { initAuthGuard } from './src/auth-guard.mjs';
+    import { logout } from './src/auth.mjs';
+    
     initAuthGuard();
+    
+    // Setup logout button
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            await logout();
+            window.location.href = 'index.html';
+          } catch (error) {
+            console.error('Logout error:', error);
+            alert('Lỗi đăng xuất: ' + error.message);
+          }
+        });
+      }
+    });
   </script>
   <script>
     // Page transition function
