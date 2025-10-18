@@ -1,0 +1,139 @@
+{
+  "rules": {
+    // Users data - only authenticated users can read/write their own data
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "newData.hasChildren(['email', 'displayName', 'role', 'createdAt'])",
+        "email": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+        },
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "role": {
+          ".validate": "newData.val() === 'user' || newData.val() === 'admin' || newData.val() === 'counselor'"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "lastLogin": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+    
+    // Leaves data - authenticated users can read all, but only write with proper validation
+    "leaves": {
+      ".read": "auth !== null",
+      "$leafId": {
+        ".write": "auth !== null && (
+          // New leaf creation
+          (!data.exists() && 
+           newData.hasChildren(['id', 'text', 'author', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation']) &&
+           newData.child('authorId').val() === auth.uid
+          ) ||
+          // Update existing leaf (only by author or admin)
+          (data.exists() && 
+           (data.child('authorId').val() === auth.uid || 
+            root.child('users').child(auth.uid).child('role').val() === 'admin')
+          )
+        )",
+        ".validate": "newData.hasChildren(['id', 'text', 'author', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation'])",
+        "id": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "text": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
+        },
+        "author": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "authorId": {
+          ".validate": "newData.val() === auth.uid"
+        },
+        "ts": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "position": {
+          ".validate": "newData.hasChildren(['x', 'y']) && newData.child('x').isNumber() && newData.child('y').isNumber()"
+        },
+        "shapeKey": {
+          ".validate": "newData.isString()"
+        },
+        "paletteIdx": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10"
+        },
+        "scale": {
+          ".validate": "newData.isNumber() && newData.val() >= 0.1 && newData.val() <= 3"
+        },
+        "rotation": {
+          ".validate": "newData.isNumber() && newData.val() >= -360 && newData.val() <= 360"
+        }
+      }
+    },
+    
+    // Chat system - only authenticated users
+    "chats": {
+      ".read": "auth !== null",
+      "$chatId": {
+        ".write": "auth !== null && (
+          // New chat creation
+          (!data.exists() && newData.child('userId').val() === auth.uid) ||
+          // Update by participant or admin/counselor
+          (data.exists() && 
+           (data.child('userId').val() === auth.uid || 
+            data.child('counselorId').val() === auth.uid ||
+            root.child('users').child(auth.uid).child('role').val() === 'admin' ||
+            root.child('users').child(auth.uid).child('role').val() === 'counselor')
+          )
+        )",
+        "userId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "counselorId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "status": {
+          ".validate": "newData.val() === 'waiting' || newData.val() === 'active' || newData.val() === 'ended'"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "messages": {
+          "$messageId": {
+            ".validate": "newData.hasChildren(['senderId', 'content', 'timestamp']) && newData.child('senderId').val() === auth.uid",
+            "senderId": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "content": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1000"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber() && newData.val() <= now"
+            }
+          }
+        }
+      }
+    },
+    
+    // Statistics - read only for users, write for admin
+    "statistics": {
+      ".read": "auth !== null",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    
+    // System logs - admin only
+    "logs": {
+      ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    
+    // Deny all other paths
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

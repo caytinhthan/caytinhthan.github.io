@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trang cá nhân - Cây Tình Thần</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/header.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      min-height: 100vh;
+    }
+    
+    .profile-container {
+      max-width: 800px;
+      margin: 100px auto 0;
+      padding: 0 24px;
+    }
+    
+    .profile-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+    }
+    
+    .profile-header {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 32px;
+      text-align: center;
+    }
+    
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 16px;
+    }
+    
+    .profile-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .profile-email {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    
+    .profile-body {
+      padding: 32px;
+    }
+    
+    .profile-section {
+      margin-bottom: 32px;
+    }
+    
+    .profile-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .settings-grid {
+      display: grid;
+      gap: 16px;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .setting-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .setting-icon {
+      font-size: 18px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #10b981;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+    
+    [data-theme="dark"] .profile-card {
+      background: rgba(30, 41, 59, 0.95);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    [data-theme="dark"] .section-title {
+      color: #f1f5f9;
+    }
+    
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .setting-item {
+      background: #334155;
+      border-color: #475569;
+    }
+    
+    [data-theme="dark"] .setting-label {
+      color: #f1f5f9;
+    }
+    
+    [data-theme="dark"] .stat-label {
+      color: #94a3b8;
+    }
+    
+    @media (max-width: 768px) {
+      .profile-container {
+        margin-top: 80px;
+        padding: 0 16px;
+      }
+      
+      .profile-header,
+      .profile-body {
+        padding: 24px;
+      }
+      
+      .profile-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Navigation -->
+  <div class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="logo">
+          <span class="logo-icon">🌱</span>
+          <span class="logo-text">Cây Tình Thần</span>
+        </a>
+      </div>
+      
+      <div class="header-right">
+        <button class="header-btn" onclick="history.back()">
+          <span>←</span>
+          <span>Quay lại</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-container">
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <span id="avatarIcon">👤</span>
+        </div>
+        <div class="profile-name" id="profileName">Người dùng</div>
+        <div class="profile-email" id="profileEmail">user@example.com</div>
+      </div>
+      
+      <div class="profile-body">
+        <!-- Thống kê -->
+        <div class="profile-section">
+          <h3 class="section-title">
+            <span>📊</span>
+            Thống kê của bạn
+          </h3>
+          <div class="profile-stats">
+            <div class="stat-card">
+              <div class="stat-number" id="totalLeaves">0</div>
+              <div class="stat-label">Lá đã tạo</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="healthyLeaves">0</div>
+              <div class="stat-label">Lá khỏe mạnh</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="comfortMessages">0</div>
+              <div class="stat-label">Tin nhắn động viên</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="daysActive">0</div>
+              <div class="stat-label">Ngày hoạt động</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cài đặt -->
+        <div class="profile-section">
+          <h3 class="section-title">
+            <span>⚙️</span>
+            Cài đặt
+          </h3>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <div class="setting-label">
+                <span class="setting-icon">🌙</span>
+                <span>Chế độ tối</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="setting-item">
+              <div class="setting-label">
+                <span class="setting-icon">🔔</span>
+                <span>Thông báo</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notificationToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="setting-item">
+              <div class="setting-label">
+                <span class="setting-icon">🔒</span>
+                <span>Chế độ riêng tư</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="privacyToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thông tin khác -->
+        <div class="profile-section">
+          <h3 class="section-title">
+            <span>📋</span>
+            Thông tin
+          </h3>
+          <div class="settings-grid">
+            <div class="setting-item" onclick="window.open('terms.html', '_blank')" style="cursor: pointer;">
+              <div class="setting-label">
+                <span class="setting-icon">📜</span>
+                <span>Điều khoản sử dụng</span>
+              </div>
+              <span>→</span>
+            </div>
+            
+            <div class="setting-item" onclick="window.open('privacy.html', '_blank')" style="cursor: pointer;">
+              <div class="setting-label">
+                <span class="setting-icon">🛡️</span>
+                <span>Chính sách bảo mật</span>
+              </div>
+              <span>→</span>
+            </div>
+            
+            <div class="setting-item" onclick="window.open('help.html', '_blank')" style="cursor: pointer;">
+              <div class="setting-label">
+                <span class="setting-icon">📖</span>
+                <span>Hướng dẫn sử dụng</span>
+              </div>
+              <span>→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/firebase-init.mjs"></script>
+  <script type="module" src="src/auth.mjs"></script>
+  <script type="module" src="src/auth-guard.mjs"></script>
+  <script type="module">
+    // Page transition function
+    function navigateToPage(url) {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => {
+        window.location.href = url;
+      }, 250);
+    }
+    
+    // Make it global for onclick handlers
+    window.navigateToPage = navigateToPage;
+    
+    // Page transition on load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('page-transition');
+    });
+    
+    import { getCurrentUser } from './src/auth.mjs';
+    import { initAuthGuard } from './src/auth-guard.mjs';
+    
+    // Initialize auth guard
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuthGuard();
+    });
+    
+    // Initialize profile page
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await getCurrentUser();
+      
+      if (user) {
+        document.getElementById('profileName').textContent = user.displayName || 'Người dùng';
+        document.getElementById('profileEmail').textContent = user.email;
+        document.getElementById('avatarIcon').textContent = user.displayName ? user.displayName[0].toUpperCase() : '👤';
+      }
+      
+      // Dark mode toggle
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const currentTheme = localStorage.getItem('theme');
+      
+      if (currentTheme === 'dark') {
+        darkModeToggle.checked = true;
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      
+      darkModeToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+        }
+      });
+      
+      // Load other settings from localStorage
+      const notificationToggle = document.getElementById('notificationToggle');
+      const privacyToggle = document.getElementById('privacyToggle');
+      
+      notificationToggle.checked = localStorage.getItem('notifications') === 'true';
+      privacyToggle.checked = localStorage.getItem('privacy') === 'true';
+      
+      notificationToggle.addEventListener('change', (e) => {
+        localStorage.setItem('notifications', e.target.checked);
+      });
+      
+      privacyToggle.addEventListener('change', (e) => {
+        localStorage.setItem('privacy', e.target.checked);
+      });
+    });
+  </script>
+</body>
+</html>

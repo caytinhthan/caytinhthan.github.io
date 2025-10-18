@@ -4,6 +4,21 @@
   const clamp = (n,min,max)=> Math.max(min, Math.min(max, n));
   const rand  = (min,max)=> Math.random()*(max-min)+min;
   const uuid  = ()=> (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+  
+  // Import security functions
+  let sanitizeLeafMessage, sanitizeDisplayName, leafMessageLimiter;
+  try {
+    import('./security.mjs').then(security => {
+      sanitizeLeafMessage = security.sanitizeLeafMessage;
+      sanitizeDisplayName = security.sanitizeDisplayName;
+      leafMessageLimiter = security.leafMessageLimiter;
+    });
+  } catch (error) {
+    console.error('Failed to load security module:', error);
+    // Fallback sanitization
+    sanitizeLeafMessage = (text) => String(text).replace(/[<>]/g, '').substring(0, 500);
+    sanitizeDisplayName = (name) => String(name).replace(/[<>]/g, '').substring(0, 50);
+  }
   const mk = (tag, attrs={}) => {
     const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
@@ -11,8 +26,11 @@
   };
 
   // DOM Elements
-  const add = $("#add"), stage = $("#stage"), svg = $("#treeSvg");
-  const leaves = $("#leaves"), branches = $$("#branches path"), counter = $("#counter");
+  const add = $("#add"), stage = $("#stage");
+  const canvas = document.getElementById('leafCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  const tree = document.getElementById('tree');
+  const counter = $("#counter");
   const list = document.querySelector("#list") || null;
   const clearAll = document.querySelector("#clearAll") || null;
   const emptyState = document.querySelector("#emptyState") || null;
@@ -85,9 +103,8 @@
   btnDrag ?.addEventListener("click", ()=> setMode(mode === Mode.DRAG ? Mode.VIEW : Mode.DRAG));
 
   const storeKey = "leaf-messages-v3";
-  const SECRET_CODE = "caytinhthan2025";
   let currentEditingId = null, pendingPosition = null, dragging = null;
-  let dragOffset = { x:0, y:0 }, clickToPlaceMode = false, dragModeEnabled = false, isAdminMode = false;
+  let dragOffset = { x:0, y:0 }, clickToPlaceMode = false, dragModeEnabled = false;
 
   // Debounce và throttle để tối ưu hiệu suất
   const debounce = (fn, delay) => {
@@ -99,15 +116,59 @@
   };
 
   const throttle = (fn, delay) => {
-    let last = 0;
+    let lastCall = 0;
     return (...args) => {
       const now = Date.now();
-      if (now - last >= delay) {
-        last = now;
+      if (now - lastCall >= delay) {
+        lastCall = now;
         fn.apply(this, args);
       }
     };
   };
+
+  // Night tint for canvas
+  function nightTint() {
+    if (!canvas || !ctx) return;
+    if (!document.documentElement.classList.contains('theme-night')) return;
+    
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(30,45,120,0.22)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  // Setup canvas
+  function setupCanvas() {
+    if (!canvas || !tree) return;
+    
+    const updateCanvasSize = () => {
+      const rect = tree.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.pointerEvents = 'none';
+      redrawAllLeaves();
+    };
+    
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+  }
+
+  // Redraw all leaves on canvas
+  function redrawAllLeaves() {
+    if (!canvas || !ctx) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw all leaves here (implement based on your leaf rendering logic)
+    // This is where you'd call your leaf sprite rendering
+    
+    // Apply night tint after drawing all leaves
+    nightTint();
+  }
 
   // Virtual scrolling cho danh sách lớn
   let listScrollOptimized = false;
@@ -154,17 +215,9 @@
   function setTheme(theme){
     document.documentElement.setAttribute("data-theme", theme);
     try { localStorage.setItem("theme", theme); } catch {}
-    const icon = themeToggle?.querySelector(".theme-icon");
-    if (icon) icon.textContent = theme === "dark" ? "☀️" : "🌙";
+    // Icon update is handled in index.html
   }
-  function initializeTheme(){
-    const saved = (localStorage.getItem("theme") || "light");
-    setTheme(saved);
-  }
-  if (themeToggle) themeToggle.addEventListener("click", ()=>{
-    const cur = document.documentElement.getAttribute("data-theme") || "light";
-    setTheme(cur === "dark" ? "light" : "dark");
-  });
+  // Theme toggle handler is in index.html to avoid conflicts
 
   // Modal hướng dẫn sử dụng
   if (helpBtn) helpBtn.addEventListener("click", ()=> showModal(helpModal));
@@ -213,30 +266,6 @@
       m.style.display = "none";
       document.body.style.overflow = "";
     }, 300);
-  }
-
-  function checkSecretCode(text) {
-    if (text.toLowerCase().includes(SECRET_CODE.toLowerCase())) {
-      enableAdminMode();
-      return true;
-    } else if (isAdminMode && !text.toLowerCase().includes(SECRET_CODE.toLowerCase())) {
-      disableAdminMode();
-    }
-    return false;
-  }
-
-  function enableAdminMode() {
-    if (!isAdminMode) {
-      isAdminMode = true;
-      document.body.classList.add('admin-mode');
-    }
-  }
-
-  function disableAdminMode() {
-    if (isAdminMode) {
-      isAdminMode = false;
-      document.body.classList.remove('admin-mode');
-    }
   }
 
 
@@ -404,13 +433,35 @@
     const { palette } = pickPalette(Number(leafPaletteSel?.value));
     const s = clampScale(leafScaleInp?.value || 1);
     const rot = clampRot(leafRotationInp?.value || 0);
-    leafPreview.innerHTML = `
-      <svg viewBox="-40 -40 80 80" xmlns="http://www.w3.org/2000/svg">
-        <g transform="rotate(${rot}) scale(${s})">
-          <path d="${d}" fill="${palette.fill}" stroke="${palette.stroke}" stroke-width="1.6" vector-effect="non-scaling-stroke"></path>
-          <path d="${getVeinForShape(d)}" fill="none" stroke="${palette.vein}" stroke-width="1" vector-effect="non-scaling-stroke"></path>
-        </g>
-      </svg>`;
+    
+    // Use safe method to create SVG instead of innerHTML
+    leafPreview.textContent = ''; // Clear content safely
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '-40 -40 80 80');
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('transform', `rotate(${rot}) scale(${s})`);
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', palette.fill);
+    path.setAttribute('stroke', palette.stroke);
+    path.setAttribute('stroke-width', '1.6');
+    path.setAttribute('vector-effect', 'non-scaling-stroke');
+    
+    const veinPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    veinPath.setAttribute('d', getVeinForShape(d));
+    veinPath.setAttribute('fill', 'none');
+    veinPath.setAttribute('stroke', palette.vein);
+    veinPath.setAttribute('stroke-width', '1');
+    veinPath.setAttribute('vector-effect', 'non-scaling-stroke');
+    
+    g.appendChild(path);
+    g.appendChild(veinPath);
+    svg.appendChild(g);
+    leafPreview.appendChild(svg);
   }
   function openAddModal(message="", author="", isEdit=false, leafId=null){
     if (!addModal) return;
@@ -625,11 +676,25 @@
   saveLeaf?.addEventListener("click", ()=>{
     console.log("Save leaf clicked");
     let text = addMessage.value.trim();
-    const author = isAnonymous.checked ? "" : addAuthor.value.trim();
-
-    if (text.toLowerCase().includes(SECRET_CODE.toLowerCase())) {
-      const regex = new RegExp(SECRET_CODE, 'gi');
-      text = text.replace(regex, '').trim();
+    let author = isAnonymous.checked ? "" : addAuthor.value.trim();
+    
+    // Security: Sanitize inputs
+    if (sanitizeLeafMessage) {
+      text = sanitizeLeafMessage(text);
+    } else {
+      text = text.replace(/[<>]/g, '').substring(0, 500);
+    }
+    
+    if (sanitizeDisplayName) {
+      author = sanitizeDisplayName(author);
+    } else {
+      author = author.replace(/[<>]/g, '').substring(0, 50);
+    }
+    
+    // Rate limiting check
+    if (leafMessageLimiter && !leafMessageLimiter.isAllowed('user')) {
+      alert('Bạn đang thêm lá quá nhanh! Vui lòng chờ một chút.');
+      return;
     }
     
     if (!text){ addMessage && (addMessage.focus(), addMessage.select()); return; }
@@ -773,8 +838,9 @@
     }, console.error);
   }
 
-  initializeTheme();
+  // Theme initialization is handled in index.html
   optimizeListScroll();
+  setupCanvas(); // Setup canvas for leaf rendering
   
   // khởi tạo mode
   setMode(Mode.VIEW);
@@ -801,3 +867,6 @@
     attachRealtime();
   }, { once:true });
 })();
+
+// ===== STARS ANIMATION =====
+// Remove debug logs and simplify

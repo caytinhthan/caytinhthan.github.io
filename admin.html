@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản trị - Cây Tình Thần</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .admin-container {
+      min-height: 100vh;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .admin-header {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .admin-header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .admin-logo h1 {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .admin-nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    .admin-nav a {
+      text-decoration: none;
+      color: #64748b;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .admin-nav a:hover,
+    .admin-nav a.active {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .logout-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .logout-btn:hover {
+      background: #dc2626;
+    }
+    
+    .admin-content {
+      flex: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .stat-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      margin: 0;
+    }
+    
+    .stat-icon {
+      font-size: 20px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+    }
+    
+    .stat-change {
+      font-size: 14px;
+      color: #10b981;
+      margin-top: 8px;
+    }
+    
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    
+    .admin-section {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+    
+    .section-action {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .section-action:hover {
+      background: #2563eb;
+    }
+    
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .user-item-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    
+    .user-item-info {
+      flex: 1;
+    }
+    
+    .user-item-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 14px;
+      margin: 0 0 4px 0;
+    }
+    
+    .user-item-role {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+    
+    .user-item-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .user-action-btn {
+      background: #f1f5f9;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .user-action-btn:hover {
+      background: #e2e8f0;
+    }
+    
+    .chat-queue {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .chat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    
+    .chat-info {
+      flex: 1;
+    }
+    
+    .chat-user {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 14px;
+      margin: 0 0 4px 0;
+    }
+    
+    .chat-time {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+    
+    .chat-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .chat-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .chat-btn:hover {
+      background: #059669;
+    }
+    
+    .chat-btn.decline {
+      background: #ef4444;
+    }
+    
+    .chat-btn.decline:hover {
+      background: #dc2626;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    @media (max-width: 768px) {
+      .admin-header-content {
+        padding: 0 16px;
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+      
+      .admin-nav {
+        justify-content: center;
+      }
+      
+      .admin-content {
+        padding: 20px 16px;
+      }
+      
+      .admin-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-header-content">
+        <div class="admin-logo">
+          <span>🌿</span>
+          <h1>Quản trị Cây Tình Thần</h1>
+        </div>
+        
+        <nav class="admin-nav">
+          <a href="#dashboard" class="active">Dashboard</a>
+          <a href="#users">Người dùng</a>
+          <a href="#chat">Chat</a>
+          <a href="#settings">Cài đặt</a>
+        </nav>
+        
+        <div class="user-menu">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <span id="userName">Admin</span>
+          <button class="logout-btn" id="logoutBtn">Đăng xuất</button>
+        </div>
+      </div>
+    </header>
+    
+    <main class="admin-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Tổng số lá</h3>
+            <span class="stat-icon">🌿</span>
+          </div>
+          <p class="stat-value" id="totalLeaves">0</p>
+          <p class="stat-change">+12% so với tuần trước</p>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Người dùng hoạt động</h3>
+            <span class="stat-icon">👥</span>
+          </div>
+          <p class="stat-value" id="activeUsers">0</p>
+          <p class="stat-change">+5% so với tuần trước</p>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Lá cần an ủi</h3>
+            <span class="stat-icon">🍂</span>
+          </div>
+          <p class="stat-value" id="witheredLeaves">0</p>
+          <p class="stat-change">Cần được chú ý</p>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-header">
+            <h3 class="stat-title">Chat đang chờ</h3>
+            <span class="stat-icon">💬</span>
+          </div>
+          <p class="stat-value" id="pendingChats">0</p>
+          <p class="stat-change">Cần phản hồi</p>
+        </div>
+      </div>
+      
+      <div class="admin-grid">
+        <div class="admin-section">
+          <div class="section-header">
+            <h2 class="section-title">Người dùng mới nhất</h2>
+            <button class="section-action">Xem tất cả</button>
+          </div>
+          <div class="user-list" id="userList">
+            <div class="empty-state">
+              <span class="empty-state-icon">👥</span>
+              <p>Không có người dùng nào</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="admin-section">
+          <div class="section-header">
+            <h2 class="section-title">Hàng đợi tư vấn</h2>
+            <button class="section-action">Cài đặt</button>
+          </div>
+          <div class="chat-queue" id="chatQueue">
+            <div class="empty-state">
+              <span class="empty-state-icon">💬</span>
+              <p>Không có chat nào đang chờ</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="src/firebase-init.mjs"></script>
+  <script type="module" src="src/auth.mjs"></script>
+  <script type="module" src="src/admin.mjs"></script>
+  <script type="module" src="src/auth-guard.mjs"></script>
+  <script type="module">
+    import { checkAuth, logout } from './src/auth.mjs';
+    import { loadDashboard, loadUsers, loadChatQueue } from './src/admin.mjs';
+    import { initAuthGuard } from './src/auth-guard.mjs';
+    
+    // Initialize auth guard for admin page
+    document.addEventListener('DOMContentLoaded', () => {
+      initAuthGuard();
+    });
+    
+    // Check admin access
+    checkAuth().then(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      document.getElementById('userName').textContent = user.displayName || user.email;
+      document.getElementById('userAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
+      
+      // Load dashboard data
+      loadDashboard();
+    });
+    
+    // Logout handler
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await logout();
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    });
+    
+    // Navigation handlers
+    document.querySelectorAll('.admin-nav a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const section = e.target.getAttribute('href').substring(1);
+        
+        // Update active nav
+        document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        // Load section content
+        switch(section) {
+          case 'dashboard':
+            loadDashboard();
+            break;
+          case 'users':
+            loadUsers();
+            break;
+          case 'chat':
+            loadChatQueue();
+            break;
+          case 'settings':
+            // Load settings
+            break;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

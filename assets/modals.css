@@ -1,0 +1,280 @@
+/* modals.css - Modal dialog styles */
+
+/* ===== MODAL STYLES ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.9) translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1) translateY(0);
+}
+
+.modal-header {
+  padding: 24px 32px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.modal-body {
+  padding: 24px 32px;
+}
+
+.modal-footer {
+  padding: 16px 32px 24px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* Settings Modal Specific */
+.settings-group {
+  margin-bottom: 24px;
+}
+
+.settings-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.settings-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.theme-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.theme-option {
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.theme-option:hover {
+  border-color: #10b981;
+  transform: translateY(-2px);
+}
+
+.theme-option.active {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.theme-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.theme-name {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+/* Leaf Status Modal */
+.leaf-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.status-card {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.status-card.healthy {
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+
+.status-card.withered {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.status-number {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.status-card.healthy .status-number {
+  color: #22c55e;
+}
+
+.status-card.withered .status-number {
+  color: #ef4444;
+}
+
+.status-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Dark theme support for modals */
+[data-theme="dark"] .modal-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+[data-theme="dark"] .modal-header {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .modal-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .modal-close {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .modal-footer {
+  border-color: #334155;
+}
+
+[data-theme="dark"] .settings-label {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .settings-description {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .theme-option {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .theme-option:hover {
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .theme-option.active {
+  background: #065f46;
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .theme-name {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .status-card {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .status-card.healthy {
+  background: #064e3b;
+  border-color: #22c55e;
+}
+
+[data-theme="dark"] .status-card.withered {
+  background: #7f1d1d;
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] .status-label {
+  color: #f1f5f9;
+}
+
+/* Mobile responsive for modals */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  .theme-options {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .leaf-status-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,22 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cây Thông Điệp</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com wss://*.firebaseio.com; frame-ancestors 'none';">
+  <title>Cây Tình Thần - Chia sẻ cảm xúc</title>
   <link rel="preload" as="image" href="tree.jpg">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/main.css">
+  <link rel="stylesheet" href="assets/header.css">
+  <link rel="stylesheet" href="assets/tree.css">
+  <link rel="stylesheet" href="assets/chat.css">
+  <link rel="stylesheet" href="assets/modals.css">
 </head>
 <body>
-  <div class="layout">
+  <!-- Header Navigation -->
+  <div class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="logo">
+          <span class="logo-icon">🌱</span>
+          <span class="logo-text">Cây Tình Thần</span>
+        </a>
+      </div>
+      
+      <div class="header-right" id="headerRight">
+        <div class="auth-section" id="authSection">
+          <button class="header-btn login-btn" onclick="window.location.href='login.html'">
+            Đăng nhập
+          </button>
+          <button class="header-btn register-btn" onclick="window.location.href='register.html'">
+            Đăng ký
+          </button>
+        </div>
+        
+        <div class="user-section" id="userSection" style="display: none;">
+          <div class="user-greeting">
+            <span>Xin chào, </span>
+            <span id="userDisplayName"></span>
+          </div>
+          
+          <div class="user-menu">
+            <button class="header-btn settings-btn" id="settingsBtn">
+              <span>⚙️</span>
+              <span>Cài đặt</span>
+            </button>
+            
+            <button class="header-btn logout-btn" id="logoutBtn">
+              <span>🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </div>
+        </div>
+        
+        <button class="hamburger" id="hamburger">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        
+        <!-- Dropdown Menu -->
+        <div class="dropdown-menu" id="dropdownMenu">
+          <div class="dropdown-item" id="themeToggle">
+            <span class="dropdown-icon">🌙</span>
+            <span class="dropdown-text">Chế độ tối</span>
+          </div>
+          <div class="dropdown-item" onclick="navigateToPage('profile.html')">
+            <span class="dropdown-icon">👤</span>
+            <span class="dropdown-text">Trang cá nhân</span>
+          </div>
+          <div class="dropdown-item" id="helpModalBtn">
+            <span class="dropdown-icon">📖</span>
+            <span class="dropdown-text">Hướng dẫn sử dụng</span>
+          </div>
+          <div class="dropdown-item" id="termsModalBtn">
+            <span class="dropdown-icon">📜</span>
+            <span class="dropdown-text">Điều khoản</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="layout page-transition" id="main-content">
     <!-- Panel trái -->
     <section class="panel left-panel">
       <div class="panel-header">
         <h1>🌱 Cây Thông Điệp</h1>
-        <div class="header-buttons">
-          <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
-            <span class="theme-icon">🌙</span>
-          </button>
-        </div>
       </div>
       
       <p class="panel-description">Click vào cây để đặt lá tại vị trí bất kỳ, hoặc tự động thêm lá ngẫu nhiên!</p>
@@ -64,7 +134,7 @@
           <div class="info-content">
             <h3>Gửi thông điệp yêu thương</h3>
             <p>Trước khi viết lên cây tinh thần, chúng mình mong bạn luôn nhớ rằng: đây là cây của những lời động viên, yêu thương và niềm tin. Mỗi lời bạn để lại sẽ trở thành ánh sáng nhỏ sưởi ấm trái tim một ai đó. Hãy chọn màu sắc riêng cho chiếc lá ứng với vấn đề bạn muốn gửi lời động viên nhé:</p>
-            <div style="margin-top: 12px; font-size: 0.9rem; line-height: 1.4;">
+            <div class="help-description">
               💸 Tài chính → Xanh lá<br>
               💕 Tình yêu → Hồng<br>
               📚 Học tập → Vàng<br>
@@ -74,70 +144,53 @@
             </div>
           </div>
         </div>
-        
-        <button class="btn secondary" id="helpBtn" style="width: 100%; margin-top: 16px;">
-          <span class="btn-icon">📖</span>
-          <span class="btn-text">Hướng dẫn sử dụng</span>
-        </button>
-        
-        <button class="btn info" id="projectInfoBtn" style="width: 100%; margin-top: 12px;">
-          <span class="btn-icon">🌿</span>
-          <span class="btn-text">Thông tin dự án</span>
-        </button>
       </div>
     </section>
 
     <!-- Sân khấu phải -->
     <section class="stage panel" id="stage">
-      <svg id="treeSvg" viewBox="0 0 553 666" preserveAspectRatio="xMidYMid meet" aria-label="Cây thông điệp">
-        <image href="tree.jpg" x="0" y="0" width="553" height="666" alt="Cây thông" />
-        
-        <!-- Nhánh vô hình để bám lá -->
-        <g id="branches" stroke="#0f172a" stroke-width="3" fill="none" opacity="0">
-          <path d="M278 420 C240 402 200 377 168 358 140 342 118 332 98 326" />
-          <path d="M282 420 C320 398 356 376 392 358 424 342 450 328 468 320" />
-          <path d="M282 362 C244 342 210 320 178 304" />
-          <path d="M286 358 C324 340 358 324 392 308" />
-          <path d="M286 308 C246 290 214 270 184 254" />
-          <path d="M290 304 C328 288 360 272 394 256" />
-          <path d="M292 260 C326 244 356 226 388 212" />
-          <path d="M288 258 C252 240 220 226 190 212" />
-          <path d="M294 212 C330 198 360 182 386 168" />
-          <path d="M286 214 C254 200 224 186 198 174" />
-          <path d="M294 172 C320 162 346 148 366 136" />
-          <path d="M284 172 C256 162 230 150 208 140" />
-        </g>
-        
-        <g id="leaves"></g>
-      </svg>
+      <!-- Day/Night Scene -->
+      <div id="scene">
+        <div class="sky"></div>
+        <div class="sun"></div>
+        <div class="moon"></div>
+        <div class="clouds"></div>
+        <canvas id="stars"></canvas>
+        <div class="grass"></div>
+      </div>
+      
+      <div id="app">
+        <img id="tree" src="assets/tree/tree_transparent.png" alt="Cây Tình Thần">
+        <canvas id="leafCanvas"></canvas>
+      </div>
       <div class="ground"></div>
       <div class="tooltip" id="tip"></div>
     </section>
-  </div>
+  </main>
 
   <!-- Add/Edit Modal -->
   <div class="modal" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="sheet">
       <button class="x" id="closeAddModal" aria-label="Đóng modal">✕</button>
       <h3 id="addModalTitle">🌿 Thêm lá mới</h3>
-      <div style="margin:16px 0">
-        <label style="display:block;margin-bottom:8px;font-weight:600">Thông điệp:</label>
-        <textarea id="addMessage" placeholder="Nhập thông điệp..." style="width:100%;min-height:80px;resize:vertical;padding:12px;border-radius:8px;border:1px solid #e2e8f0"></textarea>
+      <div class="form-section">
+        <label>Thông điệp:</label>
+        <textarea id="addMessage" placeholder="Nhập thông điệp..."></textarea>
       </div>
-      <div style="margin:16px 0">
-        <label style="display:block;margin-bottom:8px;font-weight:600">Tên của bạn:</label>
-        <input type="text" id="addAuthor" placeholder="Nhập tên hoặc để trống (ẩn danh)" style="width:100%;padding:12px;border-radius:8px;border:1px solid #e2e8f0">
+      <div class="form-section">
+        <label>Tên của bạn:</label>
+        <input type="text" id="addAuthor" placeholder="Nhập tên hoặc để trống (ẩn danh)">
       </div>
-      <div style="margin:16px 0">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-          <input type="checkbox" id="isAnonymous" style="transform:scale(1.2)">
+      <div class="form-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="isAnonymous">
           <span>Gửi ẩn danh</span>
         </label>
       </div>
       
-      <div class="picker" id="leafPicker" style="margin:16px 0">
+      <div class="picker picker-section" id="leafPicker">
         <div class="picker-row">
-          <label style="font-weight:600">Hình dáng lá</label>
+          <label>Hình dáng lá</label>
           <select id="leafShape">
             <option value="oval">🍃 Oval</option>
             <option value="round">⭕ Tròn</option>
@@ -219,6 +272,22 @@
     </div>
   </div>
 
+  <!-- Terms Modal -->
+  <div class="modal" id="termsModal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <button class="x" id="closeTermsModal" aria-label="Đóng điều khoản">✕</button>
+      <h3>📜 Điều khoản</h3>
+      <div class="help-content">
+        <p style="line-height: 1.6; margin-bottom: 16px;">
+          Trong guồng quay tất bật của cuộc sống, đôi khi chúng ta quên rằng hạnh phúc có thể đến từ những điều giản dị nhất. Dự án Peace by Piece ra đời để gửi gắm những lời yêu thương, động viên và hy vọng – như từng chiếc lá nhỏ mang trong mình thông điệp bình yên.
+        </p>
+        <p style="line-height: 1.6;">
+          Hãy để mỗi nụ cười, mỗi lời chia sẻ trở thành một mảnh ghép góp phần tạo nên bức tranh hạnh phúc trọn vẹn. 💌
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- Project Info Modal -->
   <div class="modal" id="projectInfoModal" role="dialog" aria-modal="true">
     <div class="sheet">
@@ -253,7 +322,188 @@
     </div>
   </div>
 
-  <script type="module" src="./firebase-init.mjs"></script>
-  <script src="script.js" defer></script>
+  <script type="module" src="src/firebase-init.mjs"></script>
+  <script type="module" src="src/auth-guard.mjs"></script>
+  <script type="module" src="src/ui.mjs"></script>
+  <script src="src/script.js" defer></script>
+  <script type="module">
+    import { initAuthGuard } from './src/auth-guard.mjs';
+    initAuthGuard();
+  </script>
+  <script>
+    // Page transition function
+    function navigateToPage(url) {
+      document.body.classList.add('page-fade-out');
+      setTimeout(() => {
+        window.location.href = url;
+      }, 250);
+    }
+
+    // Single DOMContentLoaded handler
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Add page transition on load
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        mainContent.classList.add('page-transition');
+      }
+      
+      const dropdownMenu = document.getElementById('dropdownMenu');
+      
+      // Set up dropdown first so elements are accessible
+      dropdownMenu.style.display = 'block';
+      dropdownMenu.style.visibility = 'hidden';
+      
+      const themeToggle = document.getElementById('themeToggle');
+      const helpModalBtn = document.getElementById('helpModalBtn');
+      const termsModalBtn = document.getElementById('termsModalBtn');
+      
+      // Toggle dropdown menu - hamburger button
+      const hamburger = document.getElementById('hamburger');
+      if (hamburger) {
+        hamburger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.remove('show');
+          } else {
+            dropdownMenu.style.visibility = 'visible';
+            dropdownMenu.classList.add('show');
+          }
+        });
+      }
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!dropdownMenu.contains(e.target) && 
+            !e.target.closest('.hamburger')) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+      
+      // Theme toggle functionality
+      if (themeToggle) {
+        const themeIcon = themeToggle.querySelector('.dropdown-icon');
+        const themeText = themeToggle.querySelector('.dropdown-text');
+
+        const updateThemeUI = () => {
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+          if (isDark) {
+            if (themeIcon) themeIcon.textContent = '☀️';
+            if (themeText) themeText.textContent = 'Chế độ sáng';
+          } else {
+            if (themeIcon) themeIcon.textContent = '🌙';
+            if (themeText) themeText.textContent = 'Chế độ tối';
+          }
+        };
+
+        // Set initial theme on page load
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('theme-night');
+          document.documentElement.classList.remove('theme-day');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.classList.add('theme-day');
+          document.documentElement.classList.remove('theme-night');
+        }
+        updateThemeUI();
+
+        themeToggle.addEventListener('click', () => {
+          const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+          if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            document.documentElement.classList.remove('theme-night');
+            document.documentElement.classList.add('theme-day');
+            localStorage.setItem('theme', 'light');
+          } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.remove('theme-day');
+            document.documentElement.classList.add('theme-night');
+            localStorage.setItem('theme', 'dark');
+          }
+          
+          window.dispatchEvent(new CustomEvent('theme-change', { 
+            detail: { theme: isDark ? 'light' : 'dark' } 
+          }));
+          
+          updateThemeUI();
+          dropdownMenu.classList.remove('show');
+        });
+      }
+      
+      // Help modal
+      if (helpModalBtn) {
+        helpModalBtn.addEventListener('click', () => {
+          dropdownMenu.classList.remove('show');
+          const helpModal = document.getElementById('helpModal');
+          if (helpModal) {
+            helpModal.style.display = 'flex';
+            helpModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+          }
+        });
+      }
+      
+      // Terms modal  
+      if (termsModalBtn) {
+        termsModalBtn.addEventListener('click', () => {
+          dropdownMenu.classList.remove('show');
+          const termsModal = document.getElementById('termsModal');
+          if (termsModal) {
+            termsModal.style.display = 'flex';
+            termsModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+          }
+        });
+      }
+
+      // Modal close handlers
+      const closeHelp = document.getElementById('closeHelpModal');
+      const closeTerms = document.getElementById('closeTermsModal');
+      const closeProject = document.getElementById('closeProjectInfoModal');
+      const helpModal = document.getElementById('helpModal');
+      const termsModal = document.getElementById('termsModal');
+      const projectModal = document.getElementById('projectInfoModal');
+
+      if (closeHelp && helpModal) {
+        closeHelp.addEventListener('click', () => {
+          helpModal.style.display = 'none';
+          helpModal.classList.remove('show');
+          document.body.style.overflow = 'auto';
+        });
+      }
+
+      if (closeTerms && termsModal) {
+        closeTerms.addEventListener('click', () => {
+          termsModal.style.display = 'none';
+          termsModal.classList.remove('show');
+          document.body.style.overflow = 'auto';
+        });
+      }
+
+      if (closeProject && projectModal) {
+        closeProject.addEventListener('click', () => {
+          projectModal.style.display = 'none';
+          projectModal.classList.remove('show');
+          document.body.style.overflow = 'auto';
+        });
+      }
+
+      // Close modals when clicking outside
+      [helpModal, termsModal, projectModal].forEach(modal => {
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.style.display = 'none';
+              modal.classList.remove('show');
+              document.body.style.overflow = 'auto';
+            }
+          });
+        }
+      });
+    });
+  </script>
+  
 </body>
 </html>

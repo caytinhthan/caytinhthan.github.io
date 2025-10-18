@@ -1,0 +1,76 @@
+/* ===== APP.CSS - Consolidated styles ===== */
+
+/* ===== BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #334155;
+  background: #f8fafc;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+/* ===== THEME VARIABLES ===== */
+:root {
+  --primary-color: #10b981;
+  --primary-dark: #059669;
+  --secondary-color: #3b82f6;
+  --accent-color: #8b5cf6;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --glass: rgba(255,255,255,.65);
+  --border: rgba(255,255,255,.15);
+  --ink: #1e293b;
+  --muted: #64748b;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --accent: #8b5cf6;
+  
+  /* Scene variables */
+  --sky-day-from: #a8e0ff;
+  --sky-day-to: #fdfbfb;
+  --sky-night-from: #0b1026;
+  --sky-night-to: #1b2354;
+  --sun: #ffd166;
+  --moon: #e5e7ff;
+  --grass-day: #2aa657;
+  --grass-night: #1e7540;
+  --t: 600ms ease;
+}
+
+[data-theme="dark"] {
+  --glass: rgba(15,23,42,.85);
+  --border: rgba(71,85,105,.35);
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent: #a855f7;
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+}
+
+html, body { height: 100%; }
+html { scroll-behavior: smooth; }
+
+/* This will be a consolidated file - more content to be added from other CSS files */
