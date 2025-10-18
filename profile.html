@@ -51,6 +51,22 @@
       font-size: 24px;
       font-weight: 700;
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+    
+    .role-badge {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
     }
     
     .profile-email {
@@ -246,7 +262,10 @@
         <div class="profile-avatar">
           <span id="avatarIcon">👤</span>
         </div>
-        <div class="profile-name" id="profileName">Người dùng</div>
+        <div class="profile-name">
+          <span id="profileName">Người dùng</span>
+          <span id="roleBadge" class="role-badge" style="display: none;"></span>
+        </div>
         <div class="profile-email" id="profileEmail">user@example.com</div>
       </div>
       
@@ -377,10 +396,17 @@
     
     import { getCurrentUser } from './src/auth.mjs';
     import { initAuthGuard } from './src/auth-guard.mjs';
+    import { db, ref, onValue } from './src/firebase-init.mjs';
     
     // Initialize auth guard
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('🔄 Profile page initializing auth guard...');
       initAuthGuard();
+      
+      // Listen for auth state updates
+      window.addEventListener('auth-state-updated', () => {
+        console.log('🔔 Auth state updated on profile page');
+      });
     });
     
     // Initialize profile page
@@ -388,9 +414,29 @@
       const user = await getCurrentUser();
       
       if (user) {
+        console.log('👤 Loading profile for user:', user.email);
+        
+        // Update basic info
         document.getElementById('profileName').textContent = user.displayName || 'Người dùng';
         document.getElementById('profileEmail').textContent = user.email;
         document.getElementById('avatarIcon').textContent = user.displayName ? user.displayName[0].toUpperCase() : '👤';
+        
+        // Load user role from database
+        const userRef = ref(db, `users/${user.uid}`);
+        onValue(userRef, (snapshot) => {
+          const userData = snapshot.val();
+          if (userData) {
+            console.log('📊 User data loaded:', userData);
+            
+            // Show role badge if admin
+            const roleBadge = document.getElementById('roleBadge');
+            if (userData.role === 'admin' && roleBadge) {
+              roleBadge.textContent = 'ADMIN';
+              roleBadge.style.display = 'inline-block';
+              console.log('👑 Admin badge displayed');
+            }
+          }
+        });
       }
       
       // Dark mode toggle

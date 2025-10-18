@@ -96,7 +96,9 @@ export async function loginWithGoogle() {
     } else if (error.code === 'auth/popup-blocked') {
       throw new Error('Popup bị chặn. Vui lòng cho phép popup và thử lại');
     } else if (error.code === 'auth/unauthorized-domain') {
-      throw new Error('Domain chưa được cấu hình. Vui lòng đăng nhập bằng email/password hoặc thử trên domain đã deploy');
+      throw new Error('Lỗi cấu hình domain. Vui lòng thêm localhost vào Firebase Console > Authentication > Settings > Authorized domains');
+    } else if (error.code === 'auth/configuration-not-found') {
+      throw new Error('Google OAuth chưa được cấu hình trong Firebase Console');
     }
     
     throw new Error(getErrorMessage(error.code));
