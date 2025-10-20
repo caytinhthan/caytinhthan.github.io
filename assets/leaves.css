@@ -1,0 +1,69 @@
+/* CSS cho leaf sprites - cắt từ ảnh gốc */
+.leaf-sprite {
+  width: 50px;
+  height: 50px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: inline-block;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Các loại lá từ ảnh riêng biệt */
+.leaf-money-gold {
+  background-image: url('../leaves/leaf_money_gold_1.png');
+}
+
+.leaf-love-pink {
+  background-image: url('../leaves/leaf_love_pink_1.png');
+}
+
+.leaf-study-green {
+  background-image: url('../leaves/leaf_study_green_1.png');
+}
+
+.leaf-work-blue {
+  background-image: url('../leaves/leaf_work_blue_1.png');
+}
+
+.leaf-relation-purple {
+  background-image: url('../leaves/leaf_relation_purple_1.png');
+}
+
+.leaf-other-red {
+  background-image: url('../leaves/leaf_other_red_1.png');
+}
+
+.leaf-transition-yellow {
+  background-image: url('../leaves/leaf_transition_yellow.png');
+}
+
+.leaf-dry-brown {
+  background-image: url('../leaves/leaf_dry_brown.png');
+}
+
+/* Preview styling */
+.preview-leaf {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.preview-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* Responsive preview */
+.preview-leaf img {
+  transition: transform 0.2s ease;
+}
+
+.preview-leaf img:hover {
+  transform: scale(1.1);
+}

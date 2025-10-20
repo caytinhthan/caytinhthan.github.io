@@ -470,71 +470,150 @@
     </main>
   </div>
 
-  <script type="module" src="src/firebase-init.mjs"></script>
-  <script type="module" src="src/auth.mjs"></script>
-  <script type="module" src="src/admin.mjs"></script>
-  <script type="module" src="src/auth-guard.mjs"></script>
-  <script type="module">
-    import { checkAuth, logout } from './src/auth.mjs';
-    import { loadDashboard, loadUsers, loadChatQueue } from './src/admin.mjs';
-    import { initAuthGuard } from './src/auth-guard.mjs';
-    
-    // Initialize auth guard for admin page
-    document.addEventListener('DOMContentLoaded', () => {
-      initAuthGuard();
-    });
-    
-    // Check admin access
-    checkAuth().then(user => {
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
+  <script src="src/firebase-init.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/auth-guard.js"></script>
+  
+  <script>
+    // Wait for Firebase to be ready
+    window.addEventListener('firebase-ready', () => {
+      // Check admin access
+      if (window._firebase && window._firebase.onAuthStateChanged) {
+        window._firebase.onAuthStateChanged(user => {
+          if (!user) {
+            window.location.href = 'login.html?redirect=admin.html';
+            return;
+          }
+          
+          // Update user info
+          document.getElementById('userName').textContent = user.displayName || user.email;
+          document.getElementById('userAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
+          
+          // Check if user has admin role
+          const userRef = window._firebase.ref(`users/${user.uid}`);
+          userRef.once('value', (snapshot) => {
+            const userData = snapshot.val();
+            if (!userData || userData.role !== 'admin') {
+              // Redirect non-admin users
+              window.location.href = 'index.html';
+              return;
+            }
+            
+            // Load dashboard data for admin users
+            loadDashboard();
+          });
+        });
       }
-      
-      document.getElementById('userName').textContent = user.displayName || user.email;
-      document.getElementById('userAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
-      
-      // Load dashboard data
-      loadDashboard();
     });
+    
+    // Simple dashboard loading function
+    function loadDashboard() {
+      // Load basic stats
+      if (window._firebase) {
+        const usersRef = window._firebase.ref('users');
+        const leavesRef = window._firebase.ref('leaves');
+        
+        // Count users
+        usersRef.once('value', (snapshot) => {
+          const users = snapshot.val() || {};
+          const userCount = Object.keys(users).length;
+          
+          const userCountEl = document.querySelector('#userCount .stat-value');
+          if (userCountEl) userCountEl.textContent = userCount;
+        });
+        
+        // Count leaves
+        leavesRef.once('value', (snapshot) => {
+          const leaves = snapshot.val() || {};
+          const leafCount = Object.keys(leaves).length;
+          
+          const leafCountEl = document.querySelector('#leafCount .stat-value');
+          if (leafCountEl) leafCountEl.textContent = leafCount;
+        });
+      }
+    }
     
     // Logout handler
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        await logout();
-        window.location.href = 'login.html';
-      } catch (error) {
-        console.error('Logout error:', error);
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            if (window._firebase && window._firebase.signOut) {
+              await window._firebase.signOut();
+            }
+            window.location.href = 'index.html';
+          } catch (error) {
+            console.error('Logout error:', error);
+            window.location.href = 'index.html';
+          }
+        });
       }
-    });
-    
-    // Navigation handlers
-    document.querySelectorAll('.admin-nav a').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const section = e.target.getAttribute('href').substring(1);
-        
-        // Update active nav
-        document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
-        e.target.classList.add('active');
-        
-        // Load section content
-        switch(section) {
-          case 'dashboard':
+      
+      // Navigation handlers
+      document.querySelectorAll('.admin-nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const section = e.target.getAttribute('href').substring(1);
+          
+          // Update active nav
+          document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
+          e.target.classList.add('active');
+          
+          // Show corresponding section
+          document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+          const targetSection = document.getElementById(section);
+          if (targetSection) targetSection.style.display = 'block';
+          
+          // Load section data
+          if (section === 'dashboard') {
             loadDashboard();
-            break;
-          case 'users':
+          } else if (section === 'users') {
             loadUsers();
-            break;
-          case 'chat':
+          } else if (section === 'chat') {
             loadChatQueue();
-            break;
-          case 'settings':
-            // Load settings
-            break;
-        }
+          }
+        });
       });
     });
+    
+    function loadUsers() {
+      // Simple user list
+      if (window._firebase) {
+        const usersRef = window._firebase.ref('users');
+        usersRef.once('value', (snapshot) => {
+          const users = snapshot.val() || {};
+          const userList = document.getElementById('userList');
+          if (userList) {
+            userList.innerHTML = Object.entries(users).map(([uid, user]) => `
+              <div class="user-item">
+                <div class="user-avatar">${(user.displayName || user.email || 'User').charAt(0).toUpperCase()}</div>
+                <div class="user-info">
+                  <div class="user-name">${user.displayName || user.email || 'Unknown'}</div>
+                  <div class="user-role">${user.role || 'user'}</div>
+                  <div class="user-status">${user.isOnline ? '🟢 Online' : '⚫ Offline'}</div>
+                </div>
+              </div>
+            `).join('');
+          }
+        });
+      }
+    }
+    
+    function loadChatQueue() {
+      const chatList = document.getElementById('chatList');
+      if (chatList) {
+        chatList.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-state-icon">💬</span>
+            <p>Không có cuộc trò chuyện nào đang chờ</p>
+          </div>
+        `;
+      }
+    }
   </script>
+</body>
+</html>
+  <script src="src/auth-guard.js"></script>
 </body>
 </html>

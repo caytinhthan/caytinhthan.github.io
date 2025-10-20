@@ -5,20 +5,10 @@
   const rand  = (min,max)=> Math.random()*(max-min)+min;
   const uuid  = ()=> (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
   
-  // Import security functions
-  let sanitizeLeafMessage, sanitizeDisplayName, leafMessageLimiter;
-  try {
-    import('./security.mjs').then(security => {
-      sanitizeLeafMessage = security.sanitizeLeafMessage;
-      sanitizeDisplayName = security.sanitizeDisplayName;
-      leafMessageLimiter = security.leafMessageLimiter;
-    });
-  } catch (error) {
-    console.error('Failed to load security module:', error);
-    // Fallback sanitization
-    sanitizeLeafMessage = (text) => String(text).replace(/[<>]/g, '').substring(0, 500);
-    sanitizeDisplayName = (name) => String(name).replace(/[<>]/g, '').substring(0, 50);
-  }
+  // Remove module import - use inline fallback sanitization
+  const sanitizeLeafMessage = (text) => String(text).replace(/[<>]/g, '').substring(0, 500);
+  const sanitizeDisplayName = (name) => String(name).replace(/[<>]/g, '').substring(0, 50);
+  const leafMessageLimiter = { check: () => true }; // Simple fallback
   const mk = (tag, attrs={}) => {
     const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
@@ -27,7 +17,7 @@
 
   // DOM Elements
   const add = $("#add"), stage = $("#stage");
-  const svg = $("#treeSvg") || document.querySelector("svg");
+  const svg = $("#leafSvg");
   const leaves = $("#leaves");
   const canvas = document.getElementById('leafCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
@@ -211,7 +201,7 @@
   // Firebase - function động thay vì const cứng
   function hasFB(){ return !!(window._firebase && window._firebase.db); }
   function fb(){ return window._firebase; }
-  function leavesRef(){ return fb().ref(fb().db, "leaves"); }
+  function leavesRef(){ return fb().db.ref("leaves"); }
 
   // Chuyển đổi theme sáng/tối
   function setTheme(theme){
@@ -260,7 +250,13 @@
   function showModal(m){
     document.body.style.overflow = "hidden";
     m.style.display = "grid";
-    requestAnimationFrame(()=> m.classList.add("show"));
+    requestAnimationFrame(()=> {
+      m.classList.add("show");
+      // Initialize preview when add modal is opened
+      if (m === addModal) {
+        renderPreview();
+      }
+    });
   }
   function hideModal(m){
     m.classList.remove("show");
@@ -290,8 +286,38 @@
   }
   function hideTip(){ tip.style.display = "none"; }
 
-  // Hình dạng và màu sắc cho lá cây
+  // Hình ảnh lá cây thật từ assets/leaves/
+  function getLeafImagePath(shapeKey, paletteIdx) {
+    // Mapping palette index to leaf image
+    const leafImages = {
+      0: 'leaf_money_gold_1.png',     // Tiền bạc → Lá vàng
+      1: 'leaf_love_pink_1.png',      // Tình yêu → Lá hồng  
+      2: 'leaf_study_green_1.png',    // Học tập → Lá xanh
+      3: 'leaf_work_blue_1.png',      // Công việc → Lá xanh dương
+      4: 'leaf_relation_purple_1.png', // Mối quan hệ → Lá tím
+      5: 'leaf_other_red_1.png'       // Khác → Lá đỏ
+    };
+    
+    // Fallback cho các shape keys mới
+    const shapeToImage = {
+      'money_gold': 'leaf_money_gold_1.png',
+      'love_pink': 'leaf_love_pink_1.png', 
+      'study_green': 'leaf_study_green_1.png',
+      'work_blue': 'leaf_work_blue_1.png',
+      'relation_purple': 'leaf_relation_purple_1.png',
+      'other_red': 'leaf_other_red_1.png',
+      'transition_yellow': 'leaf_transition_yellow.png',
+      'dry_brown': 'leaf_dry_brown.png'
+    };
+    
+    // Ưu tiên shape key, fallback về palette index
+    let imageName = shapeToImage[shapeKey] || leafImages[paletteIdx] || 'leaf_money_gold_1.png';
+    
+    return `assets/leaves/${imageName}`;
+  }
+  
   function pickPalette(idx){
+    // Giữ lại để compatibility, nhưng không dùng cho rendering
     const arr = [
       { fill:"#E8F5E8", stroke:"#A8D8A8", vein:"#7BC97B" }, // Tiền bạc → Xanh pastel
       { fill:"#FFE5F0", stroke:"#FFB3D9", vein:"#FF80C7" }, // Tình yêu → Hồng pastel  
@@ -303,24 +329,12 @@
     const i = Number.isFinite(idx) ? clamp(idx,0,arr.length-1) : Math.floor(Math.random()*arr.length);
     return { palette: arr[i], idx: i };
   }
+  
   function pickLeafShape(key){
-    const map = {
-      oval:     { key:"oval",     d:"M0,-18 C8,-16 14,-10 16,-2 C18,6 14,14 8,18 C3,20 -3,20 -8,18 C-14,14 -18,6 -16,-2 C-14,-10 -8,-16 0,-18 Z" },
-      round:    { key:"round",    d:"M0,-16 C6,-15 11,-9 12,-2 C13,5 11,12 6,16 C2,18 -2,18 -6,16 C-11,12 -13,5 -12,-2 C-11,-9 -6,-15 0,-16 Z" },
-      oak:      { key:"oak",      d:"M0,-17 C4,-16 7,-12 8,-6 C9,-2 8,2 6,5 C8,8 9,12 6,15 C3,17 0,18 -3,17 C-6,15 -8,12 -6,8 C-8,5 -9,2 -8,-6 C-7,-12 -4,-16 0,-17 Z" },
-      maple:    { key:"maple",    d:"M0,-20 C4,-18 8,-14 10,-8 C12,-4 10,0 8,4 C12,6 16,8 14,12 C12,16 8,14 4,12 C2,16 0,20 -2,16 C-4,12 -8,14 -12,12 C-16,8 -12,6 -8,4 C-10,0 -12,-4 -10,-8 C-8,-14 -4,-18 0,-20 Z" },
-      heart:    { key:"heart",    d:"M0,-16 C-6,-20 -14,-18 -16,-10 C-18,-2 -12,6 0,18 C12,6 18,-2 16,-10 C14,-18 6,-20 0,-16 Z" },
-      willow:   { key:"willow",   d:"M0,-20 C2,-18 4,-14 5,-8 C6,-2 5,4 4,10 C3,16 1,20 0,18 C-1,20 -3,16 -4,10 C-5,4 -6,-2 -5,-8 C-4,-14 -2,-18 0,-20 Z" },
-      birch:    { key:"birch",    d:"M0,-18 C3,-17 6,-14 8,-10 C10,-6 9,-2 8,2 C7,6 5,10 3,14 C1,17 -1,17 -3,14 C-5,10 -7,6 -8,2 C-9,-2 -10,-6 -8,-10 C-6,-14 -3,-17 0,-18 Z" },
-      ginkgo:   { key:"ginkgo",   d:"M0,-16 C8,-16 14,-10 16,-2 C18,6 16,12 12,16 C8,18 4,18 0,16 C-4,18 -8,18 -12,16 C-16,12 -18,6 -16,-2 C-14,-10 -8,-16 0,-16 Z" },
-      elm:      { key:"elm",      d:"M0,-18 C6,-17 10,-13 12,-8 C14,-3 13,2 11,6 C9,10 6,13 3,15 C1,17 -1,17 -3,15 C-6,13 -9,10 -11,6 C-13,2 -14,-3 -12,-8 C-10,-13 -6,-17 0,-18 Z" },
-      bamboo:   { key:"bamboo",   d:"M0,-20 C1,-19 2,-16 3,-12 C4,-8 4,-4 3,0 C2,4 2,8 1,12 C0,16 0,18 0,20 C0,18 0,16 -1,12 C-2,8 -2,4 -3,0 C-4,-4 -4,-8 -3,-12 C-2,-16 -1,-19 0,-20 Z" },
-      fern:     { key:"fern",     d:"M0,-18 C2,-16 4,-12 5,-8 C6,-4 5,0 4,4 C5,6 6,8 5,10 C4,12 2,13 0,14 C-2,13 -4,12 -5,10 C-6,8 -5,6 -4,4 C-5,0 -6,-4 -5,-8 C-4,-12 -2,-16 0,-18 Z" },
-      cherry:   { key:"cherry",   d:"M0,-16 C4,-15 8,-12 10,-8 C12,-4 11,0 9,4 C7,8 4,11 1,13 C-1,14 -3,13 -5,11 C-7,9 -9,6 -10,3 C-11,-1 -10,-5 -8,-9 C-6,-13 -3,-15 0,-16 Z" }
-    };
-    if (key && map[key]) return map[key];
-    const keys = Object.keys(map);
-    return map[keys[Math.floor(Math.random()*keys.length)]];
+    // Giữ lại để compatibility - bây giờ chỉ return key
+    const validKeys = ['money_gold', 'love_pink', 'study_green', 'work_blue', 'relation_purple', 'other_red', 'transition_yellow', 'dry_brown'];
+    const shapeKey = validKeys.includes(key) ? key : 'money_gold';
+    return { key: shapeKey, d: '' }; // d không cần thiết nữa
   }
   function getVeinForShape(d){
     // Oak với gân phức tạp
@@ -379,7 +393,7 @@
       position,
       scale: Number(leaf?.dataset.scale || 1),
       rotation: Number(leaf?.dataset.rotation || 0),
-      shapeKey: leaf?.dataset.shapeKey || "oval",
+      shapeKey: leaf?.dataset.shapeKey || "money_gold",
       paletteIdx: Number(leaf?.dataset.paletteIdx || 0),
       ts: Number(leaf?.dataset.ts || Date.now())
     };
@@ -401,20 +415,29 @@
     return pt.matrixTransform(m);
   }
   function randomPositionInTree(){
-    const branchElements = document.querySelectorAll("#branches path");
-    if (!branchElements.length) {
-      console.warn("No branches found, using fallback position");
-      return { x: 276 + rand(-60,60), y: 330 + rand(-120,40), rotation: rand(-15,15) };
+    // Fix: Sử dụng vùng tương đối với kích thước cây thay vì tìm branches không tồn tại
+    const treeImg = document.getElementById('tree');
+    if (!treeImg) {
+      return { x: 400 + rand(-80,80), y: 300 + rand(-100,50), rotation: rand(-15,15) };
     }
-    const branches = [...branchElements];
-    const options = branches.map((path, i)=>({
-      path, range: i<2 ? [0.2,0.8] : i<6 ? [0.15,0.85] : [0.3,0.7]
-    }));
-    const sel = options[Math.floor(Math.random()*options.length)];
-    const len = sel.path.getTotalLength();
-    const t   = rand(len*sel.range[0], len*sel.range[1]);
-    const p   = sel.path.getPointAtLength(t);
-    return { x: p.x + rand(-3,3), y: p.y + rand(-2,2), rotation: rand(-15,15) };
+    
+    // Lấy kích thước thực của cây trên viewport
+    const rect = treeImg.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    
+    // Tính toán vị trí tương đối trong SVG (tỷ lệ với stage)
+    const centerX = (rect.left + rect.width/2 - stageRect.left);
+    const centerY = (rect.top + rect.height/2 - stageRect.top);
+    
+    // Tạo vùng đặt lá trong khu vực cây (70% chiều rộng, 60% chiều cao từ top)
+    const leafZoneWidth = rect.width * 0.7;
+    const leafZoneHeight = rect.height * 0.6;
+    
+    return { 
+      x: centerX + rand(-leafZoneWidth/2, leafZoneWidth/2), 
+      y: centerY - rect.height/4 + rand(-leafZoneHeight/2, leafZoneHeight/2), 
+      rotation: rand(-15,15) 
+    };
   }
 
   // Các utility function cho UI
@@ -430,6 +453,20 @@
 
   // Modal thêm/sửa thông điệp
   function renderPreview(){
+    // Update image preview in modal
+    const previewImg = document.getElementById('previewLeafImage');
+    if (previewImg && leafShapeSel?.value) {
+      const paletteIdx = Number(leafPaletteSel?.value) || 0;
+      const imagePath = getLeafImagePath(leafShapeSel.value, paletteIdx);
+      if (imagePath) {
+        previewImg.src = imagePath;
+        previewImg.style.display = 'block';
+      } else {
+        previewImg.style.display = 'none';
+      }
+    }
+    
+    // Keep old SVG preview for compatibility if leafPreview element exists
     if (!leafPreview) return;
     const { d } = pickLeafShape(leafShapeSel?.value);
     const { palette } = pickPalette(Number(leafPaletteSel?.value));
@@ -506,8 +543,9 @@
     const scale    = Number.isFinite(data.scale)    ? data.scale    : rand(0.9,1.2);
 
     const { palette, idx: paletteIdx } = pickPalette(data.paletteIdx);
-    const { d: leafShape, key: shapeKey } = pickLeafShape(data.shapeKey);
+    const { key: shapeKey } = pickLeafShape(data.shapeKey);
 
+    // Tạo group container
     const g = mk("g", { class: "leaf" });
     g.dataset.id        = data.id;
     g.dataset.msg       = data.text || "";
@@ -519,21 +557,24 @@
     g.dataset.paletteIdx= String(paletteIdx);
     g.dataset.ts        = String(data.ts || Date.now());
 
-    // Transform SVG CHUẨN với clamp
+    // Transform SVG với image
     const sc = clampScale(scale);
     const rot = clampRot(rotation);
     const baseTransform = `translate(${position.x} ${position.y}) rotate(${rot}) scale(${sc})`;
     g.setAttribute("transform", baseTransform);
 
-    const body = mk("path", { 
-      d: leafShape, fill: palette.fill, stroke: palette.stroke, 
-      "stroke-width":"1.6", "vector-effect":"non-scaling-stroke"
+    // Sử dụng ảnh thay vì SVG path
+    const leafImagePath = getLeafImagePath(shapeKey, paletteIdx);
+    const leafImage = mk("image", { 
+      href: leafImagePath,
+      x: "-25", // Center image
+      y: "-25", 
+      width: "50",
+      height: "50",
+      style: "filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"
     });
-    const vein = mk("path", { 
-      d: getVeinForShape(leafShape), fill:"none", stroke: palette.vein, 
-      "stroke-width":"1", "vector-effect":"non-scaling-stroke"
-    });
-    g.append(body, vein);
+
+    g.appendChild(leafImage);
     leaves.appendChild(g);
 
     // Tooltip - chỉ ở VIEW mode
@@ -614,7 +655,7 @@
     if (list) list.querySelectorAll(".chip").forEach(r=> { if (r.dataset.id === id) r.remove(); });
 
     if (hasFB()) {
-      fb().remove(fb().ref(fb().db, `leaves/${id}`)).catch(console.error);
+      fb().db.ref(`leaves/${id}`).remove().catch(console.error);
     }
     syncLocalStorage();
     updateCounter();
@@ -640,7 +681,7 @@
     try { e && dragging.releasePointerCapture(e.pointerId); } catch {}
     dragging = null;
     
-    if (hasFB()) fb().set(fb().ref(fb().db, `leaves/${id}`), payload).catch(console.error);
+    if (hasFB()) fb().db.ref(`leaves/${id}`).set(payload).catch(console.error);
     syncLocalStorage();
   }
   svg?.addEventListener("pointerup", endDrag);
@@ -720,12 +761,12 @@
           leafEl.dataset.position = JSON.stringify(pos);
           leafEl.dataset.rotation = String(rotation);
         }
-        // repaint
-        const { palette } = pickPalette(Number(leafEl.dataset.paletteIdx || 0));
-        const { d } = pickLeafShape(leafEl.dataset.shapeKey || "oval");
-        const paths = leafEl.querySelectorAll("path");
-        if (paths[0]) { paths[0].setAttribute("d", d); paths[0].setAttribute("fill", palette.fill); paths[0].setAttribute("stroke", palette.stroke); }
-        if (paths[1]) { paths[1].setAttribute("d", getVeinForShape(d)); paths[1].setAttribute("stroke", palette.vein); }
+        // repaint with new image
+        const leafImagePath = getLeafImagePath(shapeKey, Number(leafEl.dataset.paletteIdx || 0));
+        const leafImage = leafEl.querySelector("image");
+        if (leafImage) {
+          leafImage.setAttribute("href", leafImagePath);
+        }
 
         const pos = JSON.parse(leafEl.dataset.position || '{"x":0,"y":0,"rotation":0}');
         const sc  = Number(leafEl.dataset.scale || 1);
@@ -743,7 +784,7 @@
         }
       }
       const data = getLeafDataFromDOM(currentEditingId);
-      if (hasFB()) fb().set(fb().ref(fb().db, `leaves/${currentEditingId}`), data).catch(console.error);
+      if (hasFB()) fb().db.ref(`leaves/${currentEditingId}`).set(data).catch(console.error);
     } else {
       // Add new
       const pos = pendingPosition || randomPositionInTree();
@@ -751,7 +792,7 @@
       const data = { id: uuid(), text, author, ts: Date.now(), position: pos, shapeKey, paletteIdx, scale, rotation };
       addLeafFromData(data, true);
       if (hasFB()) {
-        fb().set(fb().ref(fb().db, `leaves/${data.id}`), getLeafDataFromDOM(data.id)).catch(console.error);
+        fb().db.ref(`leaves/${data.id}`).set(getLeafDataFromDOM(data.id)).catch(console.error);
       }
     }
 
@@ -807,7 +848,7 @@
     setTimeout(()=>{
       list.innerHTML = '<div class="empty-state" id="emptyState"><div class="empty-icon">🌱</div><p>Chưa có lá nào trên cây</p><small>Hãy thêm lá đầu tiên!</small></div>';
       try { localStorage.removeItem(storeKey); } catch {}
-      if (hasFB()) fb().set(leavesRef(), null).catch(console.error);
+      if (hasFB()) leavesRef().set(null).catch(console.error);
       updateCounter(); updateEmptyState();
     }, allLeaves.length*80 + 500);
   });
@@ -817,26 +858,44 @@
   
   // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
   function attachRealtime(){
-    if (!hasFB()) return;
-    console.log("Attaching Firebase realtime listener");
-    fb().onValue(leavesRef(), (snap)=>{
+    if (!hasFB()) {
+      console.error("❌ Firebase not available in attachRealtime");
+      return;
+    }
+    
+    leavesRef().on('value', (snap)=>{
       const data = snap.val();
-      console.log("Firebase data received:", data);
-      leaves.innerHTML = "";
+      
+      // Clear existing leaves (SVG)
+      if (leaves) leaves.innerHTML = "";
+      allLeaves.length = 0;
       if (list) list.innerHTML = "";
-      if (data){
+      
+      if (data && typeof data === 'object'){
         const leafData = Object.values(data);
-        console.log("Processing", leafData.length, "leaves");
+        
         leafData
           .sort((a,b)=> (a.ts||0) - (b.ts||0))
-          .forEach(d => {
-            console.log("Adding leaf:", d);
+          .forEach((d, index) => {
             addLeafFromData(d, false);
           });
+          
+      } else {
+        console.warn("⚠️ No leaves data found in Firebase");
       }
-      updateCounter(); updateEmptyState();
-      try { localStorage.setItem(storeKey, JSON.stringify(Object.values(data||{}))); } catch {}
-    }, console.error);
+      
+      updateCounter(); 
+      updateEmptyState();
+      
+      // Save to localStorage as backup
+      try { 
+        localStorage.setItem(storeKey, JSON.stringify(Object.values(data||{}))); 
+      } catch (e) {
+        console.error("💾 Failed to save to localStorage:", e);
+      }
+    }, (error) => {
+      console.error("❌ Firebase realtime listener error:", error);
+    });
   }
 
   // Theme initialization is handled in index.html
@@ -846,27 +905,19 @@
   // khởi tạo mode
   setMode(Mode.VIEW);
   
+  // Listen for firebase-ready event first
+  window.addEventListener("firebase-ready", ()=>{
+    if (hasFB()) {
+      attachRealtime();
+    }
+  });
+  
+  // Always try Firebase first - no localStorage fallback
   if (hasFB()) {
-    console.log("Firebase available, attaching realtime");
     attachRealtime();
   } else {
-    console.log("Firebase not available, loading from localStorage");
-    const existing = loadFromStorage();
-    console.log("Loaded from storage:", existing);
-    let migrated = false;
-    existing.forEach(d=>{
-      if (!d.position){ d.position = randomPositionInTree(); migrated = true; }
-      console.log("Adding leaf from storage:", d);
-      addLeafFromData(d, false);
-    });
-    if (migrated) try { localStorage.setItem(storeKey, JSON.stringify(existing)); } catch {}
-    updateCounter(); updateEmptyState();
+    console.warn("⚠️ Firebase not available yet, waiting for firebase-ready event...");
   }
-  
-  window.addEventListener("firebase-ready", ()=>{
-    console.log("Firebase ready event received");
-    attachRealtime();
-  }, { once:true });
 })();
 
 // ===== STARS ANIMATION =====

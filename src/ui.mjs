@@ -507,7 +507,5 @@ export function initializeUI() {
   if (settings.darkMode) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
-  
-  console.log('🎨 UI components initialized');
 }
 

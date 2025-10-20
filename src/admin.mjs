@@ -344,5 +344,3 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-
-console.log('🛠️ Admin module loaded');

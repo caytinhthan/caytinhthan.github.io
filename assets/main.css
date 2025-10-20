@@ -609,6 +609,12 @@ html.theme-day .grass {
   transition: filter var(--t);
   z-index: 2;
   object-fit: contain;
+  /* Fix: Ngăn cây bị kéo */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 [data-theme="dark"] #tree {
@@ -642,9 +648,9 @@ html.theme-day .grass {
 
 @media (max-width: 768px) {
   #tree {
-    max-height: 60vh;
+    max-height: 70vh; /* Tăng từ 60vh để cây lớn hơn */
     max-width: 90%;
-    bottom: 2vh;
+    bottom: 5vh; /* Tăng từ 2vh để cây cao hơn */
   }
   
   .btn {
@@ -663,13 +669,38 @@ html.theme-day .grass {
   .toast.show {
     transform: translateY(0);
   }
+  
+  /* Fix: Tối ưu header cho mobile */
+  .header-content {
+    height: 50px;
+    padding: 0 12px;
+  }
+  
+  /* Fix: Giảm khoảng cách top để ít scroll hơn */
+  main {
+    padding-top: 50px; /* Giảm padding top */
+  }
+  
+  /* Fix: Điều chỉnh left panel cho mobile */
+  .left-panel {
+    top: 50px;
+    padding: 12px;
+    max-height: calc(100vh - 50px);
+    overflow-y: auto;
+  }
+  
+  /* Fix: Điều chỉnh stage height cho mobile */
+  #stage {
+    min-height: calc(100vh - 50px);
+    padding-top: 0;
+  }
 }
 
 @media (max-width: 480px) {
   #tree {
-    max-height: 55vh;
+    max-height: 65vh; /* Tăng từ 55vh để cây lớn hơn trên mobile nhỏ */
     max-width: 85%;
-    bottom: 0vh;
+    bottom: 3vh; /* Tăng từ 0vh để có khoảng cách đáy */
   }
   
   .form-input {
@@ -680,6 +711,35 @@ html.theme-day .grass {
   .btn {
     padding: 8px 16px;
     font-size: 12px;
+  }
+  
+  /* Fix: Header nhỏ hơn cho mobile */
+  .header-content {
+    height: 45px;
+    padding: 0 8px;
+  }
+  
+  /* Fix: Giảm thêm padding top */
+  main {
+    padding-top: 45px;
+  }
+  
+  /* Fix: Điều chỉnh left panel cho mobile nhỏ */
+  .left-panel {
+    top: 45px;
+    padding: 8px;
+    max-height: calc(100vh - 45px);
+  }
+  
+  /* Fix: Stage layout cho mobile nhỏ */
+  #stage {
+    min-height: calc(100vh - 45px);
+    padding-top: 0;
+  }
+  
+  /* Fix: Button text nhỏ hơn cho mobile */
+  .btn-text {
+    font-size: 11px;
   }
 }
 

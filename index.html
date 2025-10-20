@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com;";
-  <title>Cây Tình Thần - Chia sẻ cảm xúc</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebasedatabase.app;";
+  <title>Trang chủ | Cây Tình Thần - Chia sẻ cảm xúc</title>
+
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <!-- CSS Files -->
@@ -14,6 +16,7 @@
   <link rel="stylesheet" href="assets/tree.css">
   <link rel="stylesheet" href="assets/chat.css">
   <link rel="stylesheet" href="assets/modals.css">
+  <link rel="stylesheet" href="assets/leaves.css">
 </head>
 <body>
   <!-- Header Navigation -->
@@ -75,6 +78,10 @@
           <div class="dropdown-item" onclick="navigateToPage('profile.html')">
             <span class="dropdown-icon">👤</span>
             <span class="dropdown-text">Trang cá nhân</span>
+          </div>
+          <div class="dropdown-item admin-only" onclick="navigateToPage('admin.html')" style="display: none;">
+            <span class="dropdown-icon">🛡️</span>
+            <span class="dropdown-text">Quản trị viên</span>
           </div>
           <div class="dropdown-item" id="helpModalBtn">
             <span class="dropdown-icon">📖</span>
@@ -167,6 +174,9 @@
       <div id="app">
         <img id="tree" src="assets/tree/tree_transparent.png" alt="Cây Tình Thần">
         <canvas id="leafCanvas"></canvas>
+        <svg id="leafSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto;">
+          <g id="leaves"></g>
+        </svg>
       </div>
       <div class="ground"></div>
       <div class="tooltip" id="tip"></div>
@@ -197,18 +207,14 @@
         <div class="picker-row">
           <label>Hình dáng lá</label>
           <select id="leafShape">
-            <option value="oval">🍃 Oval</option>
-            <option value="round">⭕ Tròn</option>
-            <option value="oak">🌳 Sồi</option>
-            <option value="maple">🍁 Phong</option>
-            <option value="heart">💚 Trái tim</option>
-            <option value="willow">🌿 Liễu</option>
-            <option value="birch">🌲 Bạch dương</option>
-            <option value="ginkgo">🟡 Bạch quả</option>
-            <option value="elm">🌱 Du</option>
-            <option value="bamboo">🎋 Tre</option>
-            <option value="fern">🌿 Dương xỉ</option>
-            <option value="cherry">🌸 Anh đào</option>
+            <option value="money_gold">💰 Lá vàng (Tiền bạc)</option>
+            <option value="love_pink">💕 Lá hồng (Tình yêu)</option>
+            <option value="study_green">� Lá xanh (Học tập)</option>
+            <option value="work_blue">💼 Lá xanh dương (Công việc)</option>
+            <option value="relation_purple">� Lá tím (Mối quan hệ)</option>
+            <option value="other_red">� Lá đỏ (Khác)</option>
+            <option value="transition_yellow">� Lá vàng chuyển mùa</option>
+            <option value="dry_brown">� Lá khô nâu</option>
           </select>
         </div>
 
@@ -234,7 +240,12 @@
           <input type="range" id="leafRotation" min="-25" max="25" step="1" value="0">
         </div>
 
-        <div class="preview" id="leafPreview"></div>
+        <div class="preview" id="leafPreview">
+          <div class="preview-label">Xem trước:</div>
+          <div class="preview-leaf">
+            <img id="previewLeafImage" src="assets/leaves/leaf_money_gold_1.png" alt="Preview" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">
+          </div>
+        </div>
       </div>
       
       <div style="display:flex;gap:12px;margin-top:20px">
@@ -327,23 +338,20 @@
     </div>
   </div>
 
-  <script type="module" src="src/firebase-init.mjs"></script>
-  <script type="module" src="src/auth-guard.mjs"></script>
-  <script type="module" src="src/ui.mjs"></script>
+  <script src="src/firebase-init.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/auth-guard.js"></script>
   <script src="src/script.js" defer></script>
-  <script type="module">
-    import { initAuthGuard } from './src/auth-guard.mjs';
-    import { logout } from './src/auth.mjs';
-    
-    initAuthGuard();
-    
-    // Setup logout button
+  <script>
+    // Setup logout button and auth state management
     document.addEventListener('DOMContentLoaded', () => {
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
           try {
-            await logout();
+            if (window.AuthHelpers) {
+              await window.AuthHelpers.signOut();
+            }
             // Reload page to reset auth state
             window.location.reload();
           } catch (error) {

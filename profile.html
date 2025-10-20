@@ -3,73 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com wss://*.firebaseio.com; frame-src https://www.google.com https://www.recaptcha.net;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebasedatabase.app;";
   <title>Trang cá nhân - Cây Tình Thần</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/header.css">
+  <link rel="stylesheet" href="assets/styles.css">
   <style>
     body {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: var(--background);
       min-height: 100vh;
-    }
-    
-    .profile-nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      padding: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    
-    .back-btn {
-      background: #10b981;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-    }
-    
-    .back-btn:hover {
-      background: #059669;
-      transform: translateY(-1px);
     }
     
     .profile-container {
       max-width: 800px;
-      margin: 100px auto 0;
-      padding: 0 24px;
+      margin: 0 auto;
+      padding: 120px 24px 24px;
     }
     
     .profile-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--surface);
       backdrop-filter: blur(20px);
       border-radius: 24px;
-      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
       overflow: hidden;
     }
     
     .profile-header {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
       color: white;
       padding: 32px;
       text-align: center;
@@ -85,6 +47,7 @@
       justify-content: center;
       font-size: 32px;
       margin: 0 auto 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
     }
     
     .profile-name {
@@ -95,6 +58,7 @@
       align-items: center;
       gap: 12px;
       justify-content: center;
+      flex-wrap: wrap;
     }
     
     .role-badge {
@@ -107,37 +71,18 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-    }
-    
-    .logout-section {
-      text-align: center;
-      padding: 20px;
-    }
-    
-    .logout-button {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-    }
-    
-    .logout-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+      display: none;
     }
     
     .profile-email {
       opacity: 0.9;
       font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .join-date {
+      font-size: 12px;
+      opacity: 0.8;
     }
     
     .profile-body {
@@ -155,7 +100,7 @@
     .section-title {
       font-size: 18px;
       font-weight: 700;
-      color: #1e293b;
+      color: var(--text-primary);
       margin-bottom: 16px;
       display: flex;
       align-items: center;
@@ -170,22 +115,28 @@
     }
     
     .stat-card {
-      background: #f8fafc;
+      background: var(--bg-primary);
       border-radius: 12px;
       padding: 20px;
       text-align: center;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
     }
     
     .stat-number {
       font-size: 32px;
       font-weight: 700;
-      color: #10b981;
+      color: var(--primary-color);
       margin-bottom: 8px;
     }
     
     .stat-label {
-      color: #64748b;
+      color: var(--text-secondary);
       font-size: 14px;
       font-weight: 500;
     }
@@ -200,9 +151,32 @@
       justify-content: space-between;
       align-items: center;
       padding: 16px;
-      background: #f8fafc;
+      background: var(--bg-primary);
       border-radius: 12px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s ease;
+    }
+    
+    .setting-item:hover {
+      background: var(--border-color);
+    }
+    
+    .setting-item.admin-only {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    .setting-item.admin-only:hover {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+      border-color: #ef4444;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+    
+    .setting-item.admin-only .setting-label {
+      color: #ef4444;
+      font-weight: 700;
     }
     
     .setting-label {
@@ -210,7 +184,7 @@
       align-items: center;
       gap: 12px;
       font-weight: 600;
-      color: #374151;
+      color: var(--text-primary);
     }
     
     .setting-icon {
@@ -255,40 +229,73 @@
     }
     
     input:checked + .slider {
-      background-color: #10b981;
+      background-color: var(--primary-color);
     }
     
     input:checked + .slider:before {
       transform: translateX(24px);
     }
     
-    [data-theme="dark"] .profile-card {
-      background: rgba(30, 41, 59, 0.95);
-      border-color: rgba(255, 255, 255, 0.1);
+    .logout-section {
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid var(--border-color);
     }
     
-    [data-theme="dark"] .section-title {
-      color: #f1f5f9;
+    .logout-button {
+      background: linear-gradient(135deg, var(--error-color), #dc2626);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
     
-    [data-theme="dark"] .stat-card,
-    [data-theme="dark"] .setting-item {
-      background: #334155;
-      border-color: #475569;
+    .logout-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
     }
     
-    [data-theme="dark"] .setting-label {
-      color: #f1f5f9;
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
     }
     
-    [data-theme="dark"] .stat-label {
-      color: #94a3b8;
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .info-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-weight: 500;
     }
     
     @media (max-width: 768px) {
       .profile-container {
-        margin-top: 80px;
-        padding: 0 16px;
+        padding: 80px 16px 16px;
       }
       
       .profile-header,
@@ -298,6 +305,10 @@
       
       .profile-stats {
         grid-template-columns: 1fr 1fr;
+      }
+      
+      .user-info-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -314,15 +325,10 @@
       </div>
       
       <div class="header-right">
-        <div class="auth-section" id="authSection" style="display: none;">
-          <button class="header-btn login-btn" onclick="window.location.href='login.html'">Đăng nhập</button>
-          <button class="header-btn register-btn" onclick="window.location.href='register.html'">Đăng ký</button>
-        </div>
-        
-        <div class="user-section" id="userSection" style="display: flex;">
+        <div class="user-section" style="display: flex;">
           <div class="user-greeting">
             <span>Xin chào, </span>
-            <span id="userDisplayName"></span>
+            <span id="headerUserName">Người dùng</span>
           </div>
           <button class="header-btn" onclick="navigateToPage('index.html')">
             <span>←</span>
@@ -341,16 +347,47 @@
         </div>
         <div class="profile-name">
           <span id="profileName">Người dùng</span>
-          <span id="roleBadge" class="role-badge" style="display: none;"></span>
+          <span id="roleBadge" class="role-badge"></span>
         </div>
-        <div class="profile-email" id="profileEmail"></div>
+        <div class="profile-email" id="profileEmail">email@example.com</div>
+        <div class="join-date">
+          Tham gia: <span id="joinDate">--</span>
+        </div>
       </div>
       
       <div class="profile-body">
+        <!-- Thông tin cá nhân -->
+        <div class="profile-section">
+          <h3 class="section-title">
+            <span>�</span>
+            Thông tin cá nhân
+          </h3>
+          <div class="user-info-grid">
+            <div class="info-item">
+              <div class="info-label">Tên hiển thị</div>
+              <div class="info-value" id="displayNameInfo">--</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Email</div>
+              <div class="info-value" id="emailInfo">--</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Vai trò</div>
+              <div class="info-value" id="roleInfo">Người dùng</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Trạng thái</div>
+              <div class="info-value" id="statusInfo">
+                <span style="color: #10b981;">● Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Thống kê -->
         <div class="profile-section">
           <h3 class="section-title">
-            <span>📊</span>
+            <span>�📊</span>
             Thống kê của bạn
           </h3>
           <div class="profile-stats">
@@ -397,31 +434,10 @@
                 <span>Thông báo</span>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="notificationToggle">
+                <input type="checkbox" id="notificationToggle" checked>
                 <span class="slider"></span>
               </label>
             </div>
-            
-            <div class="setting-item">
-              <div class="setting-label">
-                <span class="setting-icon">🔒</span>
-                <span>Chế độ riêng tư</span>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="privacyToggle">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Logout Section -->
-        <div class="profile-section">
-          <div class="logout-section">
-            <button class="logout-button" id="profileLogoutBtn">
-              <span>🚪</span>
-              <span>Đăng xuất</span>
-            </button>
           </div>
         </div>
 
@@ -432,39 +448,44 @@
             Thông tin
           </h3>
           <div class="settings-grid">
-            <div class="setting-item" onclick="window.open('terms.html', '_blank')" style="cursor: pointer;">
+            <div class="setting-item" onclick="navigateToPage('index.html')" style="cursor: pointer;">
               <div class="setting-label">
-                <span class="setting-icon">📜</span>
-                <span>Điều khoản sử dụng</span>
+                <span class="setting-icon">🏠</span>
+                <span>Về trang chủ</span>
               </div>
               <span>→</span>
             </div>
             
-            <div class="setting-item" onclick="window.open('privacy.html', '_blank')" style="cursor: pointer;">
+            <div class="setting-item admin-only" onclick="navigateToPage('admin.html')" style="cursor: pointer; display: none;">
               <div class="setting-label">
                 <span class="setting-icon">🛡️</span>
-                <span>Chính sách bảo mật</span>
+                <span>Đi tới trang quản trị</span>
               </div>
               <span>→</span>
             </div>
             
-            <div class="setting-item" onclick="window.open('help.html', '_blank')" style="cursor: pointer;">
+            <div class="setting-item" onclick="window.open('https://github.com/caytinhthan/caytinhthan.github.io', '_blank')" style="cursor: pointer;">
               <div class="setting-label">
-                <span class="setting-icon">📖</span>
-                <span>Hướng dẫn sử dụng</span>
+                <span class="setting-icon">📜</span>
+                <span>Mã nguồn dự án</span>
               </div>
               <span>→</span>
             </div>
           </div>
         </div>
+
+        <!-- Đăng xuất -->
+        <div class="logout-section">
+          <button id="profileLogoutBtn" class="logout-button">
+            <span>🚪</span>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script type="module" src="src/firebase-init.mjs"></script>
-  <script type="module" src="src/auth.mjs"></script>
-  <script type="module" src="src/auth-guard.mjs"></script>
-  <script type="module">
+  <script>
     // Page transition function
     function navigateToPage(url) {
       document.body.classList.add('page-fade-out');
@@ -472,109 +493,143 @@
         window.location.href = url;
       }, 250);
     }
-    
-    // Make it global for onclick handlers
-    window.navigateToPage = navigateToPage;
-    
-    // Page transition on load
-    document.addEventListener('DOMContentLoaded', () => {
-      document.body.classList.add('page-transition');
-    });
-    
-    import { getCurrentUser, logout } from './src/auth.mjs';
-    import { initAuthGuard } from './src/auth-guard.mjs';
-    import { db, ref, onValue } from './src/firebase-init.mjs';
-    
-    // Function to update profile statistics
+
     function updateProfileStats(userData, userId) {
-      // Update last active
-      const createdDate = new Date(userData.createdAt).toLocaleDateString('vi-VN');
+      // Calculate days since joining
+      const joinDate = new Date(userData.createdAt || Date.now());
+      const daysSinceJoin = Math.floor((Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      // TODO: Load actual leaf statistics from database
-      // For now, show account info
-      const statsElements = document.querySelectorAll('.stat-number');
-      if (statsElements.length >= 4) {
-        statsElements[0].textContent = '0'; // Leaves created - TODO: calculate from leaves collection
-        statsElements[1].textContent = '0'; // Healthy leaves - TODO: calculate 
-        statsElements[2].textContent = '0'; // Messages sent - TODO: calculate from chat
-        statsElements[3].textContent = createdDate; // Join date
-      }
+      // Update join date display
+      document.getElementById('joinDate').textContent = joinDate.toLocaleDateString('vi-VN');
       
-      // Update role display
-      const roleText = userData.role === 'admin' ? 'Quản trị viên' : 
-                      userData.role === 'counselor' ? 'Tư vấn viên' : 'Người dùng';
-      console.log('👤 Role:', roleText);
-    }
-    
-    // Initialize auth guard
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('🔄 Profile page initializing auth guard...');
-      initAuthGuard();
-      
-      // Setup logout button
-      const logoutBtn = document.getElementById('profileLogoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-          try {
-            await logout();
-            // Redirect to home page
-            window.location.href = 'index.html';
-          } catch (error) {
-            // Even if logout fails, redirect anyway
-            console.warn('Logout had issues, but redirecting:', error);
-            window.location.href = 'index.html';
-          }
-        });
-      }
-      
-      // Listen for auth state updates
-      window.addEventListener('auth-state-updated', () => {
-        console.log('🔔 Auth state updated on profile page');
-      });
-    });
-    
-    // Initialize profile page
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await getCurrentUser();
-      
-      if (user) {
-        console.log('👤 Loading profile for user:', user.email);
+      // Fetch and count user's leaves from database
+      const leavesRef = window._firebase.ref('leaves');
+      leavesRef.once('value', (snapshot) => {
+        const allLeaves = snapshot.val() || {};
+        let userLeaves = 0;
+        let healthyLeaves = 0;
+        let messages = 0;
         
-        // Update basic info
-        document.getElementById('profileName').textContent = user.displayName || 'Người dùng';
-        document.getElementById('profileEmail').textContent = user.email;
-        document.getElementById('avatarIcon').textContent = user.displayName ? user.displayName[0].toUpperCase() : '👤';
+        // Get user identifiers
+        const userEmail = userData.email || '';
+        const displayName = userData.displayName || userEmail.split('@')[0];
         
-        // Load user role from database
-        const userRef = ref(db, `users/${user.uid}`);
-        onValue(userRef, (snapshot) => {
-          const userData = snapshot.val();
-          if (userData) {
-            console.log('📊 User data loaded:', userData);
+        Object.values(allLeaves).forEach(leaf => {
+          // Check if leaf belongs to current user
+          if (leaf.author === displayName || 
+              leaf.author === userEmail.split('@')[0] ||
+              leaf.userId === userId) {
+            userLeaves++;
             
-            // Update profile info with real data
-            document.getElementById('profileName').textContent = userData.displayName || user.displayName || 'Người dùng';
-            document.getElementById('profileEmail').textContent = userData.email || user.email;
-            
-            // Show role badge if admin
-            const roleBadge = document.getElementById('roleBadge');
-            if (userData.role === 'admin' && roleBadge) {
-              roleBadge.textContent = 'ADMIN';
-              roleBadge.style.display = 'inline-block';
-              console.log('👑 Admin badge displayed');
-            } else if (userData.role === 'counselor' && roleBadge) {
-              roleBadge.textContent = 'COUNSELOR';
-              roleBadge.style.backgroundColor = '#10b981';
-              roleBadge.style.display = 'inline-block';
+            // Check if leaf is healthy (created within last 30 days)
+            if (leaf.ts && (Date.now() - leaf.ts) < (30 * 24 * 60 * 60 * 1000)) {
+              healthyLeaves++;
             }
             
-            // Update profile stats
-            updateProfileStats(userData, user.uid);
+            // Count messages
+            if (leaf.message && leaf.message.trim()) {
+              messages++;
+            }
           }
         });
-      }
-      
-      // Dark mode toggle
+        
+        // Update stats display
+        document.getElementById('totalLeaves').textContent = userLeaves;
+        document.getElementById('healthyLeaves').textContent = healthyLeaves;
+        document.getElementById('comfortMessages').textContent = messages;
+        document.getElementById('daysActive').textContent = daysSinceJoin;
+      }).catch(error => {
+        console.warn('Error fetching leaves data:', error);
+        // Show default values if error
+        document.getElementById('totalLeaves').textContent = '0';
+        document.getElementById('healthyLeaves').textContent = '0';
+        document.getElementById('comfortMessages').textContent = '0';
+        document.getElementById('daysActive').textContent = daysSinceJoin;
+      });
+    }
+
+    // Listen for Firebase initialization
+    window.addEventListener('firebase-ready', () => {
+      window._firebase.onAuthStateChanged((user) => {
+        if (user) {
+          // Update header user name
+          const headerUserName = document.getElementById('headerUserName');
+          if (headerUserName) {
+            headerUserName.textContent = user.displayName || user.email.split('@')[0];
+          }
+
+          // Update profile basic info
+          const profileName = document.getElementById('profileName');
+          const profileEmail = document.getElementById('profileEmail');
+          const avatarIcon = document.getElementById('avatarIcon');
+          const displayNameInfo = document.getElementById('displayNameInfo');
+          const emailInfo = document.getElementById('emailInfo');
+
+          if (profileName) profileName.textContent = user.displayName || user.email.split('@')[0];
+          if (profileEmail) profileEmail.textContent = user.email;
+          if (displayNameInfo) displayNameInfo.textContent = user.displayName || user.email.split('@')[0];
+          if (emailInfo) emailInfo.textContent = user.email;
+
+          // Update avatar
+          if (avatarIcon) {
+            if (user.photoURL) {
+              avatarIcon.innerHTML = `<img src="${user.photoURL}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+              avatarIcon.textContent = user.displayName ? user.displayName[0].toUpperCase() : user.email[0].toUpperCase();
+            }
+          }
+
+          // Fetch additional user data from database
+          const userRef = window._firebase.ref(`users/${user.uid}`);
+          userRef.once('value', (snapshot) => {
+            const userData = snapshot.val() || {};
+            
+            // Update role display
+            const roleBadge = document.getElementById('roleBadge');
+            const roleInfo = document.getElementById('roleInfo');
+            
+            if (userData.role === 'admin') {
+              if (roleBadge) {
+                roleBadge.textContent = 'ADMIN';
+                roleBadge.style.display = 'inline-block';
+                roleBadge.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                roleBadge.style.color = 'white';
+                roleBadge.style.fontWeight = 'bold';
+              }
+              if (roleInfo) {
+                roleInfo.textContent = 'Quản trị viên';
+                roleInfo.style.color = '#ef4444';
+                roleInfo.style.fontWeight = 'bold';
+              }
+              
+              // Show admin navigation
+              const adminButton = document.querySelector('.admin-only');
+              if (adminButton) {
+                adminButton.style.display = 'flex';
+              }
+            } else if (userData.role === 'counselor') {
+              if (roleBadge) {
+                roleBadge.textContent = 'TƯ VẤN';
+                roleBadge.style.display = 'inline-block';
+                roleBadge.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+              }
+              if (roleInfo) roleInfo.textContent = 'Tư vấn viên';
+            } else {
+              if (roleInfo) roleInfo.textContent = 'Người dùng';
+            }
+            
+            // Update profile stats with actual data
+            updateProfileStats(userData, user.uid);
+          });
+        } else {
+          // Redirect to login if not authenticated
+          window.location.href = 'login.html';
+        }
+      });
+    });
+
+    // Dark mode toggle
+    document.addEventListener('DOMContentLoaded', () => {
       const darkModeToggle = document.getElementById('darkModeToggle');
       const currentTheme = localStorage.getItem('theme');
       
@@ -592,22 +647,27 @@
           localStorage.setItem('theme', 'light');
         }
       });
-      
-      // Load other settings from localStorage
-      const notificationToggle = document.getElementById('notificationToggle');
-      const privacyToggle = document.getElementById('privacyToggle');
-      
-      notificationToggle.checked = localStorage.getItem('notifications') === 'true';
-      privacyToggle.checked = localStorage.getItem('privacy') === 'true';
-      
-      notificationToggle.addEventListener('change', (e) => {
-        localStorage.setItem('notifications', e.target.checked);
-      });
-      
-      privacyToggle.addEventListener('change', (e) => {
-        localStorage.setItem('privacy', e.target.checked);
-      });
+
+      // Logout button handler
+      const logoutBtn = document.getElementById('profileLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          try {
+            if (window._firebase && window._firebase.signOut) {
+              await window._firebase.signOut();
+            }
+            window.location.href = 'index.html';
+          } catch (error) {
+            console.warn('Logout had issues, but redirecting:', error);
+            window.location.href = 'index.html';
+          }
+        });
+      }
     });
   </script>
+
+  <script src="src/firebase-init.js"></script>
+  <script src="src/auth.js"></script>
+  <script src="src/auth-guard.js"></script>
 </body>
 </html>
