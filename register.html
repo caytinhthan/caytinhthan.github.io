@@ -613,6 +613,19 @@
       setupPasswordToggle(document.getElementById('password'), passwordToggle);
       setupPasswordToggle(document.getElementById('confirmPassword'), confirmPasswordToggle);
       
+      // Check for redirect result on page load
+      window.addEventListener('firebase-ready', async () => {
+        try {
+          const redirectUser = await window.AuthHelpers.checkRedirectResult();
+          if (redirectUser) {
+            redirectAfterLogin();
+            return;
+          }
+        } catch (error) {
+          // Silent fail
+        }
+      });
+      
       // Password strength checker - NHẸ HỠN
       function checkPasswordStrength(password) {
         const strengthBar = document.querySelector('.strength-bar');
@@ -696,15 +709,28 @@
       }
       
       if (googleRegisterBtn) {
-        googleRegisterBtn.addEventListener('click', async () => {
+        googleRegisterBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          // Prevent double clicks
+          if (googleRegisterBtn.disabled) return;
+          
           try {
             showLoading(true);
+            googleRegisterBtn.disabled = true;
+            googleRegisterBtn.innerHTML = '<span>🔄</span><span>Đang mở cửa sổ...</span>';
+            
+            // Small delay to ensure UI updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             await window.AuthHelpers.signInWithGoogle();
             redirectAfterLogin();
           } catch (error) {
             showError(error.message);
           } finally {
             showLoading(false);
+            googleRegisterBtn.disabled = false;
+            googleRegisterBtn.innerHTML = '<span>🌐</span><span>Đăng ký với Google</span>';
           }
         });
       }

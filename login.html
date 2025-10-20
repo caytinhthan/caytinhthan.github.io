@@ -502,6 +502,19 @@
       // Setup toggle cho password field
       setupPasswordToggle(document.getElementById('password'), passwordToggle);
       
+      // Check for redirect result on page load
+      window.addEventListener('firebase-ready', async () => {
+        try {
+          const redirectUser = await window.AuthHelpers.checkRedirectResult();
+          if (redirectUser) {
+            redirectAfterLogin();
+            return;
+          }
+        } catch (error) {
+          // Silent fail
+        }
+      });
+      
       if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -521,15 +534,28 @@
       }
       
       if (googleLoginBtn) {
-        googleLoginBtn.addEventListener('click', async () => {
+        googleLoginBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          // Prevent double clicks
+          if (googleLoginBtn.disabled) return;
+          
           try {
             showLoading(true);
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.innerHTML = '<span>🔄</span><span>Đang mở cửa sổ...</span>';
+            
+            // Small delay to ensure UI updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             await window.AuthHelpers.signInWithGoogle();
             redirectAfterLogin();
           } catch (error) {
             showError(error.message);
           } finally {
             showLoading(false);
+            googleLoginBtn.disabled = false;
+            googleLoginBtn.innerHTML = '<span>🌐</span><span>Đăng nhập với Google</span>';
           }
         });
       }

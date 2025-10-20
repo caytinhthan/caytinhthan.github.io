@@ -57,7 +57,9 @@
         signOut: auth.signOut.bind(auth),
         onAuthStateChanged: auth.onAuthStateChanged.bind(auth),
         GoogleAuthProvider: firebase.auth.GoogleAuthProvider,
-        signInWithPopup: auth.signInWithPopup.bind(auth)
+        signInWithPopup: auth.signInWithPopup.bind(auth),
+        signInWithRedirect: auth.signInWithRedirect.bind(auth),
+        getRedirectResult: auth.getRedirectResult.bind(auth)
       };
       
       // Dispatch ready event

@@ -89,11 +89,40 @@
         provider.addScope('profile');
         provider.addScope('email');
         
+        // Configure provider settings for better popup handling
+        provider.setCustomParameters({
+          prompt: 'select_account'
+        });
+        
         const result = await window._firebase.signInWithPopup(provider);
         return result.user;
       } catch (error) {
-        console.error('Google sign in error:', error);
-        throw error;
+        // Handle specific popup errors
+        if (error.code === 'auth/popup-closed-by-user') {
+          throw new Error('Đăng nhập bị hủy bởi người dùng');
+        } else if (error.code === 'auth/popup-blocked') {
+          // Fallback to redirect if popup is blocked
+          try {
+            await window._firebase.signInWithRedirect(provider);
+            return null; // Will be handled by redirect result
+          } catch (redirectError) {
+            throw new Error('Popup bị chặn và redirect cũng thất bại. Vui lòng cho phép popup hoặc thử lại');
+          }
+        } else if (error.code === 'auth/cancelled-popup-request') {
+          throw new Error('Yêu cầu đăng nhập bị hủy');
+        } else {
+          throw new Error('Lỗi đăng nhập Google: ' + (error.message || 'Không xác định'));
+        }
+      }
+    },
+
+    // Check for redirect result
+    checkRedirectResult: async function() {
+      try {
+        const result = await window._firebase.getRedirectResult();
+        return result.user;
+      } catch (error) {
+        return null;
       }
     },
     
@@ -103,7 +132,6 @@
         const result = await window._firebase.signInWithEmailAndPassword(email, password);
         return result.user;
       } catch (error) {
-        console.error('Email sign in error:', error);
         throw error;
       }
     },
@@ -120,7 +148,6 @@
         
         return result.user;
       } catch (error) {
-        console.error('Email sign up error:', error);
         throw error;
       }
     },
@@ -134,7 +161,6 @@
         }
         await window._firebase.signOut();
       } catch (error) {
-        console.error('Sign out error:', error);
         throw error;
       }
     },
@@ -148,7 +174,7 @@
           lastActive: Date.now()
         });
       } catch (error) {
-        console.error('Error updating online status:', error);
+        // Silent fail
       }
     },
     
