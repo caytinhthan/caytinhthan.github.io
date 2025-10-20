@@ -1,44 +1,63 @@
-# Cây Thông Điệp
+# Cây Tình Thần
 
-Ứng dụng web để tạo cây tương tác với các lá chứa thông điệp.
+Ứng dụng web tương tác với cây và lá để viết thông điệp.
+
+## Tác giả
+
+**Trịnh Hoàng Tú**
+- Sinh viên IT passionate
+- Focus: Frontend Development & UX Design
+- Contact: [GitHub](https://github.com/caytinhthan)
 
 ## Tính năng
 
-- **Tự động thêm lá**: Thêm lá ở vị trí ngẫu nhiên
-- **Click để đặt**: Click trực tiếp lên cây để chọn vị trí 
-- **Kéo thả**: Di chuyển lá sau khi tạo
-- **Tùy chỉnh lá**: 12 hình dạng và 6 chủ đề màu sắc (tiền bạc, tình yêu, học tập, công việc, mối quan hệ, khác)
-- **Chế độ chỉ xem**: Khóa chỉnh sửa, chỉ cho phép xem thông điệp
-- **Theme sáng/tối**: Chuyển đổi giao diện
-- **Responsive**: Hoạt động trên mobile và desktop
+- **Thêm lá**: Click vào cây để đặt lá tại vị trí bất kỳ
+- **Thông điệp**: Viết và lưu thông điệp trên từng lá
+- **Đăng nhập**: Firebase Authentication với Google OAuth
+- **Phân quyền**: User thường và Admin
+- **Realtime**: Đồng bộ dữ liệu trực tiếp
+- **Theme**: Chế độ sáng/tối
+- **Mobile**: Responsive design
 
-## Cách sử dụng
+## Đăng nhập
 
-1. Nhấn "Tự động thêm" để thêm lá ngẫu nhiên
-2. Hoặc bật "Click để đặt" và click vào cây
-3. Chọn hình dạng, chủ đề màu sắc và nhập thông điệp
-4. Click vào lá để xem thông điệp, có thể sửa nếu cần
-5. Bật "Kéo thả" để di chuyển lá
+- **Email/Password**: Đăng ký và đăng nhập thông thường
+- **Google**: OAuth với Google account
+- **Phân quyền**: User (xem profile) / Admin (quản trị)
 
 ## Công nghệ
 
-- HTML5, CSS3, JavaScript
-- SVG cho đồ họa cây
-- Firebase Realtime Database (production)
-- LocalStorage (fallback)
+- Vanilla JavaScript ES6
+- Firebase v12.3.0 (Auth + Realtime Database)
+- SVG graphics
+- CSS custom properties
 
-## Chạy dự án
+## Deploy
 
-Mở `index.html` trong trình duyệt hoặc:
+Live site: https://caytinhthan.github.io
 
-```bash
-python -m http.server 8080
+## File structure
+
+```
+├── index.html          # Main app
+├── login.html          # Login page  
+├── register.html       # Register page
+├── profile.html        # User profile
+├── admin.html          # Admin panel
+├── src/
+│   ├── firebase-init.js # Firebase config
+│   ├── auth.js         # Authentication
+│   ├── auth-guard.js   # Access control
+│   └── script.js       # Main logic
+└── assets/            # CSS files
 ```
 
-Hoặc, dự án đã được deploy, truy cập trang web: caytinhthan.github.io
+## Features
 
-## Lưu trữ
-
-- **Production**: Firebase Realtime Database (realtime sync)
-- **Local/fallback**: LocalStorage
-- Dữ liệu tự động sync giữa các tab/device khi có Firebase
+- 🌳 Interactive tree with clickable leaves
+- 📝 Personal messages on each leaf
+- 🔐 Secure authentication system
+- 👥 Multi-user with role management
+- 📱 Mobile-first responsive design
+- 🌙 Dark/Light theme toggle
+- ⚡ Real-time data synchronization
