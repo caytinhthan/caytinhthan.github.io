@@ -89,7 +89,7 @@
         provider.addScope('profile');
         provider.addScope('email');
         
-        // Configure provider settings for better popup handling
+        // Configure for GitHub Pages domain
         provider.setCustomParameters({
           prompt: 'select_account'
         });
@@ -97,17 +97,10 @@
         const result = await window._firebase.signInWithPopup(provider);
         return result.user;
       } catch (error) {
-        // Handle specific popup errors
         if (error.code === 'auth/popup-closed-by-user') {
           throw new Error('Đăng nhập bị hủy bởi người dùng');
         } else if (error.code === 'auth/popup-blocked') {
-          // Fallback to redirect if popup is blocked
-          try {
-            await window._firebase.signInWithRedirect(provider);
-            return null; // Will be handled by redirect result
-          } catch (redirectError) {
-            throw new Error('Popup bị chặn và redirect cũng thất bại. Vui lòng cho phép popup hoặc thử lại');
-          }
+          throw new Error('Popup bị chặn. Vui lòng cho phép popup và thử lại');
         } else if (error.code === 'auth/cancelled-popup-request') {
           throw new Error('Yêu cầu đăng nhập bị hủy');
         } else {
