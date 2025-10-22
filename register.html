@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com;";>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebaseapp.com https://*.firebasedatabase.app;";>
   <link rel="preload" as="image" href="assets/tree/tree_base.jpg">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/main.css">
@@ -626,25 +626,29 @@
       // Check for redirect result on page load và auth state
       async function checkAuthAndRedirect() {
         try {
+          console.log('📍 Current page:', window.location.href);
+          
           // Check current auth state first
           const currentUser = window._firebase.auth.currentUser;
           if (currentUser) {
-            console.log('User already logged in:', currentUser.email);
-            redirectAfterLogin();
+            console.log('✅ User already logged in:', currentUser.email);
+            console.log('🔄 Redirecting to index.html from register page');
+            window.location.href = 'index.html';
             return;
           }
           
           // Check for redirect result
-          const redirectResult = await window.AuthHelpers.checkRedirectResult();
+          const redirectResult = await window.AuthHelpers.checkRedirectResult(true); // true = REGISTRATION
           if (redirectResult) {
-            console.log('Redirect result user:', redirectResult.email);
-            redirectAfterLogin();
+            console.log('🎯 Registration redirect result user:', redirectResult.email);
+            console.log('🔄 Redirecting to index.html after Google registration');
+            window.location.href = 'index.html';
             return;
           }
           
-          console.log('No current user or redirect result');
+          console.log('❌ No current user or redirect result');
         } catch (error) {
-          console.error('Auth check error:', error);
+          console.error('💥 Auth check error:', error);
           // Show error if redirect failed
           showError('Lỗi đăng nhập: ' + error.message);
         }
@@ -755,8 +759,8 @@
             // Small delay to ensure UI updates
             await new Promise(resolve => setTimeout(resolve, 300));
             
-            // This will redirect to Google
-            await window.AuthHelpers.signInWithGoogle();
+            // This will redirect to Google FOR REGISTRATION
+            await window.AuthHelpers.signUpWithGoogle();
             
             // If we get here, something went wrong
             showError('Có lỗi xảy ra trong quá trình chuyển hướng');

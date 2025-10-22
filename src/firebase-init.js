@@ -26,6 +26,12 @@
   // Initialize Firebase
   async function initFirebase() {
     try {
+      // Suppress extension runtime errors
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+        // Clear extension errors
+        chrome.runtime.lastError = undefined;
+      }
+      
       // Load Firebase scripts in order
       await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js');
       await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.3.0/firebase-database-compat.js');
@@ -35,6 +41,19 @@
       const app = firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
       const auth = firebase.auth();
+      
+      console.log('🔥 Firebase initialized successfully');
+      console.log('📊 Database URL:', firebaseConfig.databaseURL);
+      console.log('🔐 Auth domain:', firebaseConfig.authDomain);
+      
+      // Test database connection
+      db.ref('.info/connected').on('value', function(snapshot) {
+        if (snapshot.val() === true) {
+          console.log('✅ Connected to Firebase Database');
+        } else {
+          console.log('❌ Disconnected from Firebase Database');
+        }
+      });
       
       // Set auth persistence to LOCAL để giữ phiên đăng nhập
       await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -78,4 +97,12 @@
   } else {
     initFirebase();
   }
+  
+  // Suppress extension runtime errors globally
+  window.addEventListener('error', function(e) {
+    if (e.message && e.message.includes('extension')) {
+      e.preventDefault();
+      return false;
+    }
+  });
 })();
