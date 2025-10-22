@@ -207,43 +207,48 @@
         <div class="picker-row">
           <label>Hình dáng lá</label>
           <select id="leafShape">
-            <option value="money_gold">💰 Lá vàng (Tiền bạc)</option>
-            <option value="love_pink">💕 Lá hồng (Tình yêu)</option>
-            <option value="study_green">� Lá xanh (Học tập)</option>
-            <option value="work_blue">💼 Lá xanh dương (Công việc)</option>
-            <option value="relation_purple">� Lá tím (Mối quan hệ)</option>
-            <option value="other_red">� Lá đỏ (Khác)</option>
-            <option value="transition_yellow">� Lá vàng chuyển mùa</option>
-            <option value="dry_brown">� Lá khô nâu</option>
+            <option value="oval">🥚 Hình bầu dục</option>
+            <option value="round">⭕ Hình tròn</option>
+            <option value="pointed">� Nhọn</option>
+            <option value="heart">💖 Hình tim</option>
+            <option value="star">⭐ Hình sao</option>
+            <option value="maple">🍁 Lá phong</option>
+            <option value="willow">🌿 Lá liễu</option>
           </select>
         </div>
 
         <div class="picker-row">
-          <label style="font-weight:600">Chủ đề thông điệp</label>
+          <label style="font-weight:600">Màu sắc lá</label>
           <select id="leafPalette">
-            <option value="0">💰 Tiền bạc → Xanh pastel</option>
-            <option value="1">💕 Tình yêu → Hồng pastel</option>
-            <option value="2">📚 Học tập → Vàng pastel</option>
-            <option value="3">💼 Công việc → Xanh dương pastel</option>
-            <option value="4">👥 Mối quan hệ → Tím pastel</option>
-            <option value="5">🌟 Khác → Xanh lá pastel nhạt</option>
+            <option value="0">💛 Vàng</option>
+            <option value="1">� Hồng</option>
+            <option value="2">💚 Xanh lá</option>
+            <option value="3">💙 Xanh dương</option>
+            <option value="4">� Tím</option>
+            <option value="5">❤️ Đỏ</option>
           </select>
         </div>
 
         <div class="picker-row">
-          <label style="font-weight:600">Kích cỡ</label>
-          <input type="range" id="leafScale" min="0.8" max="1.4" step="0.05" value="1">
+          <label>Kích thước</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="leafScale" min="0.7" max="1.8" step="0.1" value="1.0" style="flex: 1;">
+            <span id="scaleValue" style="min-width: 35px; font-size: 12px; color: var(--text-secondary);">1.0x</span>
+          </div>
         </div>
 
         <div class="picker-row">
-          <label style="font-weight:600">Góc xoay</label>
-          <input type="range" id="leafRotation" min="-25" max="25" step="1" value="0">
+          <label>Độ xoay</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="leafRotation" min="-45" max="45" step="5" value="0" style="flex: 1;">
+            <span id="rotationValue" style="min-width: 35px; font-size: 12px; color: var(--text-secondary);">0°</span>
+          </div>
         </div>
 
         <div class="preview" id="leafPreview">
           <div class="preview-label">Xem trước:</div>
-          <div class="preview-leaf">
-            <img id="previewLeafImage" src="assets/leaves/leaf_money_gold_1.png" alt="Preview" style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">
+          <div class="preview-leaf" style="display: flex; justify-content: center; align-items: center; height: 90px;">
+            <img id="previewLeafImage" src="assets/leaves/oval/leaf_oval_yellow.png" alt="Preview" style="width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); transition: transform 0.2s ease;">
           </div>
         </div>
       </div>

@@ -5,9 +5,8 @@
 ## Tác giả
 
 **Trịnh Hoàng Tú**
-- Sinh viên IT passionate
+- Cybersec Undergraduate
 - Focus: Frontend Development & UX Design
-- Contact: [GitHub](https://github.com/caytinhthan)
 
 ## Tính năng
 

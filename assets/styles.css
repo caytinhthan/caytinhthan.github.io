@@ -777,6 +777,32 @@ textarea:focus, input[type="text"]:focus {
   transform-origin: center center;
 }
 
+.leaf image {
+  /* Best method: Advanced SVG filter to remove white background */
+  filter: 
+    drop-shadow(0 2px 4px rgba(0,0,0,.12))
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='remove-white'%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -1 -1 -1 1 1'/%3E%3C/filter%3E%3C/svg%3E#remove-white");
+  transition: filter 0.2s ease;
+}
+
+/* Fallback methods */
+.leaf image.blend {
+  mix-blend-mode: multiply;
+  background: transparent;
+}
+
+.leaf image.contrast {
+  filter: 
+    drop-shadow(0 2px 4px rgba(0,0,0,.12))
+    brightness(0.9)
+    contrast(1.2)
+    saturate(1.1);
+}
+
+.leaf:hover image {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+}
+
 .leaf path{
   filter: drop-shadow(0 2px 4px rgba(0,0,0,.12));
   transition: filter 0.2s ease;

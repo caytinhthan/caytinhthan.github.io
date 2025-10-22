@@ -288,32 +288,27 @@
 
   // Hình ảnh lá cây thật từ assets/leaves/
   function getLeafImagePath(shapeKey, paletteIdx) {
-    // Mapping palette index to leaf image
-    const leafImages = {
-      0: 'leaf_money_gold_1.png',     // Tiền bạc → Lá vàng
-      1: 'leaf_love_pink_1.png',      // Tình yêu → Lá hồng  
-      2: 'leaf_study_green_1.png',    // Học tập → Lá xanh
-      3: 'leaf_work_blue_1.png',      // Công việc → Lá xanh dương
-      4: 'leaf_relation_purple_1.png', // Mối quan hệ → Lá tím
-      5: 'leaf_other_red_1.png'       // Khác → Lá đỏ
-    };
+    // Shape mapping to folder names
+    const shapes = ['oval', 'round', 'pointed', 'heart', 'star', 'maple', 'willow'];
     
-    // Fallback cho các shape keys mới
-    const shapeToImage = {
-      'money_gold': 'leaf_money_gold_1.png',
-      'love_pink': 'leaf_love_pink_1.png', 
-      'study_green': 'leaf_study_green_1.png',
-      'work_blue': 'leaf_work_blue_1.png',
-      'relation_purple': 'leaf_relation_purple_1.png',
-      'other_red': 'leaf_other_red_1.png',
-      'transition_yellow': 'leaf_transition_yellow.png',
-      'dry_brown': 'leaf_dry_brown.png'
-    };
+    // Color mapping from palette index
+    const colors = ['yellow', 'pink', 'green', 'blue', 'purple', 'red'];
     
-    // Ưu tiên shape key, fallback về palette index
-    let imageName = shapeToImage[shapeKey] || leafImages[paletteIdx] || 'leaf_money_gold_1.png';
+    // Special leaves
+    if (shapeKey === 'dry_brown') {
+      return 'assets/leaves/special/SPECIAL_leaf_dry.png';
+    }
+    if (shapeKey === 'transition_yellow') {
+      return 'assets/leaves/special/SPECIAL_leaf_transition.png';
+    }
     
-    return `assets/leaves/${imageName}`;
+    // Default shape if not provided or invalid
+    let shape = shapes.includes(shapeKey) ? shapeKey : 'oval';
+    
+    // Default color based on palette index
+    let color = colors[paletteIdx] || 'green';
+    
+    return `assets/leaves/${shape}/leaf_${shape}_${color}.png`;
   }
   
   function pickPalette(idx){
@@ -331,10 +326,25 @@
   }
   
   function pickLeafShape(key){
-    // Giữ lại để compatibility - bây giờ chỉ return key
-    const validKeys = ['money_gold', 'love_pink', 'study_green', 'work_blue', 'relation_purple', 'other_red', 'transition_yellow', 'dry_brown'];
-    const shapeKey = validKeys.includes(key) ? key : 'money_gold';
-    return { key: shapeKey, d: '' }; // d không cần thiết nữa
+    // New shape system with actual leaf shapes
+    const validShapes = ['oval', 'round', 'pointed', 'heart', 'star', 'maple', 'willow'];
+    
+    // Legacy compatibility mapping
+    const legacyMap = {
+      'money_gold': 'oval',
+      'love_pink': 'heart', 
+      'study_green': 'pointed',
+      'work_blue': 'round',
+      'relation_purple': 'star',
+      'other_red': 'maple',
+      'transition_yellow': 'transition_yellow', // Special
+      'dry_brown': 'dry_brown' // Special
+    };
+    
+    // Use legacy mapping if old key, otherwise use key directly
+    const shapeKey = legacyMap[key] || (validShapes.includes(key) ? key : 'oval');
+    
+    return { key: shapeKey, d: '' }; // d not needed anymore for images
   }
   function getVeinForShape(d){
     // Oak với gân phức tạp
@@ -390,6 +400,7 @@
       id,
       text: leaf?.dataset.msg || "",
       author: leaf?.dataset.author || "",
+      userId: leaf?.dataset.userId || "", // Include userId
       position,
       scale: Number(leaf?.dataset.scale || 1),
       rotation: Number(leaf?.dataset.rotation || 0),
@@ -455,53 +466,29 @@
   function renderPreview(){
     // Update image preview in modal
     const previewImg = document.getElementById('previewLeafImage');
+    const scaleValue = document.getElementById('scaleValue');
+    const rotationValue = document.getElementById('rotationValue');
+    
     if (previewImg && leafShapeSel?.value) {
       const paletteIdx = Number(leafPaletteSel?.value) || 0;
       const imagePath = getLeafImagePath(leafShapeSel.value, paletteIdx);
+      const scale = clampScale(leafScaleInp?.value || 1);
+      const rotation = clampRot(leafRotationInp?.value || 0);
+      
       if (imagePath) {
         previewImg.src = imagePath;
         previewImg.style.display = 'block';
+        previewImg.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
       } else {
         previewImg.style.display = 'none';
       }
+      
+      // Update value displays
+      if (scaleValue) scaleValue.textContent = scale.toFixed(1) + 'x';
+      if (rotationValue) rotationValue.textContent = rotation + '°';
     }
-    
-    // Keep old SVG preview for compatibility if leafPreview element exists
-    if (!leafPreview) return;
-    const { d } = pickLeafShape(leafShapeSel?.value);
-    const { palette } = pickPalette(Number(leafPaletteSel?.value));
-    const s = clampScale(leafScaleInp?.value || 1);
-    const rot = clampRot(leafRotationInp?.value || 0);
-    
-    // Use safe method to create SVG instead of innerHTML
-    leafPreview.textContent = ''; // Clear content safely
-    
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '-40 -40 80 80');
-    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('transform', `rotate(${rot}) scale(${s})`);
-    
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('fill', palette.fill);
-    path.setAttribute('stroke', palette.stroke);
-    path.setAttribute('stroke-width', '1.6');
-    path.setAttribute('vector-effect', 'non-scaling-stroke');
-    
-    const veinPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    veinPath.setAttribute('d', getVeinForShape(d));
-    veinPath.setAttribute('fill', 'none');
-    veinPath.setAttribute('stroke', palette.vein);
-    veinPath.setAttribute('stroke-width', '1');
-    veinPath.setAttribute('vector-effect', 'non-scaling-stroke');
-    
-    g.appendChild(path);
-    g.appendChild(veinPath);
-    svg.appendChild(g);
-    leafPreview.appendChild(svg);
   }
+
   function openAddModal(message="", author="", isEdit=false, leafId=null){
     if (!addModal) return;
     addMessage.value = message || "";
@@ -534,7 +521,6 @@
   function addLeafFromData(data, animate=false){
     // Validate và fix corrupted data
     if (!data.position || typeof data.position !== 'object' || data.position.x === undefined) {
-      console.warn("Invalid position data, generating new position", data);
       data.position = randomPositionInTree();
     }
     
@@ -550,6 +536,7 @@
     g.dataset.id        = data.id;
     g.dataset.msg       = data.text || "";
     g.dataset.author    = data.author || "";
+    g.dataset.userId    = data.userId || ""; // Store userId for proper tracking
     g.dataset.position  = JSON.stringify(position);
     g.dataset.rotation  = String(clampRot(rotation));
     g.dataset.scale     = String(clampScale(scale));
@@ -567,10 +554,10 @@
     const leafImagePath = getLeafImagePath(shapeKey, paletteIdx);
     const leafImage = mk("image", { 
       href: leafImagePath,
-      x: "-25", // Center image
-      y: "-25", 
-      width: "50",
-      height: "50",
+      x: "-35", // Center larger image
+      y: "-35", 
+      width: "70",
+      height: "70",
       style: "filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"
     });
 
@@ -711,6 +698,17 @@
   });
   [leafShapeSel, leafPaletteSel, leafScaleInp, leafRotationInp].forEach(el=> el && el.addEventListener("input", renderPreview));
 
+  // Update value displays for scale and rotation
+  leafScaleInp?.addEventListener("input", (e) => {
+    const scaleValue = document.getElementById('scaleValue');
+    if (scaleValue) scaleValue.textContent = Number(e.target.value).toFixed(1) + 'x';
+  });
+  
+  leafRotationInp?.addEventListener("input", (e) => {
+    const rotationValue = document.getElementById('rotationValue');
+    if (rotationValue) rotationValue.textContent = e.target.value + '°';
+  });
+
 
   addMessage?.addEventListener("input", (e) => {
     checkSecretCode(e.target.value);
@@ -789,10 +787,30 @@
       // Add new
       const pos = pendingPosition || randomPositionInTree();
       if (Number.isFinite(rotation)) pos.rotation = rotation;
-      const data = { id: uuid(), text, author, ts: Date.now(), position: pos, shapeKey, paletteIdx, scale, rotation };
+      
+      // Get current user info for proper attribution
+      const currentUser = window._firebase?.auth?.currentUser;
+      const userId = currentUser?.uid || null;
+      const finalAuthor = author || (currentUser?.displayName || currentUser?.email?.split('@')[0] || "");
+      
+      const data = { 
+        id: uuid(), 
+        text, 
+        author: finalAuthor, 
+        userId: userId, // Add userId for proper tracking
+        ts: Date.now(), 
+        position: pos, 
+        shapeKey, 
+        paletteIdx, 
+        scale, 
+        rotation 
+      };
+      
       addLeafFromData(data, true);
+      
       if (hasFB()) {
-        fb().db.ref(`leaves/${data.id}`).set(getLeafDataFromDOM(data.id)).catch(console.error);
+        // Use the data object directly instead of getting from DOM
+        fb().db.ref(`leaves/${data.id}`).set(data).catch(console.error);
       }
     }
 
@@ -858,17 +876,13 @@
   
   // Realtime attach: chạy ngay nếu có FB, và attach lại nếu module đến sau
   function attachRealtime(){
-    if (!hasFB()) {
-      console.error("❌ Firebase not available in attachRealtime");
-      return;
-    }
+    if (!hasFB()) return;
     
     leavesRef().on('value', (snap)=>{
       const data = snap.val();
       
       // Clear existing leaves (SVG)
       if (leaves) leaves.innerHTML = "";
-      allLeaves.length = 0;
       if (list) list.innerHTML = "";
       
       if (data && typeof data === 'object'){
@@ -880,8 +894,6 @@
             addLeafFromData(d, false);
           });
           
-      } else {
-        console.warn("⚠️ No leaves data found in Firebase");
       }
       
       updateCounter(); 
@@ -891,10 +903,10 @@
       try { 
         localStorage.setItem(storeKey, JSON.stringify(Object.values(data||{}))); 
       } catch (e) {
-        console.error("💾 Failed to save to localStorage:", e);
+        console.error("Failed to save to localStorage:", e);
       }
     }, (error) => {
-      console.error("❌ Firebase realtime listener error:", error);
+      console.error("Firebase realtime listener error:", error);
     });
   }
 
@@ -915,8 +927,6 @@
   // Always try Firebase first - no localStorage fallback
   if (hasFB()) {
     attachRealtime();
-  } else {
-    console.warn("⚠️ Firebase not available yet, waiting for firebase-ready event...");
   }
 })();
 

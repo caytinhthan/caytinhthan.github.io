@@ -515,10 +515,13 @@
         const displayName = userData.displayName || userEmail.split('@')[0];
         
         Object.values(allLeaves).forEach(leaf => {
-          // Check if leaf belongs to current user
-          if (leaf.author === displayName || 
-              leaf.author === userEmail.split('@')[0] ||
-              leaf.userId === userId) {
+          // Check if leaf belongs to current user by multiple criteria
+          const isUserLeaf = leaf.userId === userId || 
+                           leaf.author === displayName || 
+                           leaf.author === userEmail.split('@')[0] ||
+                           leaf.author === userEmail;
+                           
+          if (isUserLeaf) {
             userLeaves++;
             
             // Check if leaf is healthy (created within last 30 days)
@@ -526,8 +529,8 @@
               healthyLeaves++;
             }
             
-            // Count messages
-            if (leaf.message && leaf.message.trim()) {
+            // Count messages (any leaf with text content)
+            if (leaf.text && leaf.text.trim()) {
               messages++;
             }
           }
