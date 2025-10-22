@@ -511,9 +511,20 @@
             return;
           }
         } catch (error) {
-          // Silent fail
+          // Silent fail for redirect result
         }
       });
+      
+      // Also check immediately if Firebase is already ready
+      if (window._firebase) {
+        window.AuthHelpers.checkRedirectResult().then(user => {
+          if (user) {
+            redirectAfterLogin();
+          }
+        }).catch(() => {
+          // Silent fail
+        });
+      }
       
       if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {

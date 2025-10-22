@@ -94,13 +94,26 @@
           prompt: 'select_account'
         });
         
-        const result = await window._firebase.signInWithPopup(provider);
-        return result.user;
+        // Try popup first, fallback to redirect for GitHub Pages
+        try {
+          const result = await window._firebase.signInWithPopup(provider);
+          return result.user;
+        } catch (popupError) {
+          if (popupError.code === 'auth/popup-blocked' || 
+              popupError.code === 'auth/popup-closed-by-user' ||
+              popupError.code === 'auth/cancelled-popup-request') {
+            
+            // Fallback to redirect for GitHub Pages
+            await window._firebase.signInWithRedirect(provider);
+            return null; // Will handle in redirect result
+          }
+          throw popupError;
+        }
       } catch (error) {
         if (error.code === 'auth/popup-closed-by-user') {
           throw new Error('Đăng nhập bị hủy bởi người dùng');
         } else if (error.code === 'auth/popup-blocked') {
-          throw new Error('Popup bị chặn. Vui lòng cho phép popup và thử lại');
+          throw new Error('Popup bị chặn. Sử dụng phương thức chuyển hướng...');
         } else if (error.code === 'auth/cancelled-popup-request') {
           throw new Error('Yêu cầu đăng nhập bị hủy');
         } else {
