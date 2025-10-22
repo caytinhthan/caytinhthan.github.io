@@ -2,15 +2,22 @@
   "rules": {
     // Users data - only authenticated users can read/write their own data
     "users": {
+      ".read": "auth !== null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$uid": {
-        ".read": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".read": "$uid === auth.uid",
         ".write": "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
         ".validate": "newData.hasChildren(['email', 'displayName', 'role', 'createdAt'])",
+        "uid": {
+          ".validate": "newData.val() === $uid"
+        },
         "email": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
         },
         "displayName": {
           ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "photoURL": {
+          ".validate": "newData.isString() || newData.val() === null"
         },
         "role": {
           ".validate": "newData.val() === 'user' || newData.val() === 'admin' || newData.val() === 'counselor'"
@@ -18,8 +25,11 @@
         "createdAt": {
           ".validate": "newData.isNumber()"
         },
-        "lastLogin": {
+        "lastActive": {
           ".validate": "newData.isNumber()"
+        },
+        "isOnline": {
+          ".validate": "newData.isBoolean()"
         }
       }
     },
@@ -128,6 +138,26 @@
     "logs": {
       ".read": "root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    
+    // Analytics - authenticated users can write their own visits, admin can read all
+    "analytics": {
+      "visits": {
+        ".read": "auth !== null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        "$visitKey": {
+          ".write": "auth !== null && newData.child('uid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['uid', 'timestamp', 'date'])",
+          "uid": {
+            ".validate": "newData.val() === auth.uid"
+          },
+          "timestamp": {
+            ".validate": "newData.isNumber()"
+          },
+          "date": {
+            ".validate": "newData.isString()"
+          }
+        }
+      }
     },
     
     // Deny all other paths

@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com wss://*.firebaseio.com; frame-src https://www.google.com https://www.recaptcha.net;">
   <title>Quản trị - Cây Tình Thần</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     .admin-container {
       min-height: 100vh;
@@ -88,7 +88,7 @@
     }
     
     .logout-btn {
-      background: #ef4444;
+      background: #3b82f6;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -99,7 +99,7 @@
     }
     
     .logout-btn:hover {
-      background: #dc2626;
+      background: #2563eb;
     }
     
     .admin-content {
@@ -171,9 +171,13 @@
       border: 1px solid #e2e8f0;
     }
     
+    .admin-section.full-width {
+      grid-column: 1 / -1;
+    }
+    
     .section-header {
       display: flex;
-      justify-content: between;
+      justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
       border-bottom: 1px solid #e2e8f0;
@@ -185,6 +189,12 @@
       font-weight: 700;
       color: #0f172a;
       margin: 0;
+    }
+    
+    .section-count {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
     }
     
     .section-action {
@@ -203,6 +213,58 @@
       background: #2563eb;
     }
     
+    /* View mode buttons */
+    .view-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .view-mode-btn {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .view-mode-btn:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+    
+    .view-mode-btn.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .refresh-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .refresh-btn:hover {
+      background: #059669;
+    }
+    
     .user-list {
       display: flex;
       flex-direction: column;
@@ -218,6 +280,216 @@
       padding: 12px;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    
+    .user-item:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 14px;
+      margin: 0 0 4px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-role {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0 0 2px 0;
+    }
+    
+    .user-status {
+      font-size: 11px;
+      color: #64748b;
+    }
+    
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    
+    .btn-edit, .btn-delete {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-edit {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-edit:hover {
+      background: #2563eb;
+    }
+    
+    .btn-delete {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .btn-delete:hover {
+      background: #dc2626;
+    }
+    
+    /* Leaf items */
+    .leaf-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .leaf-item {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      background: white;
+    }
+    
+    .leaf-item:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .leaf-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    
+    .leaf-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .leaf-text {
+      font-size: 14px;
+      color: #334155;
+      margin: 0 0 8px 0;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+    
+    .leaf-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .leaf-author {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    .leaf-author-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    
+    .leaf-time {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    
+    .leaf-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    
+    /* Grid view for leaves */
+    .leaf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .leaf-card {
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      transition: all 0.2s ease;
+    }
+    
+    .leaf-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    
+    .leaf-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+    
+    .leaf-card-text {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin-top: 20px;
     }
     
     .user-item-avatar {
@@ -350,6 +622,127 @@
       pointer-events: none;
     }
     
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 100px;
+    }
+    
+    /* Dark mode */
+    body.dark-mode,
+    [data-theme="dark"] body {
+      background: #0f172a;
+    }
+    
+    body.dark-mode .admin-container,
+    [data-theme="dark"] .admin-container {
+      background: #0f172a;
+    }
+    
+    body.dark-mode .admin-header,
+    [data-theme="dark"] .admin-header {
+      background: #1e293b;
+      border-bottom-color: #334155;
+    }
+    
+    body.dark-mode .admin-nav a,
+    [data-theme="dark"] .admin-nav a {
+      color: #cbd5e1;
+    }
+    
+    body.dark-mode .admin-nav a:hover,
+    body.dark-mode .admin-nav a.active,
+    [data-theme="dark"] .admin-nav a:hover,
+    [data-theme="dark"] .admin-nav a.active {
+      background: #334155;
+      color: #f1f5f9;
+    }
+    
+    body.dark-mode .stat-card,
+    body.dark-mode .admin-section,
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .admin-section {
+      background: #1e293b;
+      border-color: #334155;
+    }
+    
+    body.dark-mode .stat-title,
+    body.dark-mode .section-count,
+    [data-theme="dark"] .stat-title,
+    [data-theme="dark"] .section-count {
+      color: #94a3b8;
+    }
+    
+    body.dark-mode .stat-value,
+    body.dark-mode .section-title,
+    body.dark-mode .user-name,
+    body.dark-mode .user-item-name,
+    body.dark-mode .leaf-text,
+    body.dark-mode .leaf-card-text,
+    [data-theme="dark"] .stat-value,
+    [data-theme="dark"] .section-title,
+    [data-theme="dark"] .user-name,
+    [data-theme="dark"] .user-item-name,
+    [data-theme="dark"] .leaf-text,
+    [data-theme="dark"] .leaf-card-text {
+      color: #f1f5f9;
+    }
+    
+    body.dark-mode .user-item,
+    body.dark-mode .leaf-item,
+    body.dark-mode .leaf-card,
+    [data-theme="dark"] .user-item,
+    [data-theme="dark"] .leaf-item,
+    [data-theme="dark"] .leaf-card {
+      background: #1e293b;
+      border-color: #334155;
+    }
+    
+    body.dark-mode .user-item:hover,
+    body.dark-mode .leaf-item:hover,
+    body.dark-mode .leaf-card:hover,
+    [data-theme="dark"] .user-item:hover,
+    [data-theme="dark"] .leaf-item:hover,
+    [data-theme="dark"] .leaf-card:hover {
+      border-color: #475569;
+    }
+    
+    body.dark-mode .user-role,
+    body.dark-mode .user-status,
+    body.dark-mode .user-item-role,
+    body.dark-mode .leaf-author,
+    body.dark-mode .leaf-time,
+    [data-theme="dark"] .user-role,
+    [data-theme="dark"] .user-status,
+    [data-theme="dark"] .user-item-role,
+    [data-theme="dark"] .leaf-author,
+    [data-theme="dark"] .leaf-time {
+      color: #64748b;
+    }
+    
+    body.dark-mode .empty-state,
+    [data-theme="dark"] .empty-state {
+      color: #64748b;
+    }
+    
+    body.dark-mode .view-mode-btn,
+    [data-theme="dark"] .view-mode-btn {
+      background: #334155;
+      color: #cbd5e1;
+      border-color: #475569;
+    }
+    
+    body.dark-mode .view-mode-btn:hover,
+    [data-theme="dark"] .view-mode-btn:hover {
+      background: #475569;
+    }
+    
+    body.dark-mode .view-mode-btn.active,
+    [data-theme="dark"] .view-mode-btn.active {
+      background: #3b82f6;
+      color: white;
+    }
+    
     @media (max-width: 768px) {
       .admin-header-content {
         padding: 0 16px;
@@ -387,29 +780,29 @@
         </div>
         
         <nav class="admin-nav">
-          <a href="#dashboard" class="active">Dashboard</a>
-          <a href="#users">Người dùng</a>
-          <a href="#chat">Chat</a>
-          <a href="#settings">Cài đặt</a>
+          <a href="#dashboard" class="nav-link active" data-section="dashboard">Dashboard</a>
+          <a href="#analytics" class="nav-link" data-section="analytics">Thống kê</a>
+          <a href="#users" class="nav-link" data-section="users">Người dùng</a>
+          <a href="#leaves" class="nav-link" data-section="leaves">Lá cây</a>
         </nav>
         
         <div class="user-menu">
-          <div class="user-avatar" id="userAvatar">A</div>
-          <span id="userName">Admin</span>
-          <button class="logout-btn" id="logoutBtn">Đăng xuất</button>
+          <div class="user-avatar" id="userAvatar">...</div>
+          <span id="userName">Đang tải...</span>
+          <button class="logout-btn" id="homeBtnHeader">Trang chủ</button>
         </div>
       </div>
     </header>
     
     <main class="admin-content">
-      <div class="stats-grid">
+      <!-- Dashboard Stats -->
+      <div id="dashboard" class="stats-grid">
         <div class="stat-card">
           <div class="stat-header">
             <h3 class="stat-title">Tổng số lá</h3>
             <span class="stat-icon">🌿</span>
           </div>
           <p class="stat-value" id="totalLeaves">0</p>
-          <p class="stat-change">+12% so với tuần trước</p>
         </div>
         
         <div class="stat-card">
@@ -418,7 +811,6 @@
             <span class="stat-icon">👥</span>
           </div>
           <p class="stat-value" id="activeUsers">0</p>
-          <p class="stat-change">+5% so với tuần trước</p>
         </div>
         
         <div class="stat-card">
@@ -429,40 +821,70 @@
           <p class="stat-value" id="witheredLeaves">0</p>
           <p class="stat-change">Cần được chú ý</p>
         </div>
-        
-        <div class="stat-card">
-          <div class="stat-header">
-            <h3 class="stat-title">Chat đang chờ</h3>
-            <span class="stat-icon">💬</span>
-          </div>
-          <p class="stat-value" id="pendingChats">0</p>
-          <p class="stat-change">Cần phản hồi</p>
-        </div>
       </div>
       
       <div class="admin-grid">
-        <div class="admin-section">
+        <!-- User Traffic Analytics -->
+        <div id="analytics" class="admin-section full-width">
           <div class="section-header">
-            <h2 class="section-title">Người dùng mới nhất</h2>
-            <button class="section-action">Xem tất cả</button>
+            <h2 class="section-title">📊 Thống kê truy cập người dùng</h2>
+            <div class="view-controls">
+              <button class="refresh-btn" onclick="loadTrafficAnalytics()">
+                <span>🔄</span>
+                <span>Làm mới</span>
+              </button>
+              <span class="section-count" id="totalVisitsCount">0 lượt truy cập</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="trafficChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- User List -->
+        <div id="users" class="admin-section full-width">
+          <div class="section-header">
+            <h2 class="section-title">👥 Danh sách người dùng</h2>
+            <div class="view-controls">
+              <button class="refresh-btn" onclick="loadUsersList()">
+                <span>🔄</span>
+                <span>Làm mới</span>
+              </button>
+              <span class="section-count" id="totalUsersCount">0 người dùng</span>
+            </div>
           </div>
           <div class="user-list" id="userList">
             <div class="empty-state">
               <span class="empty-state-icon">👥</span>
-              <p>Không có người dùng nào</p>
+              <p>Đang tải...</p>
             </div>
           </div>
         </div>
         
-        <div class="admin-section">
+        <!-- Leaves List -->
+        <div id="leaves" class="admin-section full-width">
           <div class="section-header">
-            <h2 class="section-title">Hàng đợi tư vấn</h2>
-            <button class="section-action">Cài đặt</button>
+            <h2 class="section-title">🍃 Danh sách lá cây</h2>
+            <div class="view-controls">
+              <button class="view-mode-btn active" onclick="switchLeafView('list')" id="listViewBtn">
+                <span>📋</span>
+                <span>Danh sách</span>
+              </button>
+              <button class="view-mode-btn" onclick="switchLeafView('grid')" id="gridViewBtn">
+                <span>🎯</span>
+                <span>Lưới</span>
+              </button>
+              <button class="refresh-btn" onclick="loadLeavesList()">
+                <span>🔄</span>
+                <span>Làm mới</span>
+              </button>
+              <span class="section-count" id="totalLeavesCount">0 lá cây</span>
+            </div>
           </div>
-          <div class="chat-queue" id="chatQueue">
+          <div class="leaf-list" id="leafList">
             <div class="empty-state">
-              <span class="empty-state-icon">💬</span>
-              <p>Không có chat nào đang chờ</p>
+              <span class="empty-state-icon">🍃</span>
+              <p>Đang tải...</p>
             </div>
           </div>
         </div>
@@ -475,144 +897,596 @@
   <script src="src/auth-guard.js"></script>
   
   <script>
-    // Wait for Firebase to be ready
-    window.addEventListener('firebase-ready', () => {
-      // Check admin access
-      if (window._firebase && window._firebase.onAuthStateChanged) {
-        window._firebase.onAuthStateChanged(user => {
-          if (!user) {
-            window.location.href = 'login.html?redirect=admin.html';
-            return;
-          }
-          
-          // Update user info
-          document.getElementById('userName').textContent = user.displayName || user.email;
-          document.getElementById('userAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
-          
-          // Check if user has admin role
-          const userRef = window._firebase.ref(`users/${user.uid}`);
-          userRef.once('value', (snapshot) => {
-            const userData = snapshot.val();
-            if (!userData || userData.role !== 'admin') {
-              // Redirect non-admin users
-              window.location.href = 'index.html';
-              return;
-            }
-            
-            // Load dashboard data for admin users
-            loadDashboard();
-          });
-        });
-      }
-    });
+    // ===== DARK MODE SYNC =====
     
-    // Simple dashboard loading function
-    function loadDashboard() {
-      // Load basic stats
-      if (window._firebase) {
-        const usersRef = window._firebase.ref('users');
-        const leavesRef = window._firebase.ref('leaves');
-        
-        // Count users
-        usersRef.once('value', (snapshot) => {
-          const users = snapshot.val() || {};
-          const userCount = Object.keys(users).length;
-          
-          const userCountEl = document.querySelector('#userCount .stat-value');
-          if (userCountEl) userCountEl.textContent = userCount;
-        });
-        
-        // Count leaves
-        leavesRef.once('value', (snapshot) => {
-          const leaves = snapshot.val() || {};
-          const leafCount = Object.keys(leaves).length;
-          
-          const leafCountEl = document.querySelector('#leafCount .stat-value');
-          if (leafCountEl) leafCountEl.textContent = leafCount;
-        });
+    // Apply dark mode on load
+    (function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.body.classList.add('dark-mode');
       }
+      
+      // Listen for theme changes from other pages
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+          if (e.newValue === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.body.classList.add('dark-mode');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+            document.body.classList.remove('dark-mode');
+          }
+        }
+      });
+    })();
+    
+    // ===== CHỈ LOAD DATA - AUTH-GUARD.JS ĐÃ HANDLE TẤT CẢ AUTH =====
+    
+    // Load dashboard stats
+    function loadDashboard() {
+      console.log('📊 Loading dashboard stats...');
+      
+      if (!window._firebase) {
+        console.error('❌ Firebase not initialized');
+        return;
+      }
+      
+      // Load total leaves
+      window._firebase.ref('leaves').once('value')
+        .then((snapshot) => {
+          const leaves = snapshot.val() || {};
+          const totalLeaves = Object.keys(leaves).length;
+          document.getElementById('totalLeaves').textContent = totalLeaves;
+          console.log(`🌿 Total leaves: ${totalLeaves}`);
+        })
+        .catch(err => console.error('Error loading leaves:', err));
+      
+      // Load users stats
+      window._firebase.ref('users').once('value')
+        .then((snapshot) => {
+          console.log('📊 Users snapshot received:', snapshot.val());
+          const users = snapshot.val() || {};
+          const allUsers = Object.values(users);
+          
+          console.log(`📊 Total users found: ${allUsers.length}`);
+          
+          // Count active users (online or active in last 24h)
+          const now = Date.now();
+          const activeUsers = allUsers.filter(u => 
+            u.isOnline || (u.lastActive && (now - u.lastActive) < 24 * 60 * 60 * 1000)
+          ).length;
+          
+          document.getElementById('activeUsers').textContent = activeUsers;
+          console.log(`👥 Active users: ${activeUsers} / ${allUsers.length}`);
+          
+          // Load ALL users list (sorted by newest first)
+          const sortedUsers = allUsers
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          
+          console.log('📊 Calling loadUsersList with sorted users...');
+          loadUsersList(sortedUsers);
+        })
+        .catch(err => console.error('Error loading users:', err));
+      
+      // Load withered leaves (TODO: implement logic)
+      document.getElementById('witheredLeaves').textContent = '0';
     }
     
-    // Logout handler
-    document.addEventListener('DOMContentLoaded', () => {
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-          try {
-            if (window._firebase && window._firebase.signOut) {
-              await window._firebase.signOut();
+    // Load users list
+    function loadUsersList(users) {
+      console.log('📋 loadUsersList called with:', users);
+      const userList = document.getElementById('userList');
+      const totalUsersCount = document.getElementById('totalUsersCount');
+      
+      console.log('userList element:', userList);
+      console.log('totalUsersCount element:', totalUsersCount);
+      
+      if (!users || users.length === 0) {
+        console.warn('⚠️ No users to display');
+        userList.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-state-icon">👥</span>
+            <p>Không có người dùng nào</p>
+          </div>
+        `;
+        if (totalUsersCount) totalUsersCount.textContent = '0 người dùng';
+        return;
+      }
+      
+      console.log(`✅ Rendering ${users.length} users...`);
+      
+      // Update count
+      if (totalUsersCount) {
+        totalUsersCount.textContent = `${users.length} người dùng`;
+      }
+      
+      userList.innerHTML = users.map(user => {
+        // Determine online status: online in last 5 minutes
+        const now = Date.now();
+        const isRecentlyActive = user.lastActive && (now - user.lastActive) < 5 * 60 * 1000; // 5 minutes
+        const statusText = isRecentlyActive ? '🟢 Online' : '⚫ Offline';
+        
+        return `
+        <div class="user-item" data-uid="${user.uid}">
+          <div class="user-avatar">${(user.displayName || user.email || 'U').charAt(0).toUpperCase()}</div>
+          <div class="user-info">
+            <div class="user-name">${user.displayName || user.email || 'Unknown'}</div>
+            <div class="user-role">Role: ${user.role || 'user'}</div>
+            <div class="user-status">${statusText}</div>
+          </div>
+          <div class="user-actions">
+            <button class="btn-edit" onclick="editUser('${user.uid}')">✏️ Sửa</button>
+            <button class="btn-delete" onclick="deleteUser('${user.uid}', '${(user.displayName || user.email || 'user').replace(/'/g, "\\'")}')">🗑️ Xóa</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+      
+      console.log(`📋 ✅ Successfully loaded ${users.length} users in list`);
+    }
+    
+    // Load all sections
+    function loadUsers() {
+      console.log('📋 Loading all users...');
+      
+      window._firebase.ref('users').once('value')
+        .then((snapshot) => {
+          const users = snapshot.val() || {};
+          const allUsers = Object.values(users);
+          loadUsersList(allUsers);
+        })
+        .catch(err => console.error('Error loading users:', err));
+    }
+    
+    // Wait for Firebase ready to load data
+    window.addEventListener('firebase-ready', () => {
+      console.log('🔥 Firebase ready, loading dashboard data...');
+      
+      // Update header with current user - with retry
+      function updateHeaderUser() {
+        const userNameEl = document.getElementById('userName');
+        const userAvatarEl = document.getElementById('userAvatar');
+        
+        if (window._firebase && window._firebase.auth) {
+          const currentUser = window._firebase.auth.currentUser;
+          if (currentUser) {
+            if (userNameEl) {
+              const displayName = currentUser.displayName || currentUser.email;
+              userNameEl.textContent = displayName;
             }
-            window.location.href = 'index.html';
-          } catch (error) {
-            window.location.href = 'index.html';
+            if (userAvatarEl) {
+              const initial = (currentUser.displayName || currentUser.email).charAt(0).toUpperCase();
+              userAvatarEl.textContent = initial;
+            }
+            console.log('✅ Header updated with user:', currentUser.email);
+            return true;
+          } else {
+            console.warn('⚠️ No current user yet, will retry...');
+            return false;
+          }
+        }
+        return false;
+      }
+      
+      // Try to update immediately
+      if (!updateHeaderUser()) {
+        // If failed, retry after 500ms
+        setTimeout(() => {
+          if (!updateHeaderUser()) {
+            // If still failed, wait for auth state change
+            console.warn('⚠️ Waiting for auth state change...');
+          }
+        }, 500);
+      }
+      
+      // Also listen for auth state changes
+      if (window._firebase && window._firebase.auth) {
+        window._firebase.onAuthStateChanged((user) => {
+          if (user) {
+            console.log('🔔 Auth state changed in admin, updating header...');
+            updateHeaderUser();
           }
         });
       }
       
-      // Navigation handlers
-      document.querySelectorAll('.admin-nav a').forEach(link => {
+      // Load dashboard data
+      loadDashboard();
+      
+      // Load traffic analytics
+      loadTrafficAnalytics();
+      
+      // Load leaves list
+      loadLeavesList();
+      
+      // Home button handler (legacy fallback)
+      const homeBtnHeader = document.getElementById('homeBtnHeader');
+      if (homeBtnHeader) {
+        homeBtnHeader.addEventListener('click', () => {
+          window.location.href = 'index.html';
+        });
+      }
+    });
+    
+    // ===== CRUD FUNCTIONS =====
+    
+    function editUser(uid) {
+      console.log('Editing user:', uid);
+      
+      window._firebase.ref(`users/${uid}`).once('value')
+        .then((snapshot) => {
+          const user = snapshot.val();
+          if (!user) {
+            alert('Không tìm thấy người dùng!');
+            return;
+          }
+          
+          const newRole = prompt(`Đổi role cho ${user.displayName || user.email}:\nNhập 'admin' hoặc 'user'`, user.role || 'user');
+          
+          if (newRole && (newRole === 'admin' || newRole === 'user')) {
+            window._firebase.ref(`users/${uid}`).update({ role: newRole })
+              .then(() => {
+                alert(`✅ Đã cập nhật role thành: ${newRole}`);
+                loadDashboard(); // Reload
+              })
+              .catch(err => {
+                alert('❌ Lỗi: ' + err.message);
+              });
+          } else if (newRole !== null) {
+            alert('Role không hợp lệ! Chỉ nhập "admin" hoặc "user"');
+          }
+        })
+        .catch(err => console.error('Error editing user:', err));
+    }
+    
+    function deleteUser(uid, userName) {
+      if (!confirm(`⚠️ Bạn có chắc muốn xóa người dùng "${userName}"?\n\nHành động này không thể hoàn tác!`)) {
+        return;
+      }
+      
+      console.log('Deleting user:', uid);
+      
+      // Delete user from Realtime DB
+      window._firebase.ref(`users/${uid}`).remove()
+        .then(() => {
+          alert(`✅ Đã xóa người dùng: ${userName}`);
+          loadDashboard(); // Reload
+        })
+        .catch(err => {
+          alert('❌ Lỗi khi xóa: ' + err.message);
+          console.error('Error deleting user:', err);
+        });
+    }
+    
+    // ===== TRAFFIC ANALYTICS =====
+    
+    let trafficChart = null;
+    
+    function loadTrafficAnalytics() {
+      console.log('📊 Loading traffic analytics...');
+      
+      if (!window._firebase) {
+        console.error('❌ Firebase not initialized');
+        return;
+      }
+      
+      // Load user visits from DB
+      window._firebase.ref('analytics/visits').once('value')
+        .then((snapshot) => {
+          const visits = snapshot.val() || {};
+          
+          // Aggregate by date (last 7 days)
+          const last7Days = [];
+          const today = new Date();
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            last7Days.push(dateStr);
+          }
+          
+          // Count unique users per day
+          const dailyVisits = {};
+          last7Days.forEach(date => dailyVisits[date] = new Set());
+          
+          Object.entries(visits).forEach(([visitId, visit]) => {
+            const visitDate = new Date(visit.timestamp).toISOString().split('T')[0];
+            if (dailyVisits[visitDate]) {
+              dailyVisits[visitDate].add(visit.uid);
+            }
+          });
+          
+          const labels = last7Days.map(date => {
+            const d = new Date(date);
+            return `${d.getDate()}/${d.getMonth() + 1}`;
+          });
+          
+          const data = last7Days.map(date => dailyVisits[date].size);
+          
+          // Total visits count
+          const totalVisits = Object.keys(visits).length;
+          document.getElementById('totalVisitsCount').textContent = `${totalVisits} lượt truy cập`;
+          
+          renderTrafficChart(labels, data);
+        })
+        .catch(err => console.error('Error loading analytics:', err));
+    }
+    
+    function renderTrafficChart(labels, data) {
+      const ctx = document.getElementById('trafficChart');
+      if (!ctx) return;
+      
+      // Destroy existing chart
+      if (trafficChart) {
+        trafficChart.destroy();
+      }
+      
+      trafficChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Người dùng duy nhất',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+      
+      console.log('📈 Chart rendered successfully');
+    }
+    
+    // CRITICAL: Home button MUST work immediately
+    document.addEventListener('DOMContentLoaded', () => {
+      const homeBtn = document.getElementById('homeBtnHeader');
+      if (homeBtn) {
+        console.log('✅ Home button found, attaching listener');
+        homeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('🏠 Home button clicked, redirecting...');
+          window.location.href = 'index.html';
+        });
+      } else {
+        console.error('❌ Home button NOT found!');
+      }
+      
+      // Setup smooth scroll navigation
+      setupNavigation();
+    });
+    
+    // Setup navigation with smooth scroll
+    function setupNavigation() {
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          const section = e.target.getAttribute('href').substring(1);
           
-          // Update active nav
-          document.querySelectorAll('.admin-nav a').forEach(l => l.classList.remove('active'));
-          e.target.classList.add('active');
+          // Remove active class from all links
+          navLinks.forEach(l => l.classList.remove('active'));
           
-          // Show corresponding section
-          document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-          const targetSection = document.getElementById(section);
-          if (targetSection) targetSection.style.display = 'block';
+          // Add active class to clicked link
+          link.classList.add('active');
           
-          // Load section data
-          if (section === 'dashboard') {
-            loadDashboard();
-          } else if (section === 'users') {
-            loadUsers();
-          } else if (section === 'chat') {
-            loadChatQueue();
+          // Get section ID
+          const sectionId = link.getAttribute('data-section');
+          const section = document.getElementById(sectionId);
+          
+          if (section) {
+            // Smooth scroll to section
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
       });
-    });
-    
-    function loadUsers() {
-      // Simple user list
-      if (window._firebase) {
-        const usersRef = window._firebase.ref('users');
-        usersRef.once('value', (snapshot) => {
-          const users = snapshot.val() || {};
-          const userList = document.getElementById('userList');
-          if (userList) {
-            userList.innerHTML = Object.entries(users).map(([uid, user]) => `
-              <div class="user-item">
-                <div class="user-avatar">${(user.displayName || user.email || 'User').charAt(0).toUpperCase()}</div>
-                <div class="user-info">
-                  <div class="user-name">${user.displayName || user.email || 'Unknown'}</div>
-                  <div class="user-role">${user.role || 'user'}</div>
-                  <div class="user-status">${user.isOnline ? '🟢 Online' : '⚫ Offline'}</div>
-                </div>
-              </div>
-            `).join('');
-          }
-        });
-      }
     }
     
-    function loadChatQueue() {
-      const chatList = document.getElementById('chatList');
-      if (chatList) {
-        chatList.innerHTML = `
-          <div class="empty-state">
-            <span class="empty-state-icon">💬</span>
-            <p>Không có cuộc trò chuyện nào đang chờ</p>
+    // Load leaves list
+    let currentLeafView = 'list';
+    
+    function loadLeavesList() {
+      console.log('🍃 Loading leaves list...');
+      
+      const leafList = document.getElementById('leafList');
+      if (!leafList) return;
+      
+      leafList.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span><p>Đang tải...</p></div>';
+      
+      window._firebase.ref('leaves').once('value')
+        .then(async (snapshot) => {
+          const leaves = snapshot.val() || {};
+          const leafArray = Object.entries(leaves).map(([id, leaf]) => ({
+            id,
+            ...leaf
+          }));
+          
+          // Sort by timestamp (newest first)
+          leafArray.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+          
+          // Update count
+          document.getElementById('totalLeavesCount').textContent = `${leafArray.length} lá cây`;
+          
+          if (leafArray.length === 0) {
+            leafList.innerHTML = '<div class="empty-state"><span class="empty-state-icon">🍃</span><p>Chưa có lá cây nào</p></div>';
+            return;
+          }
+          
+          // Load user data for authors
+          const usersSnapshot = await window._firebase.ref('users').once('value');
+          const users = usersSnapshot.val() || {};
+          
+          // Render based on current view mode
+          if (currentLeafView === 'list') {
+            renderLeavesList(leafArray, users);
+          } else {
+            renderLeavesGrid(leafArray, users);
+          }
+        })
+        .catch(err => {
+          console.error('Error loading leaves:', err);
+          leafList.innerHTML = '<div class="empty-state"><span class="empty-state-icon">❌</span><p>Không thể tải danh sách lá cây</p></div>';
+        });
+    }
+    
+    function renderLeavesList(leaves, users) {
+      const leafList = document.getElementById('leafList');
+      leafList.className = 'leaf-list';
+      
+      leafList.innerHTML = leaves.map(leaf => {
+        const author = users[leaf.authorId];
+        const authorName = author ? (author.displayName || author.email) : leaf.author;
+        const authorInitial = authorName.charAt(0).toUpperCase();
+        const timeStr = formatTimeAgo(leaf.ts);
+        const leafIcon = getLeafIcon(leaf.shapeKey);
+        
+        return `
+          <div class="leaf-item">
+            <div class="leaf-icon">${leafIcon}</div>
+            <div class="leaf-content">
+              <p class="leaf-text">${escapeHtml(leaf.text)}</p>
+              <div class="leaf-meta">
+                <div class="leaf-author">
+                  <div class="leaf-author-avatar">${authorInitial}</div>
+                  <span>${authorName}</span>
+                </div>
+                <span class="leaf-time">${timeStr}</span>
+                ${leaf.scale ? `<span class="leaf-stats">Kích thước: ${(leaf.scale * 100).toFixed(0)}%</span>` : ''}
+              </div>
+            </div>
           </div>
         `;
+      }).join('');
+    }
+    
+    function renderLeavesGrid(leaves, users) {
+      const leafList = document.getElementById('leafList');
+      leafList.className = 'leaf-grid';
+      
+      leafList.innerHTML = leaves.map(leaf => {
+        const author = users[leaf.authorId];
+        const authorName = author ? (author.displayName || author.email) : leaf.author;
+        const authorInitial = authorName.charAt(0).toUpperCase();
+        const timeStr = formatTimeAgo(leaf.ts);
+        const leafIcon = getLeafIcon(leaf.shapeKey);
+        
+        return `
+          <div class="leaf-card">
+            <div class="leaf-card-header">
+              <div class="leaf-author">
+                <div class="leaf-author-avatar">${authorInitial}</div>
+                <span>${authorName}</span>
+              </div>
+              <span class="leaf-icon">${leafIcon}</span>
+            </div>
+            <p class="leaf-card-text">${escapeHtml(leaf.text)}</p>
+            <div class="leaf-meta">
+              <span class="leaf-time">${timeStr}</span>
+              ${leaf.scale ? `<span class="leaf-stats">×${leaf.scale.toFixed(1)}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function switchLeafView(mode) {
+      currentLeafView = mode;
+      
+      // Update button states
+      const listBtn = document.getElementById('listViewBtn');
+      const gridBtn = document.getElementById('gridViewBtn');
+      
+      if (mode === 'list') {
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+      } else {
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
       }
+      
+      // Reload with new view
+      loadLeavesList();
+    }
+    
+    function getLeafIcon(shapeKey) {
+      const icons = {
+        'heart': '❤️',
+        'maple': '🍁',
+        'oval': '🌿',
+        'pointed': '🍃',
+        'round': '🌱',
+        'star': '⭐',
+        'willow': '🌾',
+        'special': '✨'
+      };
+      return icons[shapeKey] || '🍃';
+    }
+    
+    function formatTimeAgo(timestamp) {
+      const now = Date.now();
+      const diff = now - timestamp;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 1) return 'Vừa xong';
+      if (minutes < 60) return `${minutes} phút trước`;
+      if (hours < 24) return `${hours} giờ trước`;
+      if (days < 30) return `${days} ngày trước`;
+      
+      const date = new Date(timestamp);
+      return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
   </script>
-</body>
-</html>
+  
+  <!-- Load auth guard -->
   <script src="src/auth-guard.js"></script>
+
+  <!-- Scroll to top button -->
+  <button id="scrollTopBtn" title="Lên đầu trang" style="display:none;position:fixed;right:20px;bottom:24px;background:#3b82f6;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;box-shadow:0 6px 18px rgba(59,130,246,0.18);font-weight:600;z-index:9999">⬆ Lên đầu</button>
+
+  <script>
+    (function(){
+      const btn = document.getElementById('scrollTopBtn');
+      if(!btn) return;
+      // Show after scrolling down 200px
+      window.addEventListener('scroll', () => {
+        if(window.scrollY > 200) btn.style.display = 'block';
+        else btn.style.display = 'none';
+      });
+      btn.addEventListener('click', () => {
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    })();
+  </script>
+
 </body>
 </html>

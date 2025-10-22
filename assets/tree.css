@@ -12,6 +12,7 @@
   justify-content: center;
 }
 
+/* SVG wrapper inside the stage */
 .tree-svg {
   width: 100%;
   height: 100%;
@@ -24,28 +25,16 @@
   overflow: hidden;
 }
 
-.tree-background {
+/* Leaf base styles - keep transforms on inner <image> to avoid
+   conflicting with the transform attribute used by JS on the <g> */
+.leaf{
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('../tree.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0.3;
-  z-index: 0;
-}
-
-/* ===== LEAF STYLES ===== */
-.leaf {
-  position: absolute;
-  width: 40px;
-  height: 40px;
+  /* increased base size by ~20%: 40 -> 48 */
+  width: 60px;
+  height: 60px;
   border-radius: 50% 0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transform-box: fill-box;
   transform-origin: center;
   z-index: 10;
   display: flex;
@@ -53,19 +42,34 @@
   justify-content: center;
   font-size: 18px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  will-change: transform, filter;
 }
 
+/* Hover visuals on container; actual scale/rotation applied to <image> */
 .leaf:hover {
-  transform: scale(1.2) rotate(5deg);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   z-index: 15;
 }
 
-/* Healthy leaf styles */
+.leaf:hover image {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.2) rotate(5deg);
+  transition: transform 0.18s cubic-bezier(.2,.9,.3,1);
+}
+
+/* Healthy leaf styles (base) */
 .leaf.healthy {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
   border: 3px solid #15803d;
+}
+
+/* Improve compositing of the inner image to avoid repaints/jitter */
+.leaf image {
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transition: transform 0.18s cubic-bezier(.2,.9,.3,1), filter 0.18s ease;
 }
 
 .leaf.healthy:hover {
@@ -78,7 +82,8 @@
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
   border: 3px solid #b91c1c;
-  animation: wither 2s ease-in-out infinite alternate;
+  /* NOTE: don't animate transform on the <g> container — that conflicts with the SVG transform attribute
+     used for positioning and dragging. Animate the inner <image> instead. */
 }
 
 .leaf.withered:hover {
@@ -86,14 +91,27 @@
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
 }
 
+/* Animate only the inner image to preserve group transforms for drag/position */
+.leaf.withered image {
+  /* Disable animation to avoid any perceived swaying while preserving the visual 'withered' filter. */
+  animation: none !important;
+  transform-origin: center;
+}
+
 @keyframes wither {
+  /* Avoid transforming layout/scale to prevent conflicts with SVG group transforms used for drag.
+     Animate only opacity and subtle brightness so the leaf feels 'alive' but doesn't sway. */
   0% {
-    opacity: 0.8;
-    transform: scale(1);
+    opacity: 0.92;
+    filter: grayscale(62%) contrast(0.86) brightness(0.96);
+  }
+  50% {
+    opacity: 0.96;
+    filter: grayscale(58%) contrast(0.88) brightness(0.99);
   }
   100% {
-    opacity: 1;
-    transform: scale(1.05);
+    opacity: 0.98;
+    filter: grayscale(54%) contrast(0.9) brightness(1);
   }
 }
 
@@ -277,8 +295,9 @@
   }
   
   .leaf {
-    width: 35px;
-    height: 35px;
+    /* mobile/tablet: increase from 35 -> 42 (~20%) */
+    width: 42px;
+    height: 42px;
     font-size: 16px;
   }
   
@@ -310,8 +329,9 @@
   }
   
   .leaf {
-    width: 30px;
-    height: 30px;
+    /* small mobile: increase from 30 -> 36 (~20%) */
+    width: 36px;
+    height: 36px;
     font-size: 14px;
   }
   
@@ -319,4 +339,15 @@
     font-size: 11px;
     padding: 6px 10px;
   }
+}
+
+/* Ensure the SVG layer containing leaves sits above the tree image and canvas */
+#leafSvg {
+  position: absolute; /* already inline in HTML but reinforce here */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 60; /* above #leafCanvas (3) and #tree (2) */
+  pointer-events: auto;
 }

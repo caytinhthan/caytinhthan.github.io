@@ -838,6 +838,7 @@ textarea:focus, input[type="text"]:focus {
   backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity .15s ease;
+  z-index: 3000; /* ensure modals appear above chat / canvas / other overlays */
 }
 
 [data-theme="dark"] .modal {
@@ -1084,11 +1085,11 @@ textarea:focus, input[type="text"]:focus {
 }
 .preview{
   margin-top:8px;
-  padding:12px;
+  padding:8px 10px; /* reduce outer padding to give inner image more room */
   border:1px dashed var(--border);
   border-radius:12px;
   background: var(--bg-secondary);
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1097,6 +1098,82 @@ textarea:focus, input[type="text"]:focus {
   width:120px;
   height:120px;
   display:block;
+}
+
+/* Enlarged inner preview image used in Add modal */
+.preview-image {
+  width: 120px;
+  height: 120px;
+  display: block;
+  transition: transform 0.12s ease, width 0.12s ease, height 0.12s ease;
+  will-change: transform, width, height;
+}
+
+/* wrapper that isolates transforms from the frame */
+.preview-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* clip so frame stays fixed */
+}
+.preview-image-wrap .preview-image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.preview-label { font-weight: 600; margin-right: 12px; color: var(--muted); }
+.preview[data-theme="dark"] .preview-label, [data-theme="dark"] .preview .preview-label { color: #cbd5e1; }
+
+/* Slight scale-up on hover/focus to emphasize preview */
+.preview:hover .preview-image,
+.preview-image:focus {
+  transform: scale(1.06);
+}
+
+/* On small screens make preview more compact but still larger than original */
+@media (max-width: 480px) {
+  .preview { padding: 8px; }
+  .preview-image { width: 110px; height: 110px; }
+}
+
+@media (min-width: 1200px) {
+  /* Larger screens: gently increase preview size */
+  .preview-image { width: 160px; height: 160px; }
+}
+
+/* Utility: make image fill the preview frame */
+.preview-leaf { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.preview-leaf .fill-frame { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; display: block; transform-origin: center center; will-change: transform; backface-visibility: hidden; transform-box: border-box; }
+
+/* Ensure the preview box and wrapper never get transformed so only the image rotates */
+.preview, .preview-leaf, .preview-image-wrap {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Isolate painting to avoid parent repainting artifacts when the image rotates */
+.preview { contain: paint; }
+
+/* Extra-large preview: make the leaf visually overflow the white preview frame */
+.preview.extra-large .preview-leaf { /* clip overflow to keep frame stable while image overflows visually */ overflow: hidden; }
+.preview.extra-large .preview-leaf .fill-frame {
+  width: 140%; /* make image larger than container */
+  height: 140%;
+  /* No transform on the container/image set by CSS here — JS will control image transform so rotation only affects the image */
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  will-change: transform, width, height;
+}
+
+@media (max-width: 480px) {
+  /* on small screens be less extreme */
+  .preview.extra-large .preview-leaf .fill-frame { width: 120%; height: 120%; transform: translateY(-4%); }
 }
 
 /* UX modes */
@@ -1217,6 +1294,24 @@ textarea:focus, input[type="text"]:focus {
   border-top: 1px solid var(--border);
   backdrop-filter: blur(8px);
   z-index: 10;
+}
+
+/* Override sticky footer for small/simple modals like logout (keeps buttons visible) */
+#logoutModal .sheet > div[style*="display:flex"]:last-child {
+  position: static;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  margin: 18px 0 0 0;
+  padding: 0;
+  border-top: 0;
+  background: transparent;
+  z-index: auto;
+}
+
+/* Make sure the logout modal's confirm (red) button is visible even when .btn.red is hidden globally */
+#logoutModal .btn.red {
+  display: block !important;
 }
 
 [data-theme="dark"] .sheet > div[style*="display:flex"]:last-child {

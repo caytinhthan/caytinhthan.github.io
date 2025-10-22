@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebasedatabase.app;";
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebasedatabase.app;";>
   <title>Trang chủ | Cây Tình Thần - Chia sẻ cảm xúc</title>
 
 
@@ -33,13 +33,18 @@
         <!-- Auth Container - Centralized auth state management -->
         <div class="auth-container" id="authContainer">
           <!-- When logged out -->
-          <div class="auth-section" id="authSection">
+          <div class="auth-section" id="authSection" style="display: none;">
             <button class="header-btn login-btn" onclick="window.location.href='login.html'">
               Đăng nhập
             </button>
             <button class="header-btn register-btn" onclick="window.location.href='register.html'">
               Đăng ký
             </button>
+          </div>
+          
+          <!-- Loading state - Hiện khi đang check auth -->
+          <div class="auth-loading" id="authLoading" style="display: flex;">
+            <span style="color: #64748b; font-size: 14px;">Đang tải...</span>
           </div>
           
           <!-- When logged in -->
@@ -50,14 +55,14 @@
                 <strong id="userDisplayName"></strong>
               </div>
               <div class="user-actions">
-                <button class="header-btn settings-btn" id="settingsBtn">
-                  <span>⚙️</span>
-                  <span>Cài đặt</span>
-                </button>
-                <button class="header-btn logout-btn" id="logoutBtn">
-                  <span>🚪</span>
-                  <span>Đăng xuất</span>
-                </button>
+                        <button class="header-btn settings-btn" id="settingsBtn" title="Trang cá nhân">
+                          <span>⚙️</span>
+                          <span>Cá nhân</span>
+                        </button>
+                        <button class="header-btn logout-btn" id="logoutBtn">
+                          <span>🚪</span>
+                          <span>Đăng xuất</span>
+                        </button>
               </div>
             </div>
           </div>
@@ -74,10 +79,6 @@
           <div class="dropdown-item" id="themeToggle">
             <span class="dropdown-icon">🌙</span>
             <span class="dropdown-text">Chế độ tối</span>
-          </div>
-          <div class="dropdown-item" onclick="navigateToPage('profile.html')">
-            <span class="dropdown-icon">👤</span>
-            <span class="dropdown-text">Trang cá nhân</span>
           </div>
           <div class="dropdown-item admin-only" onclick="navigateToPage('admin.html')" style="display: none;">
             <span class="dropdown-icon">🛡️</span>
@@ -103,7 +104,30 @@
         <h1>🌱 Cây Thông Điệp</h1>
       </div>
       
-      <p class="panel-description">Click vào cây để đặt lá tại vị trí bất kỳ, hoặc tự động thêm lá ngẫu nhiên!</p>
+      <div class="panel-description">
+        <p>Chào bạn 🌼<br>
+        Nếu bạn vẫn chưa cảm thấy ổn, và có nhiều điều chưa thể nói ra — đừng chịu đựng một mình nhé.. Chúng mình sẽ giúp bạn kết nối trực tiếp với <strong>HẺM 202</strong> [BỘ PHẬN TƯ VẤN TÂM LÝ TẠI TRƯỜNG ĐH FPT TP.HCM]. Đây là nơi bạn có thể thoải mái chia sẻ cảm xúc cùng cán bộ tâm lý giàu kinh nghiệm, luôn sẵn sàng lắng nghe và đồng hành cùng bạn.</p>
+
+        <p>Đừng ngần ngại mở lòng nhé — nhấn vào nút bên dưới để bắt đầu 💛</p>
+
+        <div style="display:flex;gap:8px;margin-top:10px;flex-direction:column;">
+          <button class="btn primary" id="hemConnectBtn">Có, mình muốn được kết nối</button>
+          <button class="btn secondary" id="hemNotNowBtn">Mình ổn rồi</button>
+        </div>
+
+        <!-- Responses (hidden) - JS can show the appropriate block after user selection -->
+        <div id="hemResponse" style="display:none;margin-top:12px;">
+          <div id="hemConnectResponse" style="display:none;">
+            <p>💛 Cảm ơn bạn vì đã mở lòng. Dù bạn đang trải qua điều gì, chúng mình luôn ở đây giúp bạn được lắng nghe và đồng hành cùng bạn. Bạn có thể bắt đầu cuộc trò chuyện trực tiếp với cán bộ tư vấn tâm lý tại Hẻm 202 nhé:</p>
+            <p><a href="https://www.facebook.com/phongtvtlfpthcm" target="_blank" rel="noopener">👉 Kết nối với Hẻm 202</a></p>
+            <p><small>Hẻm 202 hoạt động theo nguyên tắc "Thấu hiểu, tôn trọng và bảo mật". Mọi câu chuyện của bạn là của bạn, chúng mình không phán xét mà chỉ đồng hành.</small></p>
+          </div>
+
+          <div id="hemNotNowResponse" style="display:none;">
+            <p>Chúng mình rất vui khi biết bạn đang cảm thấy ổn hơn 🌻. Nếu một lúc nào đó bạn có trăn trở hay phiền lòng, đừng ngần ngại tìm đến chúng mình — chúng mình luôn sẵn sàng hỗ trợ. 💌</p>
+          </div>
+        </div>
+      </div>
       
       <div class="stats-section">
         <div class="stat-card">
@@ -146,14 +170,7 @@
           <div class="info-content">
             <h3>Gửi thông điệp yêu thương</h3>
             <p>Trước khi viết lên cây tinh thần, chúng mình mong bạn luôn nhớ rằng: đây là cây của những lời động viên, yêu thương và niềm tin. Mỗi lời bạn để lại sẽ trở thành ánh sáng nhỏ sưởi ấm trái tim một ai đó. Hãy chọn màu sắc riêng cho chiếc lá ứng với vấn đề bạn muốn gửi lời động viên nhé:</p>
-            <div class="help-description">
-              💸 Tài chính → Xanh lá<br>
-              💕 Tình yêu → Hồng<br>
-              📚 Học tập → Vàng<br>
-              💼 Công việc → Xanh dương<br>
-              🤝 Mối quan hệ → Tím<br>
-              🌈 Khác → Xanh pastel
-            </div>
+            <!-- Color-to-topic mapping removed as requested -->
           </div>
         </div>
       </div>
@@ -183,6 +200,19 @@
     </section>
   </main>
 
+  <!-- Logout Confirmation Modal -->
+  <div class="modal" id="logoutModal" role="dialog" aria-modal="true" style="display:none;">
+    <div class="sheet">
+      <button class="x" id="closeLogoutModal" aria-label="Đóng modal">✕</button>
+      <h3>🔒 Xác nhận đăng xuất</h3>
+      <p style="color:var(--text-secondary);">Bạn có chắc muốn đăng xuất khỏi tài khoản của mình? Bạn sẽ cần đăng nhập lại để tiếp tục đăng lá.</p>
+      <div style="display:flex;gap:12px;margin-top:18px;">
+        <button class="btn red" id="confirmLogout" style="flex:1">Đăng xuất</button>
+        <button class="btn secondary" id="cancelLogout" style="flex:1">Hủy</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Add/Edit Modal -->
   <div class="modal" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="sheet">
@@ -201,6 +231,19 @@
           <input type="checkbox" id="isAnonymous">
           <span>Gửi ẩn danh</span>
         </label>
+      </div>
+      <div class="form-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="isWithered">
+          <span>Đăng lá héo (Tôi cần động viên)</span>
+        </label>
+      </div>
+      <div class="form-section" id="witherTypeRow" style="display:none;">
+        <label>Loại lá héo</label>
+        <select id="witherType" style="width:100%">
+          <option value="dry_brown">🍂 Khô - dry_brown</option>
+          <option value="transition_yellow">🍁 Chuyển - transition_yellow</option>
+        </select>
       </div>
       
       <div class="picker picker-section" id="leafPicker">
@@ -245,10 +288,13 @@
           </div>
         </div>
 
-        <div class="preview" id="leafPreview">
+  <div class="preview extra-large" id="leafPreview">
           <div class="preview-label">Xem trước:</div>
-          <div class="preview-leaf" style="display: flex; justify-content: center; align-items: center; height: 90px;">
-            <img id="previewLeafImage" src="assets/leaves/oval/leaf_oval_yellow.png" alt="Preview" style="width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); transition: transform 0.2s ease;">
+          <div class="preview-leaf" style="display: flex; justify-content: center; align-items: center; height: 120px; padding: 0;">
+            <!-- Wrap the image so rotation/scale only affects the image itself -->
+            <div class="preview-image-wrap">
+              <img id="previewLeafImage" class="preview-image fill-frame" src="assets/leaves/oval/leaf_oval_yellow.png" alt="Preview" width="140" height="140" style="object-fit: contain; filter: drop-shadow(2px 2px 6px rgba(0,0,0,0.35)); transition: transform 0.12s ease, width 0.12s ease, height 0.12s ease;">
+            </div>
           </div>
         </div>
       </div>
@@ -337,6 +383,15 @@
         </div>
       </div>
       <div class="leaf-actions">
+        <div id="encourageSection" style="display:none; margin-bottom:8px;">
+          <input id="encourageInput" type="text" placeholder="Gửi lời động viên..." style="width:65%; padding:6px; margin-right:8px;">
+          <button id="dropLoveBtn" class="btn pink" style="vertical-align:middle">💖 Thả yêu thương</button>
+        </div>
+
+        <div id="ownerRecoverSection" style="display:none; margin-bottom:8px;">
+          <button id="ownerRecoverBtn" class="btn" style="background:#9AE6B4;">✅ Tôi ổn rồi</button>
+        </div>
+
         <button id="editLeaf" class="btn green">✏️ Sửa</button>
         <button id="deleteLeaf" class="btn red" style="display: none;">🗑️ Xóa</button>
       </div>
@@ -348,22 +403,78 @@
   <script src="src/auth-guard.js"></script>
   <script src="src/script.js" defer></script>
   <script>
-    // Setup logout button and auth state management
+    // EARLY AUTH CHECK - Chạy NGAY để giảm FOUC
+    (function() {
+      // Inline check để chạy nhanh nhất có thể
+      const cachedAuthKey = Object.keys(localStorage).find(key => 
+        key.startsWith('firebase:authUser:')
+      );
+      
+      if (cachedAuthKey) {
+        try {
+          const cachedUser = JSON.parse(localStorage.getItem(cachedAuthKey));
+          if (cachedUser && cachedUser.email) {
+            // Update UI ngay lập tức
+            const authLoading = document.getElementById('authLoading');
+            const userSection = document.getElementById('userSection');
+            const userDisplayName = document.getElementById('userDisplayName');
+            
+            if (authLoading) authLoading.style.display = 'none';
+            if (userSection) userSection.style.display = 'block';
+            if (userDisplayName) {
+              userDisplayName.textContent = cachedUser.displayName || cachedUser.email.split('@')[0];
+            }
+          }
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+    })();
+    
+    // Setup logout button, settings button and auth state management
     document.addEventListener('DOMContentLoaded', () => {
       const logoutBtn = document.getElementById('logoutBtn');
+      const settingsBtn = document.getElementById('settingsBtn');
+      
       if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
+        logoutBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const logoutModal = document.getElementById('logoutModal');
+          if (logoutModal) {
+            logoutModal.style.display = 'grid';
+            logoutModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+          }
+        });
+
+        // Modal handlers
+        const confirmLogout = document.getElementById('confirmLogout');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const closeLogoutModal = document.getElementById('closeLogoutModal');
+        const logoutModal = document.getElementById('logoutModal');
+
+        const doSignOut = async () => {
           try {
-            if (window.AuthHelpers) {
-              await window.AuthHelpers.signOut();
-            }
-            // Reload page to reset auth state
-            window.location.reload();
-          } catch (error) {
-            // Even if logout fails, try to reset the page
-            console.warn('Logout had issues, but proceeding:', error);
+            if (window.AuthHelpers) await window.AuthHelpers.signOut();
+          } catch (err) {
+            console.warn('Sign out failed:', err);
+          } finally {
+            // Always reload to reset UI
             window.location.reload();
           }
+        };
+
+        if (confirmLogout) confirmLogout.addEventListener('click', doSignOut);
+        const closeLogout = () => { if (logoutModal) { logoutModal.classList.remove('show'); setTimeout(()=> logoutModal.style.display='none', 220); document.body.style.overflow='auto'; } };
+        if (cancelLogout) cancelLogout.addEventListener('click', closeLogout);
+        if (closeLogoutModal) closeLogoutModal.addEventListener('click', closeLogout);
+        if (logoutModal) logoutModal.addEventListener('click', (ev)=> { if (ev.target === logoutModal) closeLogout(); });
+      }
+      
+      // Settings button - Chuyển đến trang profile
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', () => {
+          navigateToPage('profile.html');
         });
       }
     });

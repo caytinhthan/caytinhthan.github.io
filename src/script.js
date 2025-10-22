@@ -8,7 +8,52 @@
   // Remove module import - use inline fallback sanitization
   const sanitizeLeafMessage = (text) => String(text).replace(/[<>]/g, '').substring(0, 500);
   const sanitizeDisplayName = (name) => String(name).replace(/[<>]/g, '').substring(0, 50);
-  const leafMessageLimiter = { check: () => true }; // Simple fallback
+  // Backwards-compatible rate limiter shim.
+  // Older code expects leafMessageLimiter.isAllowed(namespace) to exist.
+  // Provide a small in-memory per-session limiter: allow up to N messages per MINUTES window.
+  const leafMessageLimiter = (function(){
+    const MAX_PER_WINDOW = 5; // allow 5 messages
+    const WINDOW_MINUTES = 1; // per 1 minute
+
+    // store counts by key in memory for the session
+    const store = new Map();
+
+    function _nowWindowKey() {
+      const now = Date.now();
+      // round down to WINDOW_MINUTES
+      const windowMs = WINDOW_MINUTES * 60 * 1000;
+      return Math.floor(now / windowMs) * windowMs;
+    }
+
+    function isAllowed(key = 'global') {
+      try {
+        const winKey = _nowWindowKey();
+        const mapKey = `${key}:${winKey}`;
+        const entry = store.get(mapKey) || 0;
+        if (entry >= MAX_PER_WINDOW) return false;
+        store.set(mapKey, entry + 1);
+
+        // cleanup older keys occasionally
+        if (store.size > 200) {
+          const cutoff = winKey - WINDOW_MINUTES * 2 * 60 * 1000; // keep recent
+          for (const k of store.keys()) {
+            const parts = k.split(':');
+            const wk = Number(parts[1]) || 0;
+            if (wk < cutoff) store.delete(k);
+          }
+        }
+        return true;
+      } catch (e) {
+        // On any error, be permissive to avoid blocking UX
+        return true;
+      }
+    }
+
+    // expose a legacy method name check() too for compatibility
+    function check() { return true; }
+
+    return { isAllowed, check };
+  })();
   const mk = (tag, attrs={}) => {
     const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
@@ -35,6 +80,9 @@
   const editLeafBtn = $("#editLeaf"), deleteLeafBtn = $("#deleteLeaf");
   const addModal = $("#addModal"), addModalTitle = $("#addModalTitle"), addMessage = $("#addMessage");
   const addAuthor = $("#addAuthor"), isAnonymous = $("#isAnonymous"), saveLeaf = $("#saveLeaf");
+  const isWitheredInp = $("#isWithered");
+  const witherTypeSel = $("#witherType");
+  const witherTypeRow = $("#witherTypeRow");
   const cancelAdd = $("#cancelAdd"), closeAddModal = $("#closeAddModal");
   const leafShapeSel = $("#leafShape"), leafPaletteSel = $("#leafPalette");
   const leafScaleInp = $("#leafScale"), leafRotationInp = $("#leafRotation");
@@ -400,12 +448,13 @@
       id,
       text: leaf?.dataset.msg || "",
       author: leaf?.dataset.author || "",
-      userId: leaf?.dataset.userId || "", // Include userId
+      authorId: leaf?.dataset.authorId || "", // Include authorId to match database rules
       position,
       scale: Number(leaf?.dataset.scale || 1),
       rotation: Number(leaf?.dataset.rotation || 0),
       shapeKey: leaf?.dataset.shapeKey || "money_gold",
       paletteIdx: Number(leaf?.dataset.paletteIdx || 0),
+      isWithered: !!leaf?.dataset.isWithered,
       ts: Number(leaf?.dataset.ts || Date.now())
     };
   }
@@ -471,14 +520,18 @@
     
     if (previewImg && leafShapeSel?.value) {
       const paletteIdx = Number(leafPaletteSel?.value) || 0;
-      const imagePath = getLeafImagePath(leafShapeSel.value, paletteIdx);
+  // If user selected withered, use the selected special image
+  const useWithered = !!(isWitheredInp && isWitheredInp.checked);
+  const shapeKey = useWithered ? (witherTypeSel?.value || 'dry_brown') : leafShapeSel.value;
+      const imagePath = getLeafImagePath(shapeKey, paletteIdx);
       const scale = clampScale(leafScaleInp?.value || 1);
       const rotation = clampRot(leafRotationInp?.value || 0);
       
       if (imagePath) {
-        previewImg.src = imagePath;
-        previewImg.style.display = 'block';
-        previewImg.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+  previewImg.src = imagePath;
+  previewImg.style.display = 'block';
+  // Keep the image centered in its wrapper and apply rotation/scale only to the image
+  previewImg.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
       } else {
         previewImg.style.display = 'none';
       }
@@ -492,10 +545,23 @@
   function openAddModal(message="", author="", isEdit=false, leafId=null){
     if (!addModal) return;
     addMessage.value = message || "";
-    addAuthor.value  = author  || "";
-    isAnonymous.checked = !author;
-    addAuthor.disabled = isAnonymous.checked;
-    addAuthor.style.opacity = isAnonymous.checked ? "0.5" : "1";
+      // If author explicitly provided (edit mode), use it. Otherwise,
+      // try to auto-fill from the current logged-in user.
+      const currentUser = window._firebase?.auth?.currentUser || window.AuthHelpers?.currentUser || null;
+      if (isEdit && author) {
+        addAuthor.value = author;
+        isAnonymous.checked = false;
+      } else if (!author && currentUser) {
+        // auto-fill with displayName or email local-part
+        addAuthor.value = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "");
+        isAnonymous.checked = false;
+      } else {
+        // fallback: if no user and no provided author, default to anonymous
+        addAuthor.value = author || "";
+        isAnonymous.checked = !addAuthor.value;
+      }
+      addAuthor.disabled = isAnonymous.checked;
+      addAuthor.style.opacity = isAnonymous.checked ? "0.5" : "1";
     currentEditingId = leafId;
     addModalTitle.textContent = isEdit ? "✏️ Sửa lá" : "🌿 Thêm lá mới";
 
@@ -511,54 +577,98 @@
         leafPaletteSel.value = "0";
         leafScaleInp.value = "1";
         leafRotationInp.value = "0";
+        // Default to non-withered when creating a new leaf
+        if (isWitheredInp) {
+          isWitheredInp.checked = false;
+          if (witherTypeRow) witherTypeRow.style.display = 'none';
+          if (witherTypeSel) witherTypeSel.value = 'dry_brown';
+        }
       }
       renderPreview();
     }
+    // Show wither type row based on checkbox
+    if (witherTypeRow) witherTypeRow.style.display = (isWitheredInp && isWitheredInp.checked) ? 'block' : 'none';
     showModal(addModal);
   }
 
   // Render lá cây lên cây
   function addLeafFromData(data, animate=false){
     // Validate và fix corrupted data
-    if (!data.position || typeof data.position !== 'object' || data.position.x === undefined) {
+    if (!data.position || typeof data.position !== 'object') {
       data.position = randomPositionInTree();
     }
-    
-    const position = data.position;
+
+    // Ensure position.x/y are finite numbers; fallback to random when corrupted
+    let position = data.position;
+    const px = Number(position && position.x);
+    const py = Number(position && position.y);
+    if (!Number.isFinite(px) || !Number.isFinite(py)) {
+      position = randomPositionInTree();
+      data.position = position;
+    }
     const rotation = Number.isFinite(data.rotation) ? data.rotation : (position.rotation || 0);
     const scale    = Number.isFinite(data.scale)    ? data.scale    : rand(0.9,1.2);
 
-    const { palette, idx: paletteIdx } = pickPalette(data.paletteIdx);
-    const { key: shapeKey } = pickLeafShape(data.shapeKey);
+  const { palette, idx: paletteIdx } = pickPalette(data.paletteIdx);
+  // If a special witherType is present use it, otherwise use shapeKey
+  const incomingKey = data.witherType ? data.witherType : data.shapeKey;
+  const { key: shapeKey } = pickLeafShape(incomingKey);
 
     // Tạo group container
     const g = mk("g", { class: "leaf" });
     g.dataset.id        = data.id;
     g.dataset.msg       = data.text || "";
     g.dataset.author    = data.author || "";
-    g.dataset.userId    = data.userId || ""; // Store userId for proper tracking
+    g.dataset.authorId  = data.authorId || ""; // Store authorId for proper tracking
     g.dataset.position  = JSON.stringify(position);
     g.dataset.rotation  = String(clampRot(rotation));
     g.dataset.scale     = String(clampScale(scale));
     g.dataset.shapeKey  = shapeKey;
     g.dataset.paletteIdx= String(paletteIdx);
+  // withered flag
+  if (data.isWithered) g.dataset.isWithered = '1';
     g.dataset.ts        = String(data.ts || Date.now());
 
     // Transform SVG với image
-    const sc = clampScale(scale);
-    const rot = clampRot(rotation);
-    const baseTransform = `translate(${position.x} ${position.y}) rotate(${rot}) scale(${sc})`;
+  const sc = clampScale(scale);
+  const rot = clampRot(rotation);
+  const tx = Number(position.x) || 0;
+  const ty = Number(position.y) || 0;
+  const baseTransform = `translate(${tx} ${ty}) rotate(${rot}) scale(${sc})`;
     g.setAttribute("transform", baseTransform);
 
     // Sử dụng ảnh thay vì SVG path
     const leafImagePath = getLeafImagePath(shapeKey, paletteIdx);
+    // Base image size increased by ~20% (from 70 -> 84) to make initial leaves larger
     const leafImage = mk("image", { 
       href: leafImagePath,
-      x: "-35", // Center larger image
-      y: "-35", 
-      width: "70",
-      height: "70",
+      x: "-42", // Center for 84x84 image
+      y: "-42", 
+      width: "84",
+      height: "84",
       style: "filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"
+    });
+
+    if (data.isWithered) {
+      // Visual cue: add withered class and reduce opacity slightly
+      g.classList.add('withered');
+      leafImage.style.filter = 'grayscale(60%) contrast(0.85) drop-shadow(1px 1px 3px rgba(0,0,0,0.25))';
+      leafImage.style.opacity = '0.9';
+    }
+
+    // Ensure the inner image does not swallow pointer events that the group relies on for dragging.
+    // Keep pointer-events enabled but forward pointerdown to the parent group if necessary.
+    leafImage.style.pointerEvents = 'auto';
+    leafImage.addEventListener('pointerdown', (ev) => {
+      // If a pointerdown happens on the image, re-dispatch it on the group so group-level handlers run.
+      // This keeps dragging behavior consistent for both normal and withered leaves.
+      try {
+        const evt = new PointerEvent('pointerdown', ev);
+        g.dispatchEvent(evt);
+      } catch (e) {
+        // Fallback: stopPropagation so group handler can still receive the event in many browsers
+        ev.stopPropagation();
+      }
     });
 
     g.appendChild(leafImage);
@@ -578,6 +688,90 @@
       if (mode !== Mode.VIEW) return;
       modalText.textContent   = g.dataset.msg || "";
       modalAuthor.textContent = g.dataset.author ? `💝 Từ: ${g.dataset.author}` : "👤 Ẩn danh";
+      // Configure encourage / owner recover UI
+      const encourageSection = document.getElementById('encourageSection');
+      const ownerRecoverSection = document.getElementById('ownerRecoverSection');
+      const dropLoveBtn = document.getElementById('dropLoveBtn');
+      const encourageInput = document.getElementById('encourageInput');
+      const ownerRecoverBtn = document.getElementById('ownerRecoverBtn');
+
+      // reset
+      if (encourageSection) encourageSection.style.display = 'none';
+      if (ownerRecoverSection) ownerRecoverSection.style.display = 'none';
+
+      const currentUser = window._firebase?.auth?.currentUser || window.AuthHelpers?.currentUser || null;
+      const isOwner = currentUser && g.dataset.authorId && currentUser.uid === g.dataset.authorId;
+
+      // If leaf is withered, show encourage for non-owners, and recovery for owner
+      if (g.dataset.isWithered) {
+        if (!isOwner && encourageSection) encourageSection.style.display = 'flex';
+        if (isOwner && ownerRecoverSection) ownerRecoverSection.style.display = 'block';
+      }
+
+      if (dropLoveBtn) {
+        dropLoveBtn.onclick = async () => {
+          const msg = encourageInput ? encourageInput.value.trim() : '';
+          if (!msg) { alert('Vui lòng nhập lời động viên.'); return; }
+          // Use a temporary small healthy leaf as encouragement near the target
+          const pos = JSON.parse(g.dataset.position || '{"x":0,"y":0}');
+          const smallPos = { x: Number(pos.x||0) + (Math.random()*30-15), y: Number(pos.y||0) + (Math.random()*30-15), rotation: rand(-20,20) };
+          const current = window._firebase?.auth?.currentUser || window.AuthHelpers?.currentUser || null;
+          const encourager = current?.displayName || (current?.email ? current.email.split('@')[0] : 'Người lạ');
+
+          const encouragement = {
+            id: uuid(),
+            text: msg,
+            author: encourager,
+            authorId: current?.uid || null,
+            ts: Date.now(),
+            position: smallPos,
+            shapeKey: 'oval',
+            paletteIdx: 2,
+            scale: 0.7,
+            rotation: smallPos.rotation
+          };
+
+          // Render locally
+          addLeafFromData(encouragement, true);
+
+          // Persist encouragement as a child node under the leaf for traceability
+          try {
+            if (hasFB()) {
+              await fb().db.ref(`encouragements/${g.dataset.id}/${encouragement.id}`).set(encouragement);
+            }
+          } catch (e) { console.error('Failed to save encouragement:', e); }
+
+          if (encourageInput) encourageInput.value = '';
+        };
+      }
+
+      if (ownerRecoverBtn) {
+        ownerRecoverBtn.onclick = async () => {
+          if (!confirm('Bạn xác nhận đã ổn và muốn chuyển lá về trạng thái khỏe mạnh?')) return;
+          // Update dataset and DB
+          g.dataset.isWithered = '';
+          g.classList.remove('withered');
+          const img = g.querySelector('image');
+          if (img) {
+            img.style.filter = 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))';
+            img.style.opacity = '1';
+          }
+          try {
+            if (hasFB()) {
+              const payload = getLeafDataFromDOM(g.dataset.id);
+              // remove isWithered flag from payload
+              delete payload.isWithered;
+              await fb().db.ref(`leaves/${g.dataset.id}`).set(payload);
+            }
+          } catch (e) { console.error('Failed to update leaf state:', e); }
+
+          // Show small celebration (simple opacity pop)
+          g.style.transition = 'transform .4s ease, opacity .6s ease';
+          g.style.transform += ' scale(1.08)';
+          setTimeout(()=>{ g.style.transform = g.getAttribute('transform') || ''; }, 400);
+          if (ownerRecoverSection) ownerRecoverSection.style.display = 'none';
+        };
+      }
       editLeafBtn.onclick = ()=>{
         hideModal(modal);
         openAddModal(g.dataset.msg || "", g.dataset.author || "", true, g.dataset.id);
@@ -696,6 +890,11 @@
       addAuthor.style.opacity = "1";
     }
   });
+  // Toggle wither type selector visibility when withered checkbox changes
+  isWitheredInp?.addEventListener('change', () => {
+    if (witherTypeRow) witherTypeRow.style.display = isWitheredInp.checked ? 'block' : 'none';
+    renderPreview();
+  });
   [leafShapeSel, leafPaletteSel, leafScaleInp, leafRotationInp].forEach(el=> el && el.addEventListener("input", renderPreview));
 
   // Update value displays for scale and rotation
@@ -759,6 +958,13 @@
           leafEl.dataset.position = JSON.stringify(pos);
           leafEl.dataset.rotation = String(rotation);
         }
+        // update withered flag when editing
+        if (isWitheredInp) {
+          if (isWitheredInp.checked) leafEl.dataset.isWithered = '1'; else delete leafEl.dataset.isWithered;
+          // persist chosen wither type
+          if (isWitheredInp.checked && witherTypeSel) leafEl.dataset.witherType = witherTypeSel.value;
+          else delete leafEl.dataset.witherType;
+        }
         // repaint with new image
         const leafImagePath = getLeafImagePath(shapeKey, Number(leafEl.dataset.paletteIdx || 0));
         const leafImage = leafEl.querySelector("image");
@@ -782,6 +988,10 @@
         }
       }
       const data = getLeafDataFromDOM(currentEditingId);
+      // reflect isWithered on payload when editing
+      const existingEl = leaves.querySelector(`.leaf[data-id="${currentEditingId}"]`);
+      if (existingEl && existingEl.dataset.isWithered) data.isWithered = true;
+  if (existingEl && existingEl.dataset.witherType) data.witherType = existingEl.dataset.witherType;
       if (hasFB()) fb().db.ref(`leaves/${currentEditingId}`).set(data).catch(console.error);
     } else {
       // Add new
@@ -790,14 +1000,14 @@
       
       // Get current user info for proper attribution
       const currentUser = window._firebase?.auth?.currentUser;
-      const userId = currentUser?.uid || null;
-      const finalAuthor = author || (currentUser?.displayName || currentUser?.email?.split('@')[0] || "");
+      const authorId = currentUser?.uid || null;
+      const finalAuthor = author || (currentUser?.displayName || currentUser?.email?.split('@')[0] || "Ẩn danh");
       
       const data = { 
         id: uuid(), 
         text, 
         author: finalAuthor, 
-        userId: userId, // Add userId for proper tracking
+        authorId: authorId, // MUST be authorId to match database rules
         ts: Date.now(), 
         position: pos, 
         shapeKey, 
@@ -805,6 +1015,11 @@
         scale, 
         rotation 
       };
+      // include withered flag
+      if (isWitheredInp && isWitheredInp.checked) {
+        data.isWithered = true;
+        if (witherTypeSel && witherTypeSel.value) data.witherType = witherTypeSel.value;
+      }
       
       addLeafFromData(data, true);
       
@@ -823,6 +1038,7 @@
     addMessage.value = "";
     addAuthor.value = "";
     isAnonymous.checked = false;
+    if (isWitheredInp) isWitheredInp.checked = false;
     addAuthor.disabled = false;
     addAuthor.style.opacity = "1";
   });

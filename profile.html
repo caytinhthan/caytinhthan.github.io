@@ -655,6 +655,9 @@
       const logoutBtn = document.getElementById('profileLogoutBtn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
+          if (!confirm('Bạn có chắc muốn đăng xuất?')) {
+            return;
+          }
           try {
             if (window._firebase && window._firebase.signOut) {
               await window._firebase.signOut();
