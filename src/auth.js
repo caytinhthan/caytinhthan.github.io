@@ -15,12 +15,20 @@
         this.updateAuthUI(user);
         
         if (user) {
+          console.log('✅ User logged in:', user.email);
           this.createUserProfile(user);
           // Set user online status
           this.setUserOnlineStatus(user.uid, true);
           
           // Handle page visibility for online status
           this.setupOnlineStatusHandler(user.uid);
+          
+          // QUAN TRỌNG: Redirect về trang chủ nếu đang ở trang login/register
+          const currentPage = window.location.pathname;
+          if (currentPage.includes('login.html') || currentPage.includes('register.html')) {
+            console.log('🔄 Redirecting from auth page to index.html');
+            window.location.href = 'index.html';
+          }
         }
       });
     },
@@ -48,6 +56,7 @@
     // Create or update user profile
     createUserProfile: async function(user) {
       try {
+        console.log('👤 Creating/updating user profile for:', user.email);
         const userRef = window._firebase.ref(`users/${user.uid}`);
         const userData = {
           uid: user.uid,
@@ -65,20 +74,30 @@
           const existingUser = snapshot.val();
           if (existingUser) {
             // Update existing user
+            console.log('🔄 Updating existing user');
             userRef.update({
               lastActive: Date.now(),
               isOnline: true,
               displayName: userData.displayName,
               photoURL: userData.photoURL
+            }).then(() => {
+              console.log('✅ User profile updated successfully');
+            }).catch(error => {
+              console.error('❌ Error updating user profile:', error);
             });
           } else {
             // Create new user
-            userRef.set(userData);
+            console.log('➕ Creating new user');
+            userRef.set(userData).then(() => {
+              console.log('✅ User profile created successfully');
+            }).catch(error => {
+              console.error('❌ Error creating user profile:', error);
+            });
           }
         });
         
       } catch (error) {
-        console.error('Error creating user profile:', error);
+        console.error('💥 Error in createUserProfile:', error);
       }
     },
     
@@ -106,9 +125,23 @@
     // Check for redirect result
     checkRedirectResult: async function() {
       try {
+        console.log('🔍 Checking redirect result...');
         const result = await window._firebase.getRedirectResult();
-        return result.user;
+        if (result && result.user) {
+          console.log('✅ Redirect result found:', result.user.email);
+          console.log('📝 User info:', {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL
+          });
+          return result.user;
+        } else {
+          console.log('❌ No redirect result');
+          return null;
+        }
       } catch (error) {
+        console.error('💥 Redirect result error:', error);
         return null;
       }
     },
