@@ -574,6 +574,16 @@
       const passwordToggle = document.getElementById('passwordToggle');
       const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
       
+      // Listen for auth popup completion
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'firebase-auth-popup-complete') {
+          // Auth completed, reload page to check auth state
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
+      });
+      
       // Password toggle functionality - KHÔNG GÂY LAYOUT JUMP
       function setupPasswordToggle(input, button) {
         if (!input || !button) return;
@@ -618,11 +628,13 @@
         try {
           const redirectUser = await window.AuthHelpers.checkRedirectResult();
           if (redirectUser) {
+            // Redirect successful, go to main page
             redirectAfterLogin();
             return;
           }
         } catch (error) {
-          // Silent fail for redirect result
+          // Show error if redirect failed
+          showError('Lỗi đăng nhập: ' + error.message);
         }
       });
       
@@ -632,8 +644,8 @@
           if (user) {
             redirectAfterLogin();
           }
-        }).catch(() => {
-          // Silent fail
+        }).catch(error => {
+          showError('Lỗi đăng nhập: ' + error.message);
         });
       }
       
@@ -729,16 +741,18 @@
           try {
             showLoading(true);
             googleRegisterBtn.disabled = true;
-            googleRegisterBtn.innerHTML = '<span>🔄</span><span>Đang mở cửa sổ...</span>';
+            googleRegisterBtn.innerHTML = '<span>🔄</span><span>Đang chuyển hướng...</span>';
             
             // Small delay to ensure UI updates
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 300));
             
+            // This will redirect to Google
             await window.AuthHelpers.signInWithGoogle();
-            redirectAfterLogin();
+            
+            // If we get here, something went wrong
+            showError('Có lỗi xảy ra trong quá trình chuyển hướng');
           } catch (error) {
             showError(error.message);
-          } finally {
             showLoading(false);
             googleRegisterBtn.disabled = false;
             googleRegisterBtn.innerHTML = '<span>🌐</span><span>Đăng ký với Google</span>';

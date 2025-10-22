@@ -101,36 +101,17 @@
         provider.addScope('profile');
         provider.addScope('email');
         
-        // Configure for GitHub Pages domain
+        // Configure for better UX
         provider.setCustomParameters({
           prompt: 'select_account'
         });
         
-        // Try popup first, fallback to redirect for GitHub Pages
-        try {
-          const result = await window._firebase.signInWithPopup(provider);
-          return result.user;
-        } catch (popupError) {
-          if (popupError.code === 'auth/popup-blocked' || 
-              popupError.code === 'auth/popup-closed-by-user' ||
-              popupError.code === 'auth/cancelled-popup-request') {
-            
-            // Fallback to redirect for GitHub Pages
-            await window._firebase.signInWithRedirect(provider);
-            return null; // Will handle in redirect result
-          }
-          throw popupError;
-        }
+        // Always use redirect for GitHub Pages - more reliable
+        await window._firebase.signInWithRedirect(provider);
+        // Will handle result in redirect result check
+        return null;
       } catch (error) {
-        if (error.code === 'auth/popup-closed-by-user') {
-          throw new Error('Đăng nhập bị hủy bởi người dùng');
-        } else if (error.code === 'auth/popup-blocked') {
-          throw new Error('Popup bị chặn. Sử dụng phương thức chuyển hướng...');
-        } else if (error.code === 'auth/cancelled-popup-request') {
-          throw new Error('Yêu cầu đăng nhập bị hủy');
-        } else {
-          throw new Error('Lỗi đăng nhập Google: ' + (error.message || 'Không xác định'));
-        }
+        throw new Error('Lỗi đăng nhập Google: ' + (error.message || 'Không xác định'));
       }
     },
 
