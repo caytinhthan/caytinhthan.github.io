@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đang xử lý đăng nhập...</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: white;
+      text-align: center;
+    }
+    
+    .auth-container {
+      max-width: 400px;
+      padding: 40px 20px;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 30px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .auth-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .auth-message {
+      font-size: 16px;
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      margin-top: 30px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 2px;
+      animation: progress 3s ease-in-out infinite;
+      width: 0%;
+    }
+    
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 70%; }
+      100% { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="spinner"></div>
+    <h1 class="auth-title">Đang xử lý đăng nhập...</h1>
+    <p class="auth-message">
+      Vui lòng đợi trong giây lát.<br>
+      Cửa sổ sẽ tự động đóng sau khi hoàn tất.
+    </p>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.3.0/firebase-auth-compat.js"></script>
+  
+  <script>
+    // Firebase config - same as main site
+    const firebaseConfig = {
+      apiKey: "AIzaSyBfr8tUEMT0jZpBe6Pl5NIOZlni2MWrYsM",
+      authDomain: "caytinhthan.github.io",
+      databaseURL: "https://caytinhthan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "caytinhthan",
+      storageBucket: "caytinhthan.firebasestorage.app",
+      messagingSenderId: "381361662805",
+      appId: "1:381361662805:web:07d1fe119151cb95f75ddc",
+      measurementId: "G-BHMHT2QGXN"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Handle auth redirect result
+    auth.getRedirectResult().then((result) => {
+      if (result.user) {
+        // Success! User is signed in
+        console.log('Auth successful:', result.user);
+        
+        // If this is a popup, send message to parent and close
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'firebase-auth-complete',
+            user: {
+              uid: result.user.uid,
+              email: result.user.email,
+              displayName: result.user.displayName,
+              photoURL: result.user.photoURL
+            }
+          }, window.location.origin);
+          
+          setTimeout(() => {
+            window.close();
+          }, 1000);
+        } else {
+          // If not popup, redirect to main page
+          setTimeout(() => {
+            window.location.href = '/index.html';
+          }, 2000);
+        }
+      } else {
+        // No result, probably first load
+        console.log('No auth result yet');
+        
+        // Close popup after timeout if no result
+        setTimeout(() => {
+          if (window.opener) {
+            window.close();
+          } else {
+            window.location.href = '/login.html';
+          }
+        }, 5000);
+      }
+    }).catch((error) => {
+      console.error('Auth error:', error);
+      
+      // Handle error - redirect back to login
+      setTimeout(() => {
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'firebase-auth-error',
+            error: error.message
+          }, window.location.origin);
+          window.close();
+        } else {
+          window.location.href = '/login.html?error=' + encodeURIComponent(error.message);
+        }
+      }, 2000);
+    });
+
+    // Close window after maximum timeout
+    setTimeout(() => {
+      if (window.opener) {
+        window.close();
+      }
+    }, 10000);
+  </script>
+</body>
+</html>

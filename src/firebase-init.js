@@ -3,7 +3,7 @@
   // Import Firebase from CDN
   const firebaseConfig = {
     apiKey: "AIzaSyBfr8tUEMT0jZpBe6Pl5NIOZlni2MWrYsM",
-    authDomain: "caytinhthan.firebaseapp.com",
+    authDomain: "caytinhthan.github.io",
     databaseURL: "https://caytinhthan-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "caytinhthan",
     storageBucket: "caytinhthan.firebasestorage.app",

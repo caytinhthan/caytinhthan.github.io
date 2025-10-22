@@ -10,6 +10,18 @@
         return;
       }
       
+      // Listen for auth popup messages
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data && event.data.type === 'firebase-auth-complete') {
+          // Reload to update auth state
+          window.location.reload();
+        } else if (event.data && event.data.type === 'firebase-auth-error') {
+          console.error('Auth error from popup:', event.data.error);
+        }
+      });
+      
       window._firebase.onAuthStateChanged((user) => {
         this.currentUser = user;
         this.updateAuthUI(user);
