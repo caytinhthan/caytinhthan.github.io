@@ -623,30 +623,39 @@
       setupPasswordToggle(document.getElementById('password'), passwordToggle);
       setupPasswordToggle(document.getElementById('confirmPassword'), confirmPasswordToggle);
       
-      // Check for redirect result on page load
-      window.addEventListener('firebase-ready', async () => {
+      // Check for redirect result on page load và auth state
+      async function checkAuthAndRedirect() {
         try {
-          const redirectUser = await window.AuthHelpers.checkRedirectResult();
-          if (redirectUser) {
-            // Redirect successful, go to main page
+          // Check current auth state first
+          const currentUser = window._firebase.auth.currentUser;
+          if (currentUser) {
+            console.log('User already logged in:', currentUser.email);
             redirectAfterLogin();
             return;
           }
+          
+          // Check for redirect result
+          const redirectResult = await window.AuthHelpers.checkRedirectResult();
+          if (redirectResult) {
+            console.log('Redirect result user:', redirectResult.email);
+            redirectAfterLogin();
+            return;
+          }
+          
+          console.log('No current user or redirect result');
         } catch (error) {
+          console.error('Auth check error:', error);
           // Show error if redirect failed
           showError('Lỗi đăng nhập: ' + error.message);
         }
-      });
+      }
+      
+      // Check auth state when Firebase is ready
+      window.addEventListener('firebase-ready', checkAuthAndRedirect);
       
       // Also check immediately if Firebase is already ready
       if (window._firebase) {
-        window.AuthHelpers.checkRedirectResult().then(user => {
-          if (user) {
-            redirectAfterLogin();
-          }
-        }).catch(error => {
-          showError('Lỗi đăng nhập: ' + error.message);
-        });
+        checkAuthAndRedirect();
       }
       
       // Password strength checker - NHẸ HỠN

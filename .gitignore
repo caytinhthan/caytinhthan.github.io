@@ -29,3 +29,5 @@ build/
 
 # Rules
 database.rules.json
+
+FIREBASE_SETUP.md

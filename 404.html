@@ -106,34 +106,6 @@
       transform: translateY(0);
     }
     
-    /* Firebase Auth Loading Screen */
-    .auth-loading {
-      display: none;
-      min-height: 100vh;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      text-align: center;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 20px;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
     @media (max-width: 768px) {
       .error-card {
         margin: 20px;
@@ -160,13 +132,6 @@
   </style>
 </head>
 <body>
-  <!-- Firebase Auth Loading Screen -->
-  <div id="authLoading" class="auth-loading">
-    <div class="spinner"></div>
-    <h2>Đang xử lý đăng nhập...</h2>
-    <p>Vui lòng đợi trong giây lát</p>
-  </div>
-
   <!-- Normal 404 Screen -->
   <div id="errorContent" class="error-container">
     <div class="error-card">
@@ -188,56 +153,10 @@
   </div>
 
   <script>
-    // Detect Firebase Auth URLs and handle them specially
-    const currentURL = window.location.href;
-    const currentPath = window.location.pathname;
-    const searchParams = window.location.search;
-    
-    // Check if this is a Firebase Auth handler URL
-    const isFirebaseAuth = currentPath.includes('/__/auth/') || 
-                          searchParams.includes('authType=signInViaPopup') ||
-                          searchParams.includes('apiKey=AIzaSyBfr8tUEMT0jZpBe6Pl5NIOZlni2MWrYsM') ||
-                          searchParams.includes('authType=') ||
-                          searchParams.includes('providerId=google.com');
-    
-    if (isFirebaseAuth) {
-      // Show loading screen and hide 404 content
-      document.getElementById('authLoading').style.display = 'flex';
-      document.getElementById('errorContent').style.display = 'none';
-      
-      // If this is a popup window, close it after Firebase processes
-      if (window.opener) {
-        // Wait for Firebase to process then close popup
-        setTimeout(() => {
-          try {
-            window.close();
-          } catch (e) {
-            // If can't close, redirect to opener
-            if (window.opener) {
-              window.opener.location.reload();
-              window.close();
-            }
-          }
-        }, 3000);
-      } else {
-        // If not a popup, redirect to login page after processing
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 5000);
-      }
-    } else {
-      // Normal 404 page - auto redirect after 10 seconds
-      setTimeout(() => {
-        window.location.href = '/index.html';
-      }, 10000);
-    }
-    
-    // Handle case where this might be opened in main window during auth
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'firebase-auth-complete') {
-        window.location.href = '/login.html';
-      }
-    });
+    // Normal 404 page - just redirect after 10 seconds
+    setTimeout(() => {
+      window.location.href = '/index.html';
+    }, 10000);
   </script>
 </body>
 </html>
