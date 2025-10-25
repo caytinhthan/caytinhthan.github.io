@@ -383,6 +383,11 @@ textarea:focus, input[type="text"]:focus {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.12);
 }
 
+/* Prevent transient hover effects from causing unwanted horizontal scrollbars */
+html, body {
+  overflow-x: hidden;
+}
+
 .btn.tertiary {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
@@ -404,7 +409,9 @@ textarea:focus, input[type="text"]:focus {
 }
 
 .btn:hover:not(:disabled) {
-  transform: translateY(-2px);
+  /* subtle elevation without causing layout overflow */
+  transform: translateY(-1px);
+  will-change: transform;
 }
 
 .btn.primary:hover:not(:disabled) {
@@ -586,8 +593,7 @@ textarea:focus, input[type="text"]:focus {
 
 .list::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
-  transform: scaleX(1.2);
-  /* Phóng to khi hover */
+  /* avoid scaling the thumb on hover to prevent transient layout/scrollbar width changes */
 }
 
 .list::-webkit-scrollbar-thumb:active {
@@ -850,7 +856,7 @@ textarea:focus, input[type="text"]:focus {
 }
 
 .sheet {
-  width: min(680px,92vw);
+  width: min(560px,92vw);
   max-height: calc(100dvh - 48px);
   background: #fff !important;
   border: 1px solid var(--border);
@@ -916,6 +922,14 @@ textarea:focus, input[type="text"]:focus {
 /* Kill mọi overlay tím trong sheet */
 .modal .sheet::before,
 .modal .sheet::after{
+  content: none !important;
+}
+
+/* Hide the decorative leaf emoji inside modal leaf-cards to avoid duplicate icons
+   when we render an actual image preview inside the modal. */
+#modal .leaf-card::before,
+#addModal .leaf-card::before {
+  display: none !important;
   content: none !important;
 }
 
@@ -1117,7 +1131,8 @@ textarea:focus, input[type="text"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden; /* clip so frame stays fixed */
+  /* allow rotated image to extend outside the frame so corners aren't clipped */
+  overflow: visible;
 }
 .preview-image-wrap .preview-image {
   position: absolute;
@@ -1149,14 +1164,12 @@ textarea:focus, input[type="text"]:focus {
 }
 
 /* Utility: make image fill the preview frame */
-.preview-leaf { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.preview-leaf { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: visible; }
 .preview-leaf .fill-frame { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; display: block; transform-origin: center center; will-change: transform; backface-visibility: hidden; transform-box: border-box; }
 
 /* Ensure the preview box and wrapper never get transformed so only the image rotates */
-.preview, .preview-leaf, .preview-image-wrap {
-  transform: none !important;
-  -webkit-transform: none !important;
-}
+/* Allow JS-driven transforms on preview wrapper/image. Previously a global rule
+   forced transform:none which prevented JS from rotating the preview. */
 
 /* Isolate painting to avoid parent repainting artifacts when the image rotates */
 .preview { contain: paint; }
@@ -1534,6 +1547,102 @@ textarea:focus, input[type="text"]:focus {
   transition: all 0.3s ease;
 }
 
+/* Watering / bucket effect for encouragements */
+/* Animate the inner image element so the group's translate/rotate are not overwritten */
+.leaf image.watering {
+  animation: leafWaterPulse 700ms ease-out;
+}
+@keyframes leafWaterPulse {
+  0% { transform: scale(1) translateZ(0); filter: brightness(1); }
+  40% { transform: scale(1.08) translateZ(0); filter: brightness(1.12); }
+  100% { transform: scale(1) translateZ(0); filter: brightness(1); }
+}
+
+.bucket-effect {
+  position: absolute;
+  pointer-events: none;
+  z-index: 12000;
+  /* make the bucket visually larger so it's clearly visible over the tree */
+  font-size: 56px;
+  transform-origin: center;
+  opacity: 0;
+}
+@keyframes bucketDrop {
+  0% { transform: translateY(-12px) scale(0.95); opacity: 0; }
+  25% { transform: translateY(0) scale(1); opacity: 1; }
+  75% { transform: translateY(6px) scale(0.99); opacity: 1; }
+  100% { transform: translateY(6px) scale(0.99); opacity: 1; }
+}
+.bucket-effect.play {
+  animation: bucketDrop 900ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+
+/* small water splash pseudo-element using radial-gradient on a helper span */
+.water-splash {
+  position: absolute;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(173,216,230,0.9), rgba(173,216,230,0.2) 40%, transparent 60%);
+  pointer-events: none;
+  transform: translateY(-10px) scale(0.6);
+  opacity: 0;
+  z-index: 12001;
+  transition: transform 420ms ease-out, opacity 420ms ease-out;
+}
+.water-splash.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Enhanced bucket tilt/pour visuals */
+.bucket-effect.pour {
+  transform-origin: center;
+  transition: transform 220ms ease-out;
+  transform: rotate(-18deg) translateZ(0);
+}
+/* When pouring, keep the bucket tilted and visible (override play fade out) */
+.bucket-effect.pour.play {
+  animation: none !important;
+  transform: rotate(-22deg) translateZ(0) translateY(2px) scale(1.05) !important;
+  opacity: 1 !important;
+}
+
+/* falling water drops */
+.water-drop {
+  position: absolute;
+  /* larger, more elongated drops to read better visually */
+  width: 10px; height: 22px; border-radius: 6px;
+  background: linear-gradient(180deg, rgba(168,230,255,0.98), rgba(63,180,255,0.98));
+  box-shadow: 0 2px 10px rgba(59,130,246,0.18);
+  pointer-events: none;
+  z-index: 12002;
+  opacity: 0;
+  transform: translateZ(0) scaleY(0.55);
+  /* slower fall so pour reads as heavier */
+  transition: transform 1200ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease-out;
+}
+
+/* small pool under the leaf */
+.water-pool {
+  position: absolute;
+  width: 56px; height: 12px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(173,216,230,0.45), rgba(59,130,246,0.12));
+  pointer-events: none;
+  z-index: 12001;
+  opacity: 0;
+  transform: scaleX(0.8) translateY(6px);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+.water-pool.show { opacity: 1; transform: scaleX(1) translateY(0); }
+
+/* small splash variant used by drop impact */
+.water-splash.small {
+  width: 36px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(173,216,230,0.95), rgba(173,216,230,0.25) 40%, transparent 60%);
+  opacity: 0; transform: translateY(6px) scale(0.6);
+  transition: transform 280ms ease-out, opacity 180ms ease-out;
+}
+.water-splash.small.show { opacity: 1; transform: translateY(0) scale(1); }
+
 .chat-window.minimized {
   height: 60px;
 }
@@ -1764,4 +1873,169 @@ textarea:focus, input[type="text"]:focus {
     bottom: 16px;
     max-width: 350px;
   }
+}
+
+/* ===== Modal preview / add-modal polish ===== */
+/* Prevent the Add modal's inner content from inheriting sheet transforms that
+   can make the modal appear shrunk. We keep sheet animation but paint children
+   at normal scale. */
+#addModal .sheet, #addModal .sheet * {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Make preview frames inside modals transparent so the leaf image itself is
+   the visible content (no white box around it). Also remove shadow which may
+   resemble a white card. */
+#addModal .preview, #modal .leaf-preview, #addModal .leaf-preview {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Small login prompt modal should be compact and never cause internal scrollbars.
+   Override the default sheet sticky footer and overflow rules for this modal. */
+#loginPromptModal .sheet {
+  max-width: 420px;
+  width: min(420px, 86vw);
+  max-height: none;
+  overflow: visible !important;
+  padding: 18px 18px 16px 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+}
+
+#loginPromptModal .sheet > div[style*="display:flex"]:last-child {
+  /* keep buttons inline but do not use sticky footer for this small modal */
+  position: static !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  margin: 12px 0 0 0 !important;
+  padding: 0 !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+#loginPromptModal .x { top: 8px; right: 10px; }
+
+/* When a sheet has no action controls (e.g. leaf-actions hidden), avoid the
+   sticky footer negative margins which create an empty gap. The .no-actions
+   helper class is toggled by JS when the modal's action container is empty. */
+.sheet.no-actions > div[style*="display:flex"]:last-child,
+.sheet.no-actions > .leaf-actions {
+  /* neutralize the sticky/footer adjustments */
+  position: static !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-top: 0 !important;
+}
+
+/* Ensure the preview image fills available space and doesn't carry a background
+   or fixed oversized width. JS still applies transforms (scale/rotate) to the
+   image element itself; CSS ensures no extra framing. */
+#modal .modal-leaf-image,
+#addModal .preview .preview-image,
+.preview-image.fill-frame {
+  background: transparent !important;
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* On small screens keep the preview compact but transparent */
+@media (max-width: 520px) {
+  #addModal .preview, #modal .leaf-preview { background: transparent !important; }
+  #addModal .preview .preview-image, #modal .modal-leaf-image { max-height: 120px; }
+}
+
+/* Rotation mode overlay and FABs */
+.rotate-overlay {
+  /* default: positioned relative to parent (stage) so it sits inside the canvas */
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000; /* above stage but below modals (modals use 3000) */
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 160ms ease, transform 160ms ease;
+  width: auto;
+}
+.rotate-overlay.show { opacity: 1; pointer-events: auto; }
+.rotate-overlay.in-stage { box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-radius: 12px; background: rgba(255,255,255,0.02); }
+.rotate-fabs {
+  display: flex; flex-direction: row; gap: 10px; align-items: center;
+}
+.rotate-fabs .btn { pointer-events: auto; min-width: 72px; padding: 10px 12px; border-radius: 10px; font-size: 13px; }
+.rotate-hint {
+  position: absolute; left: 50%; top: 52px; transform: translateX(-50%);
+  pointer-events: none; color: var(--muted);
+  background: rgba(255,255,255,0.9); border-radius: 8px; padding: 6px 10px; font-size: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  display: none; /* hide hint by default inside stage to reduce clutter */
+}
+.rotate-overlay .btn.red { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+.rotate-overlay .btn.primary { background: linear-gradient(135deg, var(--accent), #10b981); color: white; }
+.rotate-overlay .btn.tertiary { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+
+/* subtle target highlight during rotation */
+.leaf.rotating { filter: drop-shadow(0 8px 24px rgba(16,185,129,0.18)); transform-origin: center center; }
+
+/* Mobile: compact horizontal FABs and smaller padding */
+@media (max-width: 520px) {
+  .rotate-overlay { top: 8px; padding: 6px; }
+  .rotate-fabs { gap: 8px; }
+  .rotate-fabs .btn { min-width: 56px; padding: 8px 10px; font-size: 12px; }
+  .rotate-hint { font-size: 11px; top: 44px; display: none; }
+}
+
+/* Sparkle effect used when owner recovers a leaf */
+.leaf-sparkle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 6px 14px rgba(255,255,255,0.9), 0 0 8px rgba(255,255,255,0.6);
+  pointer-events: none;
+  transform-origin: center center;
+  z-index: 14000;
+  opacity: 0;
+  transition: transform 700ms cubic-bezier(.2,.9,.2,1), opacity 480ms ease-out;
+}
+.leaf-sparkle.show {
+  opacity: 1;
+}
+
+/* brief highlight on the inner image to show recovery */
+.recovered-highlight {
+  transition: filter 420ms ease, transform 420ms ease;
+  filter: drop-shadow(0 10px 24px rgba(255,255,200,0.75)) saturate(1.06) brightness(1.08);
+  transform: scale(1.03);
+}
+
+/* Transitioning to special leaf: crossfade + gentle scale */
+.transitioning-special {
+  opacity: 0.15;
+  transform-origin: center center;
+  transition: opacity 360ms ease, transform 420ms cubic-bezier(.2,.9,.2,1);
+  transform: scale(0.94);
+}
+.transitioning-special.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* tiny twinkle animation for accessibility-reduced devices */
+@media (prefers-reduced-motion: no-preference) {
+  .leaf-sparkle { transition-timing-function: cubic-bezier(.18,.9,.2,1); }
 }

@@ -743,3 +743,212 @@ html.theme-day .grass {
   }
 }
 
+/* View modal tweaks: make the message content larger and avoid visual "shrink"
+   caused by transient transforms/animations. These rules only target the
+   message/view modal so other modals keep their animation behavior. */
+#modal .sheet {
+  /* allow the view modal to be a bit wider for comfortable reading */
+  max-width: 820px;
+  width: min(92vw, 820px);
+}
+
+#modal .leaf-card {
+  /* reduce the large left padding used by letter-style cards so text has more room */
+  padding: 20px 20px 18px 20px;
+  border-left-width: 6px;
+}
+
+#modal .leaf-text #modalText {
+  font-size: 22px !important;
+  line-height: 1.95 !important;
+  font-weight: 500 !important;
+  color: var(--ink) !important;
+}
+
+/* Prevent the view modal's content from inheriting transient transforms
+   used for the opening animation that can make text appear smaller. This
+   keeps the animation on the sheet container but ensures inner content is
+   painted at normal scale when visible. */
+#modal .sheet, #modal .sheet * {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+/* Further polish for the letter content inside the view modal */
+#modal .leaf-card {
+  display: block; /* ensure block flow */
+  background: transparent;
+  border-left-color: var(--accent);
+  box-shadow: none;
+}
+
+#modal .leaf-text p {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  line-height: 1.9;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+/* Author (signature) styling: right aligned, lighter, visually separated */
+#modal .leaf-text #modalAuthor {
+  display: block;
+  margin-top: 10px;
+  text-align: right;
+  font-size: 14px;
+  color: var(--muted);
+  font-style: italic;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 10px;
+}
+
+/* Action buttons inside modal: full-width stack on small screens, aligned row on larger */
+#modal .leaf-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 520px) {
+  #modal .leaf-actions { flex-direction: column-reverse; }
+  #modal .leaf-actions .btn { width: 100%; }
+}
+
+/* Modal leaf preview image (view modal) */
+#modal .leaf-card {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+#modal .leaf-preview {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+#modal .modal-leaf-image {
+  width: 140%; /* intentionally larger so leaf visually overflows frame */
+  height: auto;
+  transform-origin: center center;
+  display: block;
+  pointer-events: none;
+}
+
+@media (max-width: 520px) {
+  #modal .leaf-card { flex-direction: column; }
+  #modal .leaf-preview { width: 100%; height: 140px; flex: none; }
+  #modal .modal-leaf-image { width: auto; max-height: 120px; }
+}
+
+/* === Strong overrides for modal previews and add-modal animation === */
+/* Ensure preview boxes are transparent and image is not framed */
+#modal .leaf-preview,
+#addModal .preview,
+#addModal .leaf-preview {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+#modal .modal-leaf-image,
+#addModal .preview .preview-image,
+.preview-image.fill-frame {
+  background: transparent !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Reduce the opening scale for Add modal so it doesn't visually 'shrink' too much.
+   Keep a subtle entrance but avoid aggressive scale transform that makes content
+   appear small during animation. */
+/* Positioning: anchor sheet near top so it doesn't get covered and is scollable */
+#addModal .sheet {
+  transform: none !important;
+  opacity: 1 !important;
+  margin: 12px auto !important;
+  transition: none !important;
+  position: relative !important;
+  top: 0 !important;
+}
+#addModal.modal.show .sheet {
+  transform: none !important;
+  opacity: 1 !important;
+  animation: none !important;
+}
+
+/* Make Add modal more spacious and less narrow */
+#addModal .sheet {
+  max-width: 1000px !important; /* wider canvas for create flow */
+  width: min(96vw, 1000px) !important;
+  padding: 24px !important;
+  border-radius: 12px !important;
+}
+/* Make sheet scrollable when content is taller than viewport */
+#addModal .sheet {
+  max-height: calc(100vh - 64px) !important; /* leave gap from top/bottom */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Layout: two-column picker on larger screens to use space well */
+#addModal .picker {
+  display: grid;
+  grid-template-columns: 1fr 360px; /* give the preview more width */
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  #addModal .picker { grid-template-columns: 1fr; }
+}
+
+/* Make preview on the right larger and centered; desktop gets larger canvas */
+#addModal .preview { border-radius: 12px; padding: 14px; }
+#addModal .preview .preview-image-wrap { width: 280px; height: 280px; display:flex; align-items:center; justify-content:center; }
+#addModal .preview .modal-leaf-image, #addModal .preview .preview-image { max-width: 280px; max-height: 280px; }
+
+/* Improve spacing of modal header and actions */
+#addModal h3 { font-size: 22px; margin-bottom: 12px; }
+#addModal .form-section { margin-bottom: 14px; }
+#addModal .sheet > div[style*="display:flex"] { margin-top: 20px; }
+
+/* Compact, centered preview for Add modal: smaller frame, no overflow, neat padding */
+#addModal .preview {
+  display:flex; align-items:center; gap:16px; padding:12px; border-radius:12px;
+  background: transparent !important; box-shadow: none !important; border: 1px solid rgba(0,0,0,0.04);
+}
+/* inner preview holder for legacy selectors */
+#addModal .preview .preview-leaf { height: 280px; display:flex; align-items:center; justify-content:center; }
+
+/* Responsive: keep preview comfortable on medium and small screens */
+@media (max-width: 920px) {
+  #addModal .preview .preview-image-wrap { width: 200px; height: 200px; }
+  #addModal .preview .modal-leaf-image, #addModal .preview .preview-image { max-width: 200px; max-height: 200px; }
+  #addModal .preview .preview-leaf { height: 200px; }
+}
+
+@media (max-width: 520px) {
+  #addModal .preview .preview-image-wrap { width: 140px; height: 140px; }
+  #addModal .preview .modal-leaf-image, #addModal .preview .preview-image { max-width: 140px; max-height: 140px; }
+  #addModal .preview .preview-leaf { height: 140px; }
+}
+
+/* Form spacing inside add modal */
+#addModal .picker-row { margin-bottom: 12px; }
+#addModal .picker-row label { display:block; margin-bottom:6px; font-weight:600; }
+
+/* No forced inheritance for transforms — allow JS to control preview image transforms. */
+
+
+

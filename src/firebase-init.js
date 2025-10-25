@@ -76,6 +76,7 @@
         signOut: auth.signOut.bind(auth),
         onAuthStateChanged: auth.onAuthStateChanged.bind(auth),
         GoogleAuthProvider: firebase.auth.GoogleAuthProvider,
+        FacebookAuthProvider: firebase.auth.FacebookAuthProvider,
         signInWithPopup: auth.signInWithPopup.bind(auth),
         signInWithRedirect: auth.signInWithRedirect.bind(auth),
         getRedirectResult: auth.getRedirectResult.bind(auth)

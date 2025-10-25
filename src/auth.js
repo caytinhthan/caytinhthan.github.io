@@ -42,6 +42,13 @@
     currentUser: null,
     lastProcessedUid: null, // Track last processed UID to prevent duplicates
     isProcessingAuth: false, // Prevent concurrent auth processing
+    // Session / inactivity helpers
+    _inactivityTimeoutMinutes: null, // null = disabled
+    _inactivityTimerId: null,
+    _activityListenersAttached: false,
+    _lastActivityKey: 'ctt_lastActivity',
+    _lastDBUpdateAt: 0,
+    _dbUpdateThrottleMs: 60000, // throttle DB lastActive updates to once per minute
     
     // EARLY AUTH CHECK - Gọi NGAY khi page load để giảm FOUC
     earlyAuthCheck: function() {
@@ -142,6 +149,9 @@
             this.updateAuthUI(user);
             this.setUserOnlineStatus(user.uid, true);
             this.setupOnlineStatusHandler(user.uid);
+              // Start activity tracking for session persistence
+              this._ensureActivityTracking();
+              this._maybeUpdateDBLastActive(true);
             
             // Redirect về trang chủ nếu đang ở trang login/register
             const currentPage = window.location.pathname;
@@ -158,6 +168,8 @@
           persistLog('❌ User not authenticated', 'info');
           this.lastProcessedUid = null;
           this.updateAuthUI(null);
+            // Stop activity tracking when logged out
+            this._stopActivityTracking();
         }
         
         this.isProcessingAuth = false;
@@ -186,6 +198,78 @@
         if (authSection) authSection.style.display = 'flex';
         if (userSection) userSection.style.display = 'none';
       }
+    },
+
+    // INTERNAL: update DB lastActive with throttling
+    _maybeUpdateDBLastActive: function(force=false) {
+      try {
+        const now = Date.now();
+        if (!this.currentUser || !hasFB()) return;
+        if (!force && (now - this._lastDBUpdateAt) < this._dbUpdateThrottleMs) return;
+        this._lastDBUpdateAt = now;
+        const updates = { lastActive: now, isOnline: true };
+        window._firebase.ref(`users/${this.currentUser.uid}`).update(updates).catch(e=>persistLog('Failed updating lastActive: '+e.message,'error'));
+      } catch (e) { /* ignore */ }
+    },
+
+    // INTERNAL: attach cross-tab activity listeners (mousemove/keydown/visibility)
+    _ensureActivityTracking: function(){
+      if (this._activityListenersAttached) return;
+      const onActivity = () => {
+        try {
+          localStorage.setItem(this._lastActivityKey, String(Date.now()));
+        } catch(e){}
+        this._maybeUpdateDBLastActive();
+        // Clear any inactivity timer so it restarts
+        if (this._inactivityTimeoutMinutes) this._resetInactivityTimer();
+      };
+
+      // Throttle activity events to avoid localStorage spam
+      const throttled = (()=>{
+        let last=0; const ms=1000; return function(){ const n=Date.now(); if (n-last>ms){ last=n; onActivity(); } } })();
+
+      ['mousemove','mousedown','keydown','scroll','touchstart','visibilitychange'].forEach(ev => window.addEventListener(ev, throttled, {passive:true}));
+      // Listen cross-tab localStorage updates
+      window.addEventListener('storage', (e)=>{
+        if (e.key === this._lastActivityKey) {
+          // remote tab activity - update DB lastActive
+          this._maybeUpdateDBLastActive();
+          if (this._inactivityTimeoutMinutes) {
+            this._resetInactivityTimer();
+          }
+        }
+      });
+
+      this._activityListenersAttached = true;
+      // seed lastActivity now
+      try { localStorage.setItem(this._lastActivityKey, String(Date.now())); } catch(e){}
+    },
+
+    _stopActivityTracking: function(){
+      // We keep event listeners simple and passive; nothing to remove here for now.
+      // But clear inactivity timers
+      if (this._inactivityTimerId) { clearTimeout(this._inactivityTimerId); this._inactivityTimerId = null; }
+      this._inactivityTimeoutMinutes = null;
+    },
+
+    _resetInactivityTimer: function(){
+      if (!this._inactivityTimeoutMinutes) return;
+      if (this._inactivityTimerId) clearTimeout(this._inactivityTimerId);
+      const ms = Math.max(1, Number(this._inactivityTimeoutMinutes)) * 60 * 1000;
+      this._inactivityTimerId = setTimeout(()=>{
+        // Auto sign-out when timer fires
+        persistLog('🔒 Inactivity timeout reached, auto-signing out', 'info');
+        this.signOut().catch(()=>{});
+      }, ms);
+    },
+
+    // Public API: enable auto-logout after N minutes of inactivity; pass 0 or null to disable
+    enableAutoLogout: function(minutes){
+      if (!minutes || Number(minutes) <= 0) { this._inactivityTimeoutMinutes = null; this._resetInactivityTimer(); return; }
+      this._inactivityTimeoutMinutes = Number(minutes);
+      this._ensureActivityTracking();
+      this._resetInactivityTimer();
+      persistLog(`Auto-logout enabled: ${this._inactivityTimeoutMinutes} minutes`, 'info');
     },
     
     // Check if user exists in database - DÙNG .once() thay vì .on()
@@ -383,6 +467,86 @@
       }
     },
 
+    // Facebook sign in (LOGIN)
+    signInWithFacebook: async function() {
+      try {
+        persistLog('🚀 Starting Facebook LOGIN...', 'info');
+        const provider = new window._firebase.FacebookAuthProvider();
+        provider.addScope('email');
+        // Prefer localized OAuth UI based on browser language
+        try { window._firebase.auth.languageCode = window.navigator.language || 'vi'; } catch(e){}
+        // Prefer popup display param for desktop popups
+        try { provider.setCustomParameters && provider.setCustomParameters({ display: 'popup' }); } catch(e){}
+
+        // Mobile devices: use redirect immediately
+        if (this.isMobileDevice()) {
+          persistLog('� Mobile detected, using redirect for Facebook login...', 'info');
+          await window._firebase.signInWithRedirect(provider);
+          return null; // Will complete after redirect
+        }
+
+        // Desktop: try popup first
+        persistLog('🖥️ Desktop detected, trying Facebook popup first...', 'info');
+        try {
+          const result = await window._firebase.signInWithPopup(provider);
+          persistLog(`✅ Facebook popup login successful: ${result.user && result.user.email}`, 'success');
+          return result.user;
+        } catch (popupError) {
+          persistLog(`⚠️ Facebook popup failed: ${popupError.code}, trying redirect...`, 'info');
+          if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user' || popupError.code === 'auth/cancelled-popup-request') {
+            persistLog('🔄 Initiating redirect for Facebook LOGIN...', 'info');
+            await window._firebase.signInWithRedirect(provider);
+            return null;
+          } else {
+            throw popupError;
+          }
+        }
+      } catch (error) {
+        persistLog(`💥 Facebook sign in error: ${error.code} - ${error.message}`, 'error');
+        throw new Error('Lỗi đăng nhập Facebook: ' + (error.message || 'Không xác định'));
+      }
+    },
+
+    // Facebook sign up (REGISTRATION) - mirrors Google flow
+    signUpWithFacebook: async function() {
+      try {
+        persistLog('🚀 Starting Facebook REGISTRATION...', 'info');
+        const provider = new window._firebase.FacebookAuthProvider();
+        provider.addScope('email');
+        try { window._firebase.auth.languageCode = window.navigator.language || 'vi'; } catch(e){}
+        try { provider.setCustomParameters && provider.setCustomParameters({ display: 'popup' }); } catch(e){}
+
+        // Mobile devices: use redirect immediately and mark registration
+        if (this.isMobileDevice()) {
+          persistLog('� Mobile detected, using redirect for Facebook registration...', 'info');
+          sessionStorage.setItem('auth_flow', 'register');
+          await window._firebase.signInWithRedirect(provider);
+          return null;
+        }
+
+        // Desktop: try popup first
+        persistLog('🖥️ Desktop detected, trying Facebook popup first for registration...', 'info');
+        try {
+          const result = await window._firebase.signInWithPopup(provider);
+          persistLog(`✅ Facebook popup registration successful: ${result.user && result.user.email}`, 'success');
+          await this.createUserProfile(result.user);
+          return result.user;
+        } catch (popupError) {
+          persistLog(`⚠️ Facebook popup failed during registration: ${popupError.code}, trying redirect...`, 'info');
+          if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user' || popupError.code === 'auth/cancelled-popup-request') {
+            sessionStorage.setItem('auth_flow', 'register');
+            await window._firebase.signInWithRedirect(provider);
+            return null;
+          } else {
+            throw popupError;
+          }
+        }
+      } catch (error) {
+        persistLog(`💥 Facebook sign up error: ${error.code} - ${error.message}`, 'error');
+        throw new Error('Lỗi đăng ký Facebook: ' + (error.message || 'Không xác định'));
+      }
+    },
+
     // Check for redirect result (ĐĂNG NHẬP HOẶC ĐĂNG KÝ) - SỬA LẠI VỚI ERROR HANDLING
     checkRedirectResult: async function(isRegistration = false) {
       try {
@@ -405,17 +569,13 @@
           return null;
         }
       } catch (error) {
+        // Log the error but avoid user-facing alert popups which can be noisy on redirect flows.
         persistLog(`💥 Redirect result error: ${error.code} - ${error.message}`, 'error');
-        
-        // Show error to user
-        if (error.code === 'auth/unauthorized-domain') {
-          alert('Lỗi: Domain chưa được ủy quyền. Vui lòng thêm domain vào Firebase Console.');
-        } else if (error.code === 'auth/operation-not-allowed') {
-          alert('Lỗi: Google sign-in chưa được bật trong Firebase Console.');
-        } else {
-          alert('Lỗi đăng nhập: ' + error.message);
-        }
-        
+
+        // For debugging, expose last redirect error to localStorage (non-blocking)
+        try { localStorage.setItem('last_redirect_error', JSON.stringify({ code: error.code, message: error.message })); } catch(e){}
+
+        // Don't show an alert here: onAuthStateChanged will still handle successful sign-ins
         return null;
       }
     },

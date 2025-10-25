@@ -407,6 +407,13 @@
         Đăng nhập với Google
       </button>
       
+      <button class="auth-btn google" id="facebookLoginBtn" style="margin-top:8px; display:none;" aria-hidden="true" data-disabled-by="dev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" style="margin-right:8px">
+          <path fill="#1877F2" d="M22 12a10 10 0 10-11.5 9.9v-7H8v-3h2.5V9.2c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.3.2 2.3.2v2.6h-1.3c-1.3 0-1.7.8-1.7 1.6V12H20l-.5 3h-2.5v7A10 10 0 0022 12z"/>
+        </svg>
+        Đăng nhập với Facebook
+      </button>
+      
       <div class="auth-footer">
         Chưa có tài khoản? <a href="#" onclick="navigateToPage('register.html')">Đăng ký ngay</a>
       </div>
@@ -432,17 +439,29 @@
       document.body.classList.add('page-transition');
     });
     
-    function showLoading(loading) {
-      const submitBtn = document.querySelector('.auth-btn.primary');
-      const googleBtn = document.getElementById('googleLoginBtn');
-      
-      if (loading) {
-        if (submitBtn) window.AuthHelpers.showLoading(submitBtn, true);
-        if (googleBtn) window.AuthHelpers.showLoading(googleBtn, true);
+    // Set loading state on a single button only.
+    function setButtonLoading(btn, isLoading, loadingHtml) {
+      if (!btn) return;
+      if (isLoading) {
+        // store original content so we can restore
+        if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = loadingHtml || '<span>🔄</span><span>Đang chuyển hướng...</span>';
       } else {
-        if (submitBtn) window.AuthHelpers.showLoading(submitBtn, false);
-        if (googleBtn) window.AuthHelpers.showLoading(googleBtn, false);
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        if (btn.dataset.origHtml) {
+          btn.innerHTML = btn.dataset.origHtml;
+          delete btn.dataset.origHtml;
+        }
       }
+    }
+
+    // Backwards-compatible helper: only toggles the main submit button (login)
+    function showLoading(loading) {
+      const submitBtn = document.getElementById('loginBtn');
+      setButtonLoading(submitBtn, !!loading, loading ? '🔄 Đang xử lý...' : null);
     }
     
     function showError(message) {
@@ -460,9 +479,10 @@
     
     // Wait for Firebase to be ready
     window.addEventListener('firebase-ready', () => {
-      const loginForm = document.getElementById('loginForm');
-      const googleLoginBtn = document.getElementById('googleLoginBtn');
-      const passwordToggle = document.getElementById('passwordToggle');
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  const passwordToggle = document.getElementById('passwordToggle');
       
       // Listen for auth popup completion
       window.addEventListener('message', (event) => {
@@ -538,8 +558,21 @@
           console.log('❌ No current user or redirect result');
         } catch (error) {
           console.error('💥 Auth check error:', error);
-          // Show error if redirect failed
-          showError('Lỗi đăng nhập: ' + error.message);
+          // Sometimes redirect-based auth completes and onAuthStateChanged will fire shortly after.
+          // Wait a short moment and re-check currentUser before showing an error to avoid a noisy
+          // "redirect failed" message when the login actually succeeded.
+          try {
+            await new Promise(resolve => setTimeout(resolve, 600));
+            const maybeUser = window._firebase && window._firebase.auth && window._firebase.auth.currentUser;
+            if (maybeUser) {
+              console.log('ℹ️ Auth state present after redirect; suppressing transient redirect error.');
+              return;
+            }
+          } catch (e) {
+            // ignore
+          }
+          // Otherwise show the error
+          showError('Lỗi đăng nhập: ' + (error && error.message ? error.message : String(error)));
         }
       }
       
@@ -558,13 +591,13 @@
           const password = document.getElementById('password').value;
           
           try {
-            showLoading(true);
+            setButtonLoading(loginBtn, true, '🔄 Đang đăng nhập...');
             await window.AuthHelpers.signInWithEmail(email, password);
             redirectAfterLogin();
           } catch (error) {
             showError(error.message);
           } finally {
-            showLoading(false);
+            setButtonLoading(loginBtn, false);
           }
         });
       }
@@ -572,28 +605,42 @@
       if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async (e) => {
           e.preventDefault();
-          
+
           // Prevent double clicks
           if (googleLoginBtn.disabled) return;
-          
+
           try {
-            showLoading(true);
-            googleLoginBtn.disabled = true;
-            googleLoginBtn.innerHTML = '<span>🔄</span><span>Đang chuyển hướng...</span>';
-            
+            setButtonLoading(googleLoginBtn, true, '<span>🔄</span><span>Đang chuyển hướng...</span>');
+
             // Small delay to ensure UI updates
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             // This will redirect to Google
             await window.AuthHelpers.signInWithGoogle();
-            
+
             // If we get here, something went wrong
             showError('Có lỗi xảy ra trong quá trình chuyển hướng');
           } catch (error) {
             showError(error.message);
-            showLoading(false);
-            googleLoginBtn.disabled = false;
-            googleLoginBtn.innerHTML = '<span>🌐</span><span>Đăng nhập với Google</span>';
+            setButtonLoading(googleLoginBtn, false);
+          }
+        });
+      }
+
+        const facebookLoginBtn = document.getElementById('facebookLoginBtn');
+      if (facebookLoginBtn) {
+        facebookLoginBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          if (facebookLoginBtn.disabled) return;
+          try {
+            setButtonLoading(facebookLoginBtn, true, '<span>🔄</span><span>Đang chuyển hướng...</span>');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            await window.AuthHelpers.signInWithFacebook();
+            // If redirect flow, the page will change; otherwise user object will be processed by auth listener
+            setTimeout(()=> { window.location.reload(); }, 500);
+          } catch (error) {
+            showError(error.message);
+            setButtonLoading(facebookLoginBtn, false);
           }
         });
       }

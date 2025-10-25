@@ -1,6 +1,32 @@
 /* modals.css - Modal dialog styles */
 
 /* ===== MODAL STYLES ===== */
+/* The project uses two patterns: .modal/.sheet (in markup) and
+   older .modal-overlay/.modal-content. Keep both sets in sync so
+   existing markup and JS work without changes. */
+
+/* Base overlay used by .modal (covers viewport) */
+.modal {
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  display: none; /* JS toggles to 'flex' when opening */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  z-index: 2000;
+  padding: 20px;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.modal.show,
+.modal[aria-hidden="false"] {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Backwards-compatible names (in case some code toggles these classes) */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -24,24 +50,49 @@
   visibility: visible;
 }
 
+/* The visible panel inside the overlay. Project uses .sheet in markup; keep
+   compatibility with older .modal-content naming too. */
+.sheet,
 .modal-content {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+  background: var(--modal-bg, white);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  max-width: 560px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
-  transform: scale(0.9) translateY(20px);
-  transition: all 0.3s ease;
+  transform: scale(0.96) translateY(10px);
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  position: relative;
+  padding: 20px 24px;
 }
 
+.modal.show .sheet,
 .modal-overlay.active .modal-content {
   transform: scale(1) translateY(0);
 }
 
+/* Close button inside many modals uses class .x in markup */
+.sheet .x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.sheet .x:hover {
+  background: rgba(0,0,0,0.04);
+  color: var(--text, #334155);
+}
+
 .modal-header {
-  padding: 24px 32px 16px;
+  padding: 12px 8px 8px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
@@ -49,21 +100,21 @@
 }
 
 .modal-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text, #1e293b);
   margin: 0;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   color: #64748b;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .modal-close:hover {
@@ -72,14 +123,14 @@
 }
 
 .modal-body {
-  padding: 24px 32px;
+  padding: 12px 8px;
 }
 
 .modal-footer {
-  padding: 16px 32px 24px;
+  padding: 12px 8px 16px;
   border-top: 1px solid #e2e8f0;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
 }
 
@@ -258,22 +309,34 @@
 
 /* Mobile responsive for modals */
 @media (max-width: 768px) {
+  /* Make the sheet fill most of the viewport width and be comfortably
+     scrollable; keep rounded corners and small padding */
+  .sheet,
   .modal-content {
-    margin: 10px;
-    max-width: calc(100vw - 20px);
+    margin: 8px;
+    max-width: calc(100vw - 16px);
+    border-radius: 12px;
+    padding: 12px 12px;
+    max-height: 92vh;
   }
-  
+
+  .modal {
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+
   .modal-header,
   .modal-body,
   .modal-footer {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
-  
+
   .theme-options {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .leaf-status-grid {
     grid-template-columns: 1fr;
   }

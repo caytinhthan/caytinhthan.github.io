@@ -507,6 +507,13 @@
         Đăng ký với Google
       </button>
       
+      <button class="auth-btn google" id="facebookRegisterBtn" style="margin-top:8px; display:none;" aria-hidden="true" data-disabled-by="dev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2" style="margin-right:8px">
+          <path fill="#1877F2" d="M22 12a10 10 0 10-11.5 9.9v-7H8v-3h2.5V9.2c0-2.5 1.5-3.9 3.7-3.9 1.1 0 2.3.2 2.3.2v2.6h-1.3c-1.3 0-1.7.8-1.7 1.6V12H20l-.5 3h-2.5v7A10 10 0 0022 12z"/>
+        </svg>
+        Đăng ký với Facebook
+      </button>
+      
       <div class="auth-footer">
         Đã có tài khoản? <a href="#" onclick="navigateToPage('login.html')">Đăng nhập ngay</a>
       </div>
@@ -532,17 +539,28 @@
       document.body.classList.add('page-transition');
     });
     
+    // Set loading state on a single button only.
+    function setButtonLoading(btn, isLoading, loadingHtml) {
+      if (!btn) return;
+      if (isLoading) {
+        if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = loadingHtml || '<span>🔄</span><span>Đang chuyển hướng...</span>';
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        if (btn.dataset.origHtml) {
+          btn.innerHTML = btn.dataset.origHtml;
+          delete btn.dataset.origHtml;
+        }
+      }
+    }
+
+    // Backwards-compatible helper: only toggles the main submit button (register)
     function showLoading(loading) {
       const submitBtn = document.getElementById('registerBtn');
-      const googleBtn = document.getElementById('googleRegisterBtn');
-      
-      if (loading) {
-        if (submitBtn) window.AuthHelpers.showLoading(submitBtn, true);
-        if (googleBtn) window.AuthHelpers.showLoading(googleBtn, true);
-      } else {
-        if (submitBtn) window.AuthHelpers.showLoading(submitBtn, false);
-        if (googleBtn) window.AuthHelpers.showLoading(googleBtn, false);
-      }
+      setButtonLoading(submitBtn, !!loading, loading ? '🔄 Đang xử lý...' : null);
     }
     
     function showError(message) {
@@ -568,11 +586,12 @@
     
     // Wait for Firebase to be ready
     window.addEventListener('firebase-ready', () => {
-      const registerForm = document.getElementById('registerForm');
-      const googleRegisterBtn = document.getElementById('googleRegisterBtn');
-      const passwordInput = document.getElementById('password');
-      const passwordToggle = document.getElementById('passwordToggle');
-      const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+  const registerForm = document.getElementById('registerForm');
+  const registerBtn = document.getElementById('registerBtn');
+  const googleRegisterBtn = document.getElementById('googleRegisterBtn');
+  const passwordInput = document.getElementById('password');
+  const passwordToggle = document.getElementById('passwordToggle');
+  const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
       
       // Listen for auth popup completion
       window.addEventListener('message', (event) => {
@@ -649,8 +668,21 @@
           console.log('❌ No current user or redirect result');
         } catch (error) {
           console.error('💥 Auth check error:', error);
-          // Show error if redirect failed
-          showError('Lỗi đăng nhập: ' + error.message);
+          // Sometimes redirect-based auth completes and onAuthStateChanged will fire shortly after.
+          // Wait a short moment and re-check currentUser before showing an error to avoid a noisy
+          // "redirect failed" message when the registration actually succeeded.
+          try {
+            await new Promise(resolve => setTimeout(resolve, 600));
+            const maybeUser = window._firebase && window._firebase.auth && window._firebase.auth.currentUser;
+            if (maybeUser) {
+              console.log('ℹ️ Auth state present after redirect; suppressing transient redirect error.');
+              return;
+            }
+          } catch (e) {
+            // ignore
+          }
+          // Otherwise show the error
+          showError('Lỗi đăng nhập: ' + (error && error.message ? error.message : String(error)));
         }
       }
       
@@ -730,7 +762,7 @@
           }
           
           try {
-            showLoading(true);
+            setButtonLoading(registerBtn, true, '🔄 Đang tạo tài khoản...');
             await window.AuthHelpers.signUpWithEmail(email, password, displayName);
             showSuccess('Đăng ký thành công! Đang chuyển hướng...');
             setTimeout(() => {
@@ -739,7 +771,7 @@
           } catch (error) {
             showError(error.message);
           } finally {
-            showLoading(false);
+            setButtonLoading(registerBtn, false);
           }
         });
       }
@@ -752,9 +784,7 @@
           if (googleRegisterBtn.disabled) return;
           
           try {
-            showLoading(true);
-            googleRegisterBtn.disabled = true;
-            googleRegisterBtn.innerHTML = '<span>🔄</span><span>Đang chuyển hướng...</span>';
+            setButtonLoading(googleRegisterBtn, true, '<span>🔄</span><span>Đang chuyển hướng...</span>');
             
             // Small delay to ensure UI updates
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -766,9 +796,25 @@
             showError('Có lỗi xảy ra trong quá trình chuyển hướng');
           } catch (error) {
             showError(error.message);
-            showLoading(false);
-            googleRegisterBtn.disabled = false;
-            googleRegisterBtn.innerHTML = '<span>🌐</span><span>Đăng ký với Google</span>';
+            setButtonLoading(googleRegisterBtn, false);
+          }
+        });
+      }
+
+      const facebookRegisterBtn = document.getElementById('facebookRegisterBtn');
+      if (facebookRegisterBtn) {
+        facebookRegisterBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          if (facebookRegisterBtn.disabled) return;
+          try {
+            setButtonLoading(facebookRegisterBtn, true, '<span>🔄</span><span>Đang chuyển hướng...</span>');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            await window.AuthHelpers.signUpWithFacebook();
+            // If redirect flow, the page will change; otherwise user object will be processed by auth listener
+            setTimeout(()=> { window.location.reload(); }, 500);
+          } catch (error) {
+            showError(error.message);
+            setButtonLoading(facebookRegisterBtn, false);
           }
         });
       }

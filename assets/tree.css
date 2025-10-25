@@ -58,6 +58,20 @@
   transition: transform 0.18s cubic-bezier(.2,.9,.3,1);
 }
 
+/* When a leaf is being dragged (grabbing), disable image transitions and
+   suppress hover transforms to avoid flicker from competing CSS animations
+   and JS-driven SVG transform attribute updates. */
+.leaf.grabbing {
+  cursor: grabbing;
+  z-index: 30; /* keep above other leaves while dragging */
+  /* keep a stable elevated shadow while dragging */
+  box-shadow: 0 14px 32px rgba(0,0,0,0.35);
+}
+.leaf.grabbing image {
+  transition: none !important;
+  transform: none !important; /* ensure no hover-scale is applied while dragging */
+}
+
 /* Healthy leaf styles (base) */
 .leaf.healthy {
   background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -86,16 +100,26 @@
      used for positioning and dragging. Animate the inner <image> instead. */
 }
 
+
 .leaf.withered:hover {
   background: linear-gradient(135deg, #dc2626, #b91c1c);
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
 }
 
-/* Animate only the inner image to preserve group transforms for drag/position */
+/* Animate only the inner image to preserve group transforms for drag/position.
+   Use smooth transitions instead of disabling animation so hover in/out doesn't snap. */
 .leaf.withered image {
-  /* Disable animation to avoid any perceived swaying while preserving the visual 'withered' filter. */
-  animation: none !important;
   transform-origin: center;
+  will-change: transform, filter, opacity;
+  backface-visibility: hidden;
+  transition: transform 0.18s cubic-bezier(.2,.9,.3,1), filter 0.18s ease, opacity 0.18s ease;
+}
+
+/* Subtle hover transform for withered leaves to avoid large visual jumps */
+.leaf.withered:hover image {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.06) rotate(2deg);
 }
 
 @keyframes wither {
