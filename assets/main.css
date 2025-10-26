@@ -611,10 +611,11 @@ html.theme-day .grass {
   object-fit: contain;
   /* Fix: Ngăn cây bị kéo */
   pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+  user-select: none; /* Tiêu chuẩn */
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE/Edge */
+  -webkit-user-drag: none; /* Cấm kéo ảnh (Chrome/Safari) */
 }
 
 [data-theme="dark"] #tree {

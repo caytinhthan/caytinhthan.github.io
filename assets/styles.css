@@ -819,7 +819,8 @@ html, body {
 }
 
 /* Trạng thái kéo thả lá */
-.leaf.grab { cursor: grab; }
+.leaf.grab { cursor: grab; } /* giữ lại cho tham chiếu, sẽ override bằng rule mới */
+[data-mode="drag"] .leaf.grab { cursor: grab; }
 .leaf.grabbing { cursor: grabbing; }
 
 /* 4. Tooltip tối ưu */
@@ -1554,8 +1555,9 @@ html, body {
 }
 @keyframes leafWaterPulse {
   0% { transform: scale(1) translateZ(0); filter: brightness(1); }
-  40% { transform: scale(1.08) translateZ(0); filter: brightness(1.12); }
-  100% { transform: scale(1) translateZ(0); filter: brightness(1); }
+  30% { transform: scale(1.12) translateZ(0) rotate(-2deg); filter: brightness(1.18) saturate(1.06); }
+  60% { transform: scale(1.06) translateZ(0) rotate(1deg); filter: brightness(1.08); }
+  100% { transform: scale(1) translateZ(0) rotate(0); filter: brightness(1); }
 }
 
 .bucket-effect {
@@ -1563,9 +1565,10 @@ html, body {
   pointer-events: none;
   z-index: 12000;
   /* make the bucket visually larger so it's clearly visible over the tree */
-  font-size: 56px;
-  transform-origin: center;
+  font-size: 72px;
+  transform-origin: center center;
   opacity: 0;
+  will-change: transform, opacity;
 }
 @keyframes bucketDrop {
   0% { transform: translateY(-12px) scale(0.95); opacity: 0; }
@@ -1575,6 +1578,20 @@ html, body {
 }
 .bucket-effect.play {
   animation: bucketDrop 900ms cubic-bezier(.2,.9,.2,1) forwards;
+}
+
+/* explicit image inside the bucket wrapper to control sizing and subtle wobble */
+.bucket-effect .bucket-img {
+  display: block;
+  width: 120px; /* match JS bw default */
+  height: auto;
+  transform-origin: 60% 30%; /* mouth of the can */
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.25));
+  transition: transform 220ms ease-out, opacity 220ms ease-out;
+}
+
+.bucket-effect.play .bucket-img {
+  transform: rotate(-12deg) translateY(2px) scale(1.02);
 }
 
 /* small water splash pseudo-element using radial-gradient on a helper span */
@@ -1602,7 +1619,7 @@ html, body {
 /* When pouring, keep the bucket tilted and visible (override play fade out) */
 .bucket-effect.pour.play {
   animation: none !important;
-  transform: rotate(-22deg) translateZ(0) translateY(2px) scale(1.05) !important;
+  transform: rotate(-28deg) translateZ(0) translateY(4px) scale(1.06) !important;
   opacity: 1 !important;
 }
 
@@ -1610,22 +1627,22 @@ html, body {
 .water-drop {
   position: absolute;
   /* larger, more elongated drops to read better visually */
-  width: 10px; height: 22px; border-radius: 6px;
-  background: linear-gradient(180deg, rgba(168,230,255,0.98), rgba(63,180,255,0.98));
-  box-shadow: 0 2px 10px rgba(59,130,246,0.18);
+  width: 12px; height: 28px; border-radius: 7px;
+  background: linear-gradient(180deg, rgba(198,240,255,0.98), rgba(63,180,255,0.98));
+  box-shadow: 0 6px 18px rgba(59,130,246,0.18);
   pointer-events: none;
   z-index: 12002;
   opacity: 0;
-  transform: translateZ(0) scaleY(0.55);
-  /* slower fall so pour reads as heavier */
-  transition: transform 1200ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease-out;
+  transform: translateZ(0) scaleY(0.6) rotate(-6deg);
+  /* slightly faster but eased fall for more natural motion */
+  transition: transform 980ms cubic-bezier(.22,.85,.2,1), opacity 260ms ease-out;
 }
 
 /* small pool under the leaf */
 .water-pool {
   position: absolute;
-  width: 56px; height: 12px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, rgba(173,216,230,0.45), rgba(59,130,246,0.12));
+  width: 72px; height: 14px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(198,240,255,0.55), rgba(59,130,246,0.14));
   pointer-events: none;
   z-index: 12001;
   opacity: 0;
@@ -1633,6 +1650,18 @@ html, body {
   transition: opacity 420ms ease, transform 420ms ease;
 }
 .water-pool.show { opacity: 1; transform: scaleX(1) translateY(0); }
+
+/* gentle ripple expanding from the pool when drops land */
+.water-pool::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.6);
+  width: 28px; height: 6px; border-radius: 50%;
+  background: rgba(173,216,230,0.26);
+  opacity: 0;
+  transition: transform 500ms ease, opacity 500ms ease;
+}
+.water-pool.show::after { opacity: 1; transform: translate(-50%, -50%) scale(1.6); }
 
 /* small splash variant used by drop impact */
 .water-splash.small {
@@ -2025,14 +2054,13 @@ html, body {
 
 /* Transitioning to special leaf: crossfade + gentle scale */
 .transitioning-special {
-  opacity: 0.15;
-  transform-origin: center center;
-  transition: opacity 360ms ease, transform 420ms cubic-bezier(.2,.9,.2,1);
-  transform: scale(0.94);
-}
-.transitioning-special.show {
-  opacity: 1;
-  transform: scale(1);
+  /* gentle intermediate state while swapping special images
+     keep a slight scale for a subtle pop but only animate opacity here
+     to avoid conflicts with hover/drag transforms applied elsewhere. */
+  opacity: 0.92;
+  transform-origin: center center; /* keep origin so transform is well-defined */
+  transition: opacity 320ms ease; /* <<< only transition opacity */
+  transform: scale(1.02) translateZ(0); /* keep the light temporary scale if desired */
 }
 
 /* tiny twinkle animation for accessibility-reduced devices */

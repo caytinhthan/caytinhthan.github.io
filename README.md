@@ -1,4 +1,4 @@
-# Cây Tình Thần
+# Cây Tinh Thần
 
 Ứng dụng web tương tác với cây và lá để viết thông điệp.
 
@@ -35,9 +35,6 @@
 
 Live site: https://caytinhthan.github.io
 
-## Facebook + Firebase OAuth
-
-If you use Facebook Login with this project see `FIREBASE_FACEBOOK_SETUP.md` for exact Redirect URIs and local dev server instructions.
 
 ## File structure
 

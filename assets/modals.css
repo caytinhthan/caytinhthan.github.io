@@ -341,3 +341,57 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Support modals: use a thinner, subtler scrollbar so the long text doesn't feel clunky
+   and keep the scrolling inside the sheet (no outer page scrollbar). Target the
+   support modal ids we added so other modals are unaffected. */
+#supportModal .sheet,
+#supportConnectModal .sheet,
+#supportThanksModal .sheet {
+  /* allow slightly more vertical space for follow-up content */
+  max-height: 84vh;
+  overflow-y: auto;
+  scrollbar-width: thin; /* Firefox */
+  -ms-overflow-style: -ms-autohiding-scrollbar; /* IE/Edge */
+}
+
+/* Webkit scrollbar tweaks for Chromium/Safari */
+#supportModal .sheet::-webkit-scrollbar,
+#supportConnectModal .sheet::-webkit-scrollbar,
+#supportThanksModal .sheet::-webkit-scrollbar {
+  width: 8px;
+}
+#supportModal .sheet::-webkit-scrollbar-track,
+#supportConnectModal .sheet::-webkit-scrollbar-track,
+#supportThanksModal .sheet::-webkit-scrollbar-track {
+  background: transparent;
+}
+#supportModal .sheet::-webkit-scrollbar-thumb,
+#supportConnectModal .sheet::-webkit-scrollbar-thumb,
+#supportThanksModal .sheet::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 8px;
+}
+#supportModal .sheet::-webkit-scrollbar-thumb:hover,
+#supportConnectModal .sheet::-webkit-scrollbar-thumb:hover,
+#supportThanksModal .sheet::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.18);
+}
+
+/* If the visual scrollbar is undesired, hide it for the support modals while
+   preserving scrolling capability (good visual, still accessible via wheel/keys). */
+#supportModal .sheet,
+#supportConnectModal .sheet,
+#supportThanksModal .sheet {
+  /* For Firefox: none hides the thumb but keeps scrolling */
+  scrollbar-width: none;
+}
+
+/* WebKit: hide scrollbar but keep scroll behavior */
+#supportModal .sheet::-webkit-scrollbar,
+#supportConnectModal .sheet::-webkit-scrollbar,
+#supportThanksModal .sheet::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

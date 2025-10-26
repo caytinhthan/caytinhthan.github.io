@@ -298,6 +298,13 @@
       height: 18px;
       flex-shrink: 0;
     }
+
+    .password-counter {
+      font-size: 12px;
+      color: var(--muted, #6b7280);
+      margin-top: 6px;
+      display: inline-block;
+    }
     
     .back-home {
       position: absolute;
@@ -365,7 +372,7 @@
     <div class="auth-card">
       <div class="auth-logo">
         <h1>🌱 Đăng nhập</h1>
-        <p>Chào mừng bạn trở lại Cây Tình Thần</p>
+        <p>Chào mừng bạn trở lại Cây Tinh Thần</p>
       </div>
       
       <div id="errorMessage" class="error-message"></div>
@@ -385,6 +392,9 @@
                 <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
               </svg>
             </button>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <small id="loginPasswordCount" class="password-counter">0 ký tự</small>
           </div>
         </div>
         
@@ -471,6 +481,16 @@
         errorMessage.style.display = 'block';
       }
     }
+    function showSuccess(message) {
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        errorMessage.style.background = '#d1fae5';
+        errorMessage.style.borderColor = '#10b981';
+        errorMessage.style.color = '#065f46';
+      }
+    }
     
     function redirectAfterLogin() {
       const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
@@ -531,6 +551,16 @@
       
       // Setup toggle cho password field
       setupPasswordToggle(document.getElementById('password'), passwordToggle);
+
+      // Password character counter (login)
+      (function(){
+        const pw = document.getElementById('password');
+        const counter = document.getElementById('loginPasswordCount');
+        if (!pw || !counter) return;
+        function update(){ counter.textContent = pw.value.length + ' ký tự'; }
+        pw.addEventListener('input', update);
+        update();
+      })();
       
       // Check for redirect result on page load và auth state
       async function checkAuthAndRedirect() {
@@ -619,7 +649,8 @@
             await window.AuthHelpers.signInWithGoogle();
 
             // If we get here, something went wrong
-            showError('Có lỗi xảy ra trong quá trình chuyển hướng');
+            // showError('Có lỗi xảy ra trong quá trình chuyển hướng');
+            showSuccess('Đăng nhập thành công...');
           } catch (error) {
             showError(error.message);
             setButtonLoading(googleLoginBtn, false);
@@ -646,15 +677,71 @@
       }
     });
     
-    // Theme initialization - CHỈ ĐỌC từ localStorage, không có toggle
+    // Theme initialization and class switching (MATCH index.html)
     document.addEventListener('DOMContentLoaded', () => {
       const currentTheme = localStorage.getItem('theme');
       if (currentTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('theme-night');
+        document.documentElement.classList.remove('theme-day');
       } else {
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.classList.add('theme-day');
+        document.documentElement.classList.remove('theme-night');
       }
+      // Dispatch theme-change event for consistency
+      window.dispatchEvent(new CustomEvent('theme-change', {
+        detail: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
+      }));
     });
   </script>
+  <!-- Cute CTA: gentle copy + pastel frame to invite users back to home for theme change -->
+
+  <a href="index.html" class="cta-home-theme" id="ctaHomeTheme" aria-label="Về trang chủ để đổi chế độ sáng/tối"></a>
+
+  <script>
+    // Update CTA text based on current theme (sáng/tối)
+    function updateCtaThemeText() {
+      const cta = document.getElementById('ctaHomeTheme');
+      if (!cta) return;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      cta.textContent = isDark
+        ? 'Muốn đổi sang SÁNG? Về trang chủ nhé 💡'
+        : 'Muốn đổi sang TỐI? Về trang chủ nhé 🌙';
+    }
+    document.addEventListener('DOMContentLoaded', updateCtaThemeText);
+    // Also update if theme changes dynamically (future-proof)
+    const observer = new MutationObserver(updateCtaThemeText);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  </script>
+
+  <style>
+    .cta-home-theme{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 16000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #fff8fb 0%, #fff7e6 100%);
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 13px;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(16,24,40,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(6px);
+      transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, opacity 160ms ease;
+      opacity: 1;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .cta-home-theme::before{ content: '💫'; display:inline-block; font-size:14px; margin-right:2px; }
+    .cta-home-theme:hover{ transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 28px rgba(16,24,40,0.12); }
+    @media (max-width:520px){ .cta-home-theme{ right: 10px; bottom: 10px; font-size:12px; padding:8px 10px; gap:6px; border-radius:14px; } .cta-home-theme::before{ content:'💖'; } }
+  </style>
+
 </body>
 </html>

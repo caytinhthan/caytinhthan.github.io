@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://firebase.googleapis.com https://www.google.com https://www.recaptcha.net https://apis.google.com https://apis.google.com/js/ https://*.firebasedatabase.app; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://firebase.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://content-firebaseappcheck.googleapis.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com https://accounts.google.com wss://*.firebaseio.com wss://*.firebasedatabase.app https://*.firebasedatabase.app; frame-src https://www.google.com https://www.recaptcha.net https://accounts.google.com https://*.firebasedatabase.app;" />
-    <title>Trang chủ | Cây Tình Thần - Chia sẻ cảm xúc</title>
+    <title>Trang chủ | Cây Tinh Thần - Chia sẻ cảm xúc</title>
 
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
@@ -27,7 +27,7 @@
         <div class="header-left">
           <a href="index.html" class="logo">
             <span class="logo-icon">🌱</span>
-            <span class="logo-text">Cây Tình Thần</span>
+            <span class="logo-text">Cây Tinh Thần</span>
           </a>
         </div>
 
@@ -128,6 +128,13 @@
               <div class="stat-label">Số lá trên cây</div>
             </div>
           </div>
+          <div class="stat-card">
+            <div class="stat-icon">💚</div>
+            <div class="stat-content">
+              <div class="stat-number" id="healedCounter">0</div>
+              <div class="stat-label">Số lá đã chữa lành</div>
+            </div>
+          </div>
         </div>
 
         <div class="controls">
@@ -185,7 +192,7 @@
           <img
             id="tree"
             src="assets/tree/tree_transparent.png"
-            alt="Cây Tình Thần"
+            alt="Cây Tinh Thần"
           />
           <canvas id="leafCanvas"></canvas>
           <svg
@@ -276,40 +283,16 @@
             <input type="checkbox" id="isAnonymous" />
             <span>Gửi ẩn danh</span>
           </label>
-        </div>
-        <!-- Withered option moved into the picker so shape + withered flag live together -->
-        
+        </div>        
 
         <div class="picker picker-section" id="leafPicker">
           <div class="picker-row">
             <label>Hình dáng lá</label>
             <select id="leafShape">
-              <option value="oval">DẠNG 1</option>
-              <option value="round">DẠNG 2</option>
-              <option value="pointed">DẠNG 3</option>
-              <option value="heart">DẠNG 4</option>
-              <option value="star">DẠNG 5</option>
-              <option value="maple">DẠNG 6</option>
-              <option value="willow">DẠNG 7</option>
-              <option value="dry_brown">DẠNG 8</option>
+              <option value="normal">Lá bình thường</option>
+              <option value="withered">Lá héo úa</option>
             </select>
           </div>
-
-          <div class="picker-row">
-            <label style="font-weight: 600">Màu sắc lá</label>
-            <select id="leafPalette">
-              <option value="0">💛 Vàng</option>
-              <option value="1">💖 Hồng</option>
-              <option value="2">💚 Xanh lá</option>
-              <option value="3">💙 Xanh dương</option>
-              <option value="4">💜 Tím</option>
-              <option value="5">❤️ Đỏ</option>
-            </select>
-          </div>
-
-          <!-- withered checkbox removed (moved/merged previously). -->
-
-          <!-- Size control removed: default scale is applied in script -->
 
           <div class="picker-row">
             <label>Độ xoay</label>
@@ -352,7 +335,7 @@
                 <img
                   id="previewLeafImage"
                   class="preview-image fill-frame modal-leaf-image"
-                  src="assets/leaves/oval/leaf_oval_yellow.png"
+                  src="assets/leaves/leaf_normal.png"
                   alt="Preview"
                   width="140"
                   height="140"
@@ -384,10 +367,9 @@
           <div class="help-section">
             <h4>🌿 Cách thêm lá:</h4>
             <ul>
-              <!-- Auto-add feature removed: users should use "Click để đặt" or drag mode -->
               <li>
                 <strong>Click để đặt:</strong> Bật chế độ này và click vào cây
-                để đặt lá chính xác
+                để đặt lá cây
               </li>
             </ul>
           </div>
@@ -418,32 +400,65 @@
           <div class="help-section">
             <h4>🎨 Tùy chỉnh lá:</h4>
             <p>
-              Khi thêm lá mới, bạn có thể chọn hình dáng, màu sắc, kích thước và
-              góc xoay.
+              Khi thêm lá mới, bạn có thể chọn loại lá và góc xoay.
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Terms Modal -->
-    <div class="modal" id="termsModal" role="dialog" aria-modal="true">
-      <div class="sheet">
-        <button class="x" id="closeTermsModal" aria-label="Đóng điều khoản">
-          ✕
-        </button>
-        <h3>📜 Điều khoản</h3>
-        <div class="help-content">
-          <p style="line-height: 1.6; margin-bottom: 16px">
-            Trong guồng quay tất bật của cuộc sống, đôi khi chúng ta quên rằng
-            hạnh phúc có thể đến từ những điều giản dị nhất. Dự án Peace by
-            Piece ra đời để gửi gắm những lời yêu thương, động viên và hy vọng –
-            như từng chiếc lá nhỏ mang trong mình thông điệp bình yên.
-          </p>
-          <p style="line-height: 1.6">
-            Hãy để mỗi nụ cười, mỗi lời chia sẻ trở thành một mảnh ghép góp phần
-            tạo nên bức tranh hạnh phúc trọn vẹn. 💌
-          </p>
+    <!-- Terms Modal-->
+    <div class="modal" id="termsModal" role="dialog" aria-modal="true" aria-labelledby="termsModalHeading">
+      <div class="sheet" style="max-width:820px; width:96%; max-height:84vh; overflow:auto; padding:18px; box-sizing:border-box;">
+        <button class="x" id="closeTermsModal" aria-label="Đóng điều khoản">✕</button>
+        <h3 id="termsModalHeading">📜 Điều Khoản Sử Dụng — Cây Tinh Thần</h3>
+        <div class="help-content" style="line-height:1.55; color:var(--ink);">
+          <section style="margin-top:8px;">
+            <h4>Lời Mở Đầu</h4>
+            <p>Chào mừng bạn đến với trang web <strong>Cây Tinh Thần</strong> – một không gian số của dự án cộng đồng <em>Peace by Piece</em>. Sứ mệnh của chúng tôi là tạo ra một nơi an toàn để mọi người có thể gửi gắm và đón nhận những lời động viên, sẻ chia tích cực.</p>
+            <p>Việc bạn gửi thông điệp hoặc sử dụng trang web này đồng nghĩa với việc bạn đã đọc, hiểu và đồng ý tuân thủ những quy định này.</p>
+          </section>
+
+          <section style="margin-top:12px;">
+            <h4>Điều 1 — Chuẩn Mực Cộng Đồng - Hãy Cùng Nhau "Làm Xanh" Cây</h4>
+            <p>Mỗi thông điệp bạn gửi đi là một chiếc lá, góp phần tạo nên tán cây tinh thần. Để tán cây này luôn xanh tươi và là nơi trú ẩn an toàn cho tâm hồn, chúng tôi mong bạn:</p>
+            <ul>
+              <li><strong>Gieo Hạt Tích Cực:</strong> Hãy chia sẻ những lời động viên, những câu chuyện tích cực, hoặc những lời chúc thiện chí và có tính xây dựng.</li>
+              <li><strong>Tôn Trọng Sự Khác Biệt:</strong> Mỗi người có một câu chuyện riêng. Hãy đối xử với mọi thông điệp bằng sự tôn trọng, không phán xét.</li>
+              <li><strong>Bảo Mật Tuyệt Đối:</strong> Nghiêm cấm đăng tải thông tin cá nhân của bản thân hoặc của bất kỳ ai khác (tên, số điện thoại, mạng xã hội...).</li>
+            </ul>
+            <p><strong>Nội dung bị cấm</strong>: Tuyệt đối không gửi các thông điệp chứa:</p>
+            <ul>
+              <li>Ngôn từ gây thù ghét, tấn công, phân biệt đối xử.</li>
+              <li>Nội dung đe dọa, bắt nạt, quấy rối.</li>
+              <li>Nội dung cổ suý hoặc hướng dẫn các hành vi tự hại.</li>
+              <li>Thông tin sai lệch, lừa đảo, quảng cáo, spam hoặc các nội dung vi phạm pháp luật Việt Nam.</li>
+            </ul>
+          </section>
+
+          <section style="margin-top:12px;">
+            <h4>Điều 2 — Chính Sách Quyền Riêng Tư</h4>
+            <p><strong>Thu Thập Thông Tin:</strong> Khi bạn gửi một thông điệp lên Cây Tinh Thần, chúng tôi chỉ thu thập và hiển thị công khai nội dung của thông điệp đó. Quá trình này hoàn toàn ẩn danh. Trang web không chủ động thu thập và không lưu trữ bất kỳ thông tin nhận dạng cá nhân nào như tên, email, hay địa chỉ IP khi chưa được sự cho phép của bạn.</p>
+            <p><strong>Sử Dụng Thông Tin:</strong> Nội dung thông điệp của bạn được sử dụng duy nhất cho mục đích hiển thị công khai trên Cây Tinh Thần để lan tỏa năng lượng tích cực đến cộng đồng.</p>
+          </section>
+
+          <section style="margin-top:12px;">
+            <h4>Điều 3 — Điều Khoản Pháp Lý</h4>
+            <p><strong>KHÔNG THAY THẾ HỖ TRỢ CHUYÊN NGHIỆP:</strong> Quan trọng: Cây Tinh Thần là một nơi hỗ trợ tinh thần dựa trên sự chia sẻ đồng đẳng, <strong>KHÔNG PHẢI</strong> là dịch vụ trị liệu hay tư vấn tâm lý chuyên nghiệp.</p>
+            <p>Nếu bạn hoặc ai đó bạn biết đang gặp khủng hoảng tinh thần hoặc khủng hoảng an toàn, xin hãy tìm đến sự giúp đỡ của các chuyên gia hoặc liên hệ các đường dây nóng uy tín ngay lập tức.</p>
+            <p><strong>Quyền của Dự Án:</strong> Chúng tôi có toàn quyền kiểm duyệt và xóa bỏ bất kỳ thông điệp nào vi phạm các chuẩn mực cộng đồng mà không cần thông báo trước.</p>
+          </section>
+
+          <section style="margin-top:12px;">
+            <h4>Điều 4 — Liên Hệ và Báo Cáo</h4>
+            <p>Nếu bạn phát hiện một thông điệp vi phạm hoặc có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi qua:</p>
+            <p><strong>Email:</strong> <a href="mailto:hkdaty.kng@gmail.com">hkdaty.kng@gmail.com</a></p>
+          </section>
+
+          <section style="margin-top:14px;font-size:13px;color:var(--muted);">
+            <p>Cảm ơn bạn đã cùng chúng tôi vun đắp nên Cây Tinh Thần này.</p>
+            <p><em>Phiên bản điều khoản: v1 • Ngày hiệu lực: 2025-10-25</em></p>
+          </section>
         </div>
       </div>
     </div>
@@ -541,7 +556,7 @@
         <h3>Chào bạn 🌼</h3>
         <div id="supportContent" style="line-height:1.5;color:var(--text-secondary);">
           <p>
-            Nếu bạn vẫn chưa cảm thấy ổn, và có nhiều điều chưa thể nói ra — đừng chịu đựng một mình nhé.. Chúng mình sẽ giúp bạn kết nối trực tiếp với HẺM 202 [ BỘ PHẬN TƯ VẤN TÂM LÝ TẠI TRƯỜNG ĐH FPT TP.HCM]. Đây là nơi bạn có thể thoải mái chia sẻ cảm xúc cùng cán bộ tâm lý giàu kinh nghiệm, luôn sẵn sàng lắng nghe và đồng hành cùng bạn.
+            Nếu bạn vẫn chưa cảm thấy ổn, và có nhiều điều chưa thể nói ra — đừng chịu đựng một mình nhé.. Chúng mình sẽ giúp bạn kết nối trực tiếp với <strong>HẺM 202 [ BỘ PHẬN TƯ VẤN TÂM LÝ TẠI TRƯỜNG ĐH FPT TP.HCM]</strong>. Đây là nơi bạn có thể thoải mái chia sẻ cảm xúc cùng cán bộ tâm lý giàu kinh nghiệm, luôn sẵn sàng lắng nghe và đồng hành cùng bạn.
             Đừng ngần ngại mở lòng nhé — nhấn vào nút bên dưới để bắt đầu 💛
           </p>
         </div>
@@ -549,8 +564,35 @@
           <button id="supportYesBtn" class="btn primary" style="flex:1">Có, mình muốn được kết nối</button>
           <button id="supportNoBtn" class="btn secondary" style="flex:1">Mình ổn rồi</button>
         </div>
-        <div id="supportFollow" style="display:none;margin-top:16px;">
-          <!-- follow-up content inserted by JS -->
+        <!-- follow-up content will appear in a separate modal to avoid stacking -->
+        <!-- (supportFollow removed - follow-ups are separate modals) -->
+      </div>
+    </div>
+    
+    <!-- Support: follow-up modal when user wants connection -->
+    <div class="modal" id="supportConnectModal" role="dialog" aria-modal="true" style="display:none">
+      <div class="sheet" style="max-width:520px;">
+        <button class="x" id="supportConnectClose" aria-label="Đóng modal">✕</button>
+        <h3>Cảm ơn bạn 💛</h3>
+        <div style="line-height:1.5;color:var(--text-secondary);">
+          <p>Chúng mình sẽ dẫn bạn đến đường liên kết để kết nối trực tiếp với Hẻm 202 — nơi có cán bộ tư vấn sẵn sàng lắng nghe.</p>
+          <p><strong>Hẻm 202</strong> hoạt động dưới nguyên tắc ưu tiên bảo mật và tôn trọng. Mọi cuộc trò chuyện đều được giữ kín.</p>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn primary" id="supportOpenLinkModalBtn">Mở liên kết kết nối</button>
+            <button class="btn secondary" id="supportConnectCloseBtn">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support: simple thank-you modal when user says they're OK -->
+    <div class="modal" id="supportThanksModal" role="dialog" aria-modal="true" style="display:none">
+      <div class="sheet" style="max-width:520px;">
+        <button class="x" id="supportThanksClose" aria-label="Đóng modal">✕</button>
+        <h3>Rất tốt 🌻</h3>
+        <div style="line-height:1.5;color:var(--text-secondary);">
+          <p>Rất mừng khi biết bạn đang ổn. Nếu sau này bạn cần, Hẻm 202 và cộng đồng luôn ở đây để lắng nghe.</p>
+          <div style="margin-top:12px;"><button class="btn secondary" id="supportThanksOkBtn">Đóng</button></div>
         </div>
       </div>
     </div>
@@ -559,6 +601,7 @@
     <script src="src/auth.js"></script>
     <script src="src/auth-guard.js"></script>
     <script src="src/script.js" defer></script>
+    <script src="src/modals.js"></script>
     <script>
       // EARLY AUTH CHECK - Chạy NGAY để giảm FOUC
       (function () {
@@ -659,6 +702,8 @@
 
       // Single DOMContentLoaded handler
       document.addEventListener("DOMContentLoaded", () => {
+        // Ensure shared modals (terms/privacy) are available on this page
+        if (window.ensureSharedModals) window.ensureSharedModals();
         // Add page transition on load
         const mainContent = document.getElementById("main-content");
         if (mainContent) {
@@ -833,15 +878,13 @@
             const supportClose = document.getElementById('supportCloseBtn');
             const supportYes = document.getElementById('supportYesBtn');
             const supportNo = document.getElementById('supportNoBtn');
-            const supportFollow = document.getElementById('supportFollow');
 
             function openSupportModal(){
               if (!supportModal) return;
               supportModal.style.display = 'flex';
               supportModal.classList.add('show');
               document.body.style.overflow = 'hidden';
-              // reset follow area
-              if (supportFollow) supportFollow.style.display = 'none';
+              // reset follow area (handled in separate modals)
             }
 
             function closeSupportModal(){
@@ -855,32 +898,64 @@
             if (supportClose) supportClose.addEventListener('click', closeSupportModal);
 
             if (supportYes) supportYes.addEventListener('click', (e)=>{
-              // show follow-up message with link
-              if (supportFollow) {
-                supportFollow.innerHTML = `
-                  <h4>Cảm ơn bạn vì đã mở lòng 💛</h4>
-                  <p>Dù bạn đang trải qua điều gì, chúng mình luôn ở đây giúp bạn được lắng nghe và đồng hành cùng bạn. Bạn có thể bắt đầu cuộc trò chuyện trực tiếp với cán bộ tư vấn tâm lý tại Hẻm 202 nhé 👉 <a href="https://www.facebook.com/phongtvtlfpthcm" target="_blank" rel="noopener">Link kết nối với Hẻm</a></p>
-                  <p><strong>Hẻm 202</strong> hoạt động dưới nguyên tắc "Thấu hiểu, tôn trọng và bảo mật". Mọi câu chuyện của bạn là của bạn, chúng mình không có quyền phán xét và bình luận.</p>
-                  <div style="margin-top:12px;display:flex;gap:8px;"><button class="btn primary" id="supportOpenLink">Mở liên kết</button><button class="btn secondary" id="supportClose2">Đóng</button></div>
-                `;
-                supportFollow.style.display = 'block';
-
-                // wire the newly created buttons
-                const openLinkBtn = document.getElementById('supportOpenLink');
-                const close2 = document.getElementById('supportClose2');
-                if (openLinkBtn) openLinkBtn.addEventListener('click', ()=> window.open('https://www.facebook.com/phongtvtlfpthcm','_blank'));
-                if (close2) close2.addEventListener('click', closeSupportModal);
-              }
+              // Close the current support modal and open the connect modal after it hides
+              closeSupportModal();
+              setTimeout(()=>{
+                const connect = document.getElementById('supportConnectModal');
+                if (!connect) return;
+                connect.style.display = 'flex';
+                connect.classList.add('show');
+                document.body.style.overflow = 'hidden';
+              }, 260);
             });
 
             if (supportNo) supportNo.addEventListener('click', ()=>{
-              if (supportFollow) {
-                supportFollow.innerHTML = `<p>Chúng mình rất vui khi biết bạn đang cảm thấy ổn hơn🌻. Nếu một lúc nào đó bạn có những trăn trở hay phiền lòng, đừng ngần ngại tìm đến chúng mình nhé! Chúng mình sẽ giúp bạn kết nối với cán bộ tư vấn tâm lý, nơi bạn luôn được lắng nghe và đồng hành cùng bạn. Chúng mình luôn ở đây và sẵn sàng hỗ trợ bất cứ khi nào bạn cần 💌</p><div style="margin-top:12px;display:flex;gap:8px;"><button class="btn secondary" id="supportClose3">Đóng</button></div>`;
-                supportFollow.style.display = 'block';
-                const close3 = document.getElementById('supportClose3');
-                if (close3) close3.addEventListener('click', closeSupportModal);
-              }
+              // Close current modal then show a short thank-you modal
+              closeSupportModal();
+              setTimeout(()=>{
+                const thanks = document.getElementById('supportThanksModal');
+                if (!thanks) return;
+                thanks.style.display = 'flex';
+                thanks.classList.add('show');
+                document.body.style.overflow = 'hidden';
+              }, 260);
             });
+
+            // Wire follow-up modals (connect / thanks) close buttons and actions
+            // Connect modal
+            const supportConnectModal = document.getElementById('supportConnectModal');
+            const supportConnectClose = document.getElementById('supportConnectClose');
+            const supportConnectCloseBtn = document.getElementById('supportConnectCloseBtn');
+            const supportOpenLinkModalBtn = document.getElementById('supportOpenLinkModalBtn');
+            function closeConnectModal(){
+              if (!supportConnectModal) return;
+              supportConnectModal.classList.remove('show');
+              setTimeout(()=> supportConnectModal.style.display = 'none', 220);
+              document.body.style.overflow = 'auto';
+              try { supportBtn?.focus(); } catch(e){}
+            }
+            if (supportConnectClose) supportConnectClose.addEventListener('click', closeConnectModal);
+            if (supportConnectCloseBtn) supportConnectCloseBtn.addEventListener('click', closeConnectModal);
+            if (supportOpenLinkModalBtn) supportOpenLinkModalBtn.addEventListener('click', ()=>{
+              window.open('https://www.facebook.com/phongtvtlfpthcm','_blank','noopener');
+              closeConnectModal();
+            });
+            if (supportConnectModal) supportConnectModal.addEventListener('click',(e)=>{ if (e.target === supportConnectModal) closeConnectModal(); });
+
+            // Thanks modal
+            const supportThanksModal = document.getElementById('supportThanksModal');
+            const supportThanksClose = document.getElementById('supportThanksClose');
+            const supportThanksOkBtn = document.getElementById('supportThanksOkBtn');
+            function closeThanksModal(){
+              if (!supportThanksModal) return;
+              supportThanksModal.classList.remove('show');
+              setTimeout(()=> supportThanksModal.style.display = 'none', 220);
+              document.body.style.overflow = 'auto';
+              try { supportBtn?.focus(); } catch(e){}
+            }
+            if (supportThanksClose) supportThanksClose.addEventListener('click', closeThanksModal);
+            if (supportThanksOkBtn) supportThanksOkBtn.addEventListener('click', closeThanksModal);
+            if (supportThanksModal) supportThanksModal.addEventListener('click',(e)=>{ if (e.target === supportThanksModal) closeThanksModal(); });
           })();
       });
     </script>

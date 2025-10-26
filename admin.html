@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quản trị - Cây Tình Thần</title>
+  <title>Quản trị - Cây Tinh Thần</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/styles.css">
@@ -790,7 +790,7 @@
       <div class="admin-header-content">
         <div class="admin-logo">
           <span>🌿</span>
-          <h1>Quản trị Cây Tình Thần</h1>
+          <h1>Quản trị Cây Tinh Thần</h1>
         </div>
         
         <nav class="admin-nav">
@@ -947,30 +947,39 @@
     
     // Load dashboard stats
     function loadDashboard() {
-      console.log('📊 Loading dashboard stats...');
+  console.debug('📊 Loading dashboard stats...');
       
       if (!window._firebase) {
         console.error('❌ Firebase not initialized');
         return;
       }
       
-      // Load total leaves
+      // Load total leaves & withered leaves
       const leavesPromise = window._firebase.ref('leaves').once('value')
         .then((snapshot) => {
           const leaves = snapshot.val() || {};
           const totalLeaves = Object.keys(leaves).length;
           document.getElementById('totalLeaves').textContent = totalLeaves;
-          console.log(`🌿 Total leaves: ${totalLeaves}`);
+          // Đếm số lá bị héo
+          let witheredCount = 0;
+          Object.values(leaves).forEach(l => {
+            if (l && (l.isWithered === true || l.isWithered === '1')) witheredCount++;
+          });
+          document.getElementById('witheredLeaves').textContent = witheredCount;
+          console.debug(`🌿 Total leaves: ${totalLeaves}, 🍂 Withered: ${witheredCount}`);
         })
-        .catch(err => console.error('Error loading leaves:', err));
+        .catch(err => {
+          document.getElementById('witheredLeaves').textContent = '0';
+          console.error('Error loading leaves:', err);
+        });
 
       const usersPromise = window._firebase.ref('users').once('value')
         .then((snapshot) => {
-          console.log('📊 Users snapshot received:', snapshot.val());
+          console.debug('📊 Users snapshot received:', snapshot.val());
           const users = snapshot.val() || {};
           const allUsers = Object.values(users);
           
-          console.log(`📊 Total users found: ${allUsers.length}`);
+          console.debug(`📊 Total users found: ${allUsers.length}`);
           
           // Count active users (online or active in last 24h)
           const now = Date.now();
@@ -979,13 +988,13 @@
           ).length;
           
           document.getElementById('activeUsers').textContent = activeUsers;
-          console.log(`👥 Active users: ${activeUsers} / ${allUsers.length}`);
+          console.debug(`👥 Active users: ${activeUsers} / ${allUsers.length}`);
           
           // Load ALL users list (sorted by newest first)
           const sortedUsers = allUsers
             .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
           
-          console.log('📊 Calling loadUsersList with sorted users...');
+          console.debug('📊 Calling loadUsersList with sorted users...');
           loadUsersList(sortedUsers);
         })
         .catch(err => console.error('Error loading users:', err));
@@ -999,12 +1008,12 @@
     
     // Load users list
     function loadUsersList(users) {
-      console.log('📋 loadUsersList called with:', users);
+  console.debug('📋 loadUsersList called with:', users);
       const userList = document.getElementById('userList');
       const totalUsersCount = document.getElementById('totalUsersCount');
       
-      console.log('userList element:', userList);
-      console.log('totalUsersCount element:', totalUsersCount);
+  console.debug('userList element:', userList);
+  console.debug('totalUsersCount element:', totalUsersCount);
       
       if (!users || users.length === 0) {
         console.warn('⚠️ No users to display');
@@ -1018,7 +1027,7 @@
         return;
       }
       
-      console.log(`✅ Rendering ${users.length} users...`);
+  console.debug(`✅ Rendering ${users.length} users...`);
       
       // Update count
       if (totalUsersCount) {
@@ -1057,12 +1066,12 @@
         });
       } catch(e) { console.warn('Failed to attach user action listeners', e); }
       
-      console.log(`📋 ✅ Successfully loaded ${users.length} users in list`);
+  console.debug(`📋 ✅ Successfully loaded ${users.length} users in list`);
     }
     
     // Load all sections
     function loadUsers() {
-      console.log('📋 Loading all users...');
+  console.debug('📋 Loading all users...');
       const userList = document.getElementById('userList');
       const refreshBtn = document.getElementById('usersRefreshBtn');
 
@@ -1088,7 +1097,7 @@
     
     // Wait for Firebase ready to load data
     window.addEventListener('firebase-ready', () => {
-      console.log('🔥 Firebase ready, loading dashboard data...');
+  console.debug('🔥 Firebase ready, loading dashboard data...');
       
       // Update header with current user - with retry
       function updateHeaderUser() {
@@ -1106,7 +1115,7 @@
               const initial = (currentUser.displayName || currentUser.email).charAt(0).toUpperCase();
               userAvatarEl.textContent = initial;
             }
-            console.log('✅ Header updated with user:', currentUser.email);
+            console.debug('✅ Header updated with user:', currentUser.email);
             return true;
           } else {
             console.warn('⚠️ No current user yet, will retry...');
@@ -1131,7 +1140,7 @@
       if (window._firebase && window._firebase.auth) {
         window._firebase.onAuthStateChanged((user) => {
           if (user) {
-            console.log('🔔 Auth state changed in admin, updating header...');
+            console.debug('🔔 Auth state changed in admin, updating header...');
             updateHeaderUser();
           }
         });
@@ -1213,7 +1222,7 @@
     // ===== CRUD FUNCTIONS =====
     
     function editUser(uid) {
-      console.log('Editing user:', uid);
+  console.debug('Editing user:', uid);
       
       window._firebase.ref(`users/${uid}`).once('value')
         .then((snapshot) => {
@@ -1248,7 +1257,7 @@
     let trafficChart = null;
     
     function loadTrafficAnalytics() {
-      console.log('📊 Loading traffic analytics...');
+  console.debug('📊 Loading traffic analytics...');
       
       if (!window._firebase) {
         console.error('❌ Firebase not initialized');
@@ -1343,17 +1352,17 @@
         }
       });
       
-      console.log('📈 Chart rendered successfully');
+  console.debug('📈 Chart rendered successfully');
     }
     
     // CRITICAL: Home button MUST work immediately
     document.addEventListener('DOMContentLoaded', () => {
       const homeBtn = document.getElementById('homeBtnHeader');
       if (homeBtn) {
-        console.log('✅ Home button found, attaching listener');
+  console.debug('✅ Home button found, attaching listener');
         homeBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          console.log('🏠 Home button clicked, redirecting...');
+          console.debug('🏠 Home button clicked, redirecting...');
           window.location.href = 'index.html';
         });
       } else {
@@ -1404,7 +1413,7 @@
     let currentLeafView = 'list';
     
     function loadLeavesList() {
-      console.log('🍃 Loading leaves list...');
+  console.debug('🍃 Loading leaves list...');
       
       const leafList = document.getElementById('leafList');
       if (!leafList) return;
@@ -1561,26 +1570,218 @@
       return div.innerHTML;
     }
   </script>
-  
-  <!-- Load auth guard -->
-  <script src="src/auth-guard.js"></script>
-
-  <!-- Scroll to top button -->
-  <button id="scrollTopBtn" title="Lên đầu trang" style="display:none;position:fixed;right:20px;bottom:24px;background:#3b82f6;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;box-shadow:0 6px 18px rgba(59,130,246,0.18);font-weight:600;z-index:9999">⬆ Lên đầu</button>
+  <!-- Scroll-to-top button: appears when user scrolls down inside page or admin container -->
+  <button id="scrollTopBtn" aria-hidden="true" role="button" title="Lên đầu trang" style="display:none;position:fixed;right:20px!important;bottom:20px!important;top:auto!important;background:#3b82f6;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;box-shadow:0 6px 18px rgba(59,130,246,0.18);font-weight:600;z-index:100000;transition:opacity 220ms ease,transform 220ms ease;opacity:0;transform:translateY(6px);">⬆ Lên đầu</button>
 
   <script>
-    (function(){
+    // Robust scroll-to-top behavior with observers & debounce to stabilize visibility when content changes
+    document.addEventListener('DOMContentLoaded', () => {
       const btn = document.getElementById('scrollTopBtn');
-      if(!btn) return;
-      // Show after scrolling down 200px
-      window.addEventListener('scroll', () => {
-        if(window.scrollY > 200) btn.style.display = 'block';
-        else btn.style.display = 'none';
+      if (!btn) return;
+
+      const THRESHOLD = 80; // px scrolled before showing button
+      let visible = false;
+      let hideTimer = null;
+
+      function isElementScrollable(el) {
+        return el && el.scrollHeight > el.clientHeight + 1; // small tolerance
+      }
+
+      function getWindowScrollY() {
+        return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      }
+
+      let isAutoScrolling = false;
+      let lastUserScroll = 0;
+
+      function doScrollTop() {
+        const adminContent = document.querySelector('.admin-content');
+        isAutoScrolling = true;
+        try {
+          if (adminContent && isElementScrollable(adminContent)) {
+            adminContent.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } catch (e) { }
+
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+
+        setTimeout(() => { isAutoScrolling = false; debouncedUpdate(); }, 800);
+      }
+
+      // delegated click handled later by doScrollTopAll bindings
+
+      function showButton() {
+        if (visible) return;
+        visible = true;
+        try {
+          btn.style.display = 'block';
+          void btn.offsetWidth;
+          btn.style.opacity = '1';
+          btn.style.transform = 'translateY(0)';
+          btn.style.pointerEvents = 'auto';
+        } catch (e) { }
+      }
+
+      function hideButton() {
+        if (!visible) return;
+        visible = false;
+        try {
+          btn.style.opacity = '0';
+          btn.style.transform = 'translateY(12px)';
+          btn.style.pointerEvents = 'none';
+          clearTimeout(hideTimer);
+          hideTimer = setTimeout(() => { try { btn.style.display = 'none'; } catch(e){} }, 300);
+        } catch (e) { }
+      }
+
+      function updateVisibility() {
+        try {
+          const now = Date.now();
+          const winY = getWindowScrollY();
+          const docScrollable = (document.documentElement.scrollHeight - window.innerHeight) > THRESHOLD;
+          const adminContent = document.querySelector('.admin-content');
+
+          let adminScrolled = false;
+          let adminIsScrollable = false;
+          if (adminContent) {
+            adminIsScrollable = isElementScrollable(adminContent);
+            adminScrolled = adminContent.scrollTop > THRESHOLD;
+          }
+
+          const scrolled = winY > THRESHOLD || adminScrolled || adminIsScrollable || docScrollable;
+
+          // Only show when user recently performed a scroll/interaction and not during auto-scroll
+          const userActionRecently = (Date.now() - lastUserScroll) < 1200;
+          if (scrolled && userActionRecently && !isAutoScrolling) {
+            showButton();
+          } else {
+            hideButton();
+          }
+        } catch (err) {
+          // silent fail
+        }
+      }
+
+      // Debounce helper
+      function debounce(fn, wait) {
+        let t = null;
+        return function(...args) {
+          clearTimeout(t);
+          t = setTimeout(() => fn.apply(this, args), wait);
+        };
+      }
+
+      const debouncedUpdate = debounce(updateVisibility, 120);
+
+      // Track user-initiated interactions so we can show the button only for user scrolls
+      function markUserScroll() { lastUserScroll = Date.now(); }
+      ['wheel', 'touchstart', 'touchmove', 'keydown', 'pointerdown'].forEach(evt => {
+        window.addEventListener(evt, markUserScroll, { passive: true });
       });
-      btn.addEventListener('click', () => {
-        window.scrollTo({top:0,behavior:'smooth'});
+
+      // Initial and event listeners
+      updateVisibility();
+      window.addEventListener('scroll', debouncedUpdate, { passive: true });
+      window.addEventListener('resize', debouncedUpdate);
+      document.addEventListener('scroll', debouncedUpdate, { passive: true });
+
+      const adminContent = document.querySelector('.admin-content');
+      if (adminContent) {
+        adminContent.addEventListener('scroll', debouncedUpdate, { passive: true });
+
+        // Observe size changes in adminContent
+        if (window.ResizeObserver) {
+          try {
+            const ro = new ResizeObserver(debouncedUpdate);
+            ro.observe(adminContent);
+            ro.observe(document.documentElement);
+          } catch (e) { /* ignore */ }
+        }
+
+        // Observe DOM changes that may affect scrollability
+        if (window.MutationObserver) {
+          try {
+            const mo = new MutationObserver(debouncedUpdate);
+            mo.observe(adminContent, { childList: true, subtree: true, attributes: true });
+          } catch (e) { /* ignore */ }
+        }
+      } else {
+        // If adminContent not found yet, watch for it briefly
+        const waitFor = setInterval(() => {
+          const ac = document.querySelector('.admin-content');
+          if (ac) {
+            clearInterval(waitFor);
+            ac.addEventListener('scroll', debouncedUpdate, { passive: true });
+          }
+        }, 200);
+        setTimeout(() => clearInterval(waitFor), 5000);
+      }
+
+      // Also update on full load in case images/fonts change layout
+      window.addEventListener('load', debouncedUpdate);
+      
+      // Fallback: detect wheel/touch events that may not fire scroll listeners on some setups
+      window.addEventListener('wheel', (e) => {
+        try { debouncedUpdate(); } catch(e){}
+      }, { passive: true });
+      window.addEventListener('touchmove', (e) => {
+        try { debouncedUpdate(); } catch(e){}
+      }, { passive: true });
+
+      // Expand click behavior to target multiple possible scroll roots so click always works
+      const scrollRoots = () => {
+        const roots = [];
+        try { if (document.scrollingElement) roots.push(document.scrollingElement); } catch(e){}
+        try { if (document.documentElement) roots.push(document.documentElement); } catch(e){}
+        try { if (document.body) roots.push(document.body); } catch(e){}
+        try { const ac = document.querySelector('.admin-content'); if (ac) roots.push(ac); } catch(e){}
+        try {
+          // include any overflow:auto descendants inside admin-content
+          const els = document.querySelectorAll('.admin-content *');
+          els.forEach(el => {
+            try {
+              const s = window.getComputedStyle(el);
+              if (s && (s.overflow === 'auto' || s.overflowY === 'auto' || s.overflowY === 'scroll')) roots.push(el);
+            } catch(e){}
+          });
+        } catch(e){}
+        return roots.filter(Boolean);
+      };
+
+      const doScrollTopAll = () => {
+        isAutoScrolling = true;
+        const roots = scrollRoots();
+        let did = false;
+        for (const r of roots) {
+          try {
+            if (typeof r.scrollTo === 'function') {
+              r.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              r.scrollTop = 0;
+            }
+            did = true;
+          } catch (e) { try { r.scrollTop = 0; did = true; } catch(e){} }
+        }
+        // As a final fallback, scroll window directly
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); did = true; } catch(e) { try { window.scrollTo(0,0); did = true; } catch(e){} }
+        // If nothing moved, force-set documentElement/body
+        if (!did) {
+          try { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e){}
+        }
+        // ensure auto-scroll mode clears after short delay
+        setTimeout(() => { isAutoScrolling = false; debouncedUpdate(); }, 900);
+      };
+
+      // Replace previous direct doScrollTop usage in click handlers by doScrollTopAll
+      // Attach delegated click handler to ensure we always call the new function
+  btn.removeEventListener && btn.removeEventListener('click', null);
+  btn.addEventListener('click', (e) => { e.preventDefault(); doScrollTopAll(); });
+      document.removeEventListener && document.removeEventListener('click', null);
+      document.addEventListener('click', (e) => {
+        const el = e.target && e.target.closest ? e.target.closest('#scrollTopBtn') : null;
+        if (el) { e.preventDefault(); doScrollTopAll(); }
       });
-    })();
+    });
   </script>
 
 </body>

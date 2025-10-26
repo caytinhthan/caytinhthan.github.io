@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/main.css">
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/modals.css">
   <style>
     .auth-container {
       min-height: 100vh;
@@ -359,6 +360,13 @@
       height: 18px;
       flex-shrink: 0;
     }
+
+    .password-counter {
+      font-size: 12px;
+      color: var(--muted, #6b7280);
+      margin-top: 6px;
+      display: inline-block;
+    }
     
     .password-strength {
       margin-top: 8px;
@@ -434,7 +442,7 @@
     <div class="auth-card">
       <div class="auth-logo">
         <h1>🌱 Đăng ký</h1>
-        <p>Tạo tài khoản để tham gia Cây Tình Thần</p>
+        <p>Tạo tài khoản để tham gia Cây Tinh Thần</p>
       </div>
       
       <div id="errorMessage" class="error-message"></div>
@@ -467,6 +475,9 @@
             </div>
             <div class="strength-text">Mật khẩu cần ít nhất 6 ký tự</div>
           </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <small id="registerPasswordCount" class="password-counter">0 ký tự</small>
+          </div>
         </div>
         
         <div class="form-group">
@@ -484,7 +495,7 @@
         <div class="checkbox-group">
           <input type="checkbox" id="agreeTerms" required>
           <label for="agreeTerms">
-            Tôi đồng ý với <a href="#" target="_blank">Điều khoản sử dụng</a> và <a href="#" target="_blank">Chính sách bảo mật</a>
+            Tôi đồng ý với <a href="#" id="openTermsLink">Điều khoản sử dụng</a> và <a href="#" id="openPrivacyLink">Chính sách bảo mật</a>
           </label>
         </div>
         
@@ -522,6 +533,7 @@
 
   <script src="src/firebase-init.js"></script>
   <script src="src/auth.js"></script>
+  <script src="src/modals.js"></script>
   <script>
     // Page transition function
     function navigateToPage(url) {
@@ -641,6 +653,16 @@
       // Setup toggles for both password fields
       setupPasswordToggle(document.getElementById('password'), passwordToggle);
       setupPasswordToggle(document.getElementById('confirmPassword'), confirmPasswordToggle);
+
+      // Password character counter (register)
+      (function(){
+        const pw = document.getElementById('password');
+        const counter = document.getElementById('registerPasswordCount');
+        if (!pw || !counter) return;
+        function update(){ counter.textContent = pw.value.length + ' ký tự'; }
+        pw.addEventListener('input', update);
+        update();
+      })();
       
       // Check for redirect result on page load và auth state
       async function checkAuthAndRedirect() {
@@ -801,6 +823,9 @@
         });
       }
 
+      // Use shared modals (injected by src/modals.js)
+      if (window.ensureSharedModals) window.ensureSharedModals();
+
       const facebookRegisterBtn = document.getElementById('facebookRegisterBtn');
       if (facebookRegisterBtn) {
         facebookRegisterBtn.addEventListener('click', async (e) => {
@@ -820,15 +845,73 @@
       }
     });
     
-    // Theme initialization - CHỈ ĐỌC từ localStorage, không có toggle
+    // Theme initialization and class switching (MATCH index.html)
     document.addEventListener('DOMContentLoaded', () => {
       const currentTheme = localStorage.getItem('theme');
       if (currentTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.classList.add('theme-night');
+        document.documentElement.classList.remove('theme-day');
       } else {
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.classList.add('theme-day');
+        document.documentElement.classList.remove('theme-night');
       }
+      // Dispatch theme-change event for consistency
+      window.dispatchEvent(new CustomEvent('theme-change', {
+        detail: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
+      }));
     });
   </script>
+  <!-- Shared terms/privacy modals are injected by src/modals.js -->
+
+  <!-- Cute CTA: gentle copy + pastel frame to invite users back to home for theme change -->
+
+  <a href="index.html" class="cta-home-theme" id="ctaHomeTheme" aria-label="Về trang chủ để đổi chế độ sáng/tối"></a>
+
+  <script>
+    // Update CTA text based on current theme (sáng/tối)
+    function updateCtaThemeText() {
+      const cta = document.getElementById('ctaHomeTheme');
+      if (!cta) return;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      cta.textContent = isDark
+        ? 'Muốn đổi sang SÁNG? Về trang chủ nhé 💡'
+        : 'Muốn đổi sang TỐI? Về trang chủ nhé 🌙';
+    }
+    document.addEventListener('DOMContentLoaded', updateCtaThemeText);
+    // Also update if theme changes dynamically (future-proof)
+    const observer = new MutationObserver(updateCtaThemeText);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  </script>
+
+  <style>
+    .cta-home-theme{
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 16000;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #fff8fb 0%, #fff7e6 100%);
+      color: #333;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 13px;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(16,24,40,0.08);
+      border: 1px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(6px);
+      transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms ease, opacity 160ms ease;
+      opacity: 1;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .cta-home-theme::before{ content: '💫'; display:inline-block; font-size:14px; margin-right:2px; }
+    .cta-home-theme:hover{ transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 28px rgba(16,24,40,0.12); }
+    @media (max-width:520px){ .cta-home-theme{ right: 10px; bottom: 10px; font-size:12px; padding:8px 10px; gap:6px; border-radius:14px; } .cta-home-theme::before{ content:'💖'; } }
+  </style>
+
 </body>
 </html>

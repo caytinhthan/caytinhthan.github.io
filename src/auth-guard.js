@@ -1,12 +1,12 @@
 // auth-guard.js - Vanilla JS Authentication Guard
 (function() {
-  console.log('🔥🔥🔥 AUTH-GUARD.JS LOADED! 🔥🔥🔥');
+  try { console.debug && console.debug('AUTH-GUARD.JS loaded'); } catch(e) {}
   
   // Helper để log persistently - SMART LIMIT để tránh lag
   function persistLog(message, type = 'info') {
     const timestamp = new Date().toISOString();
-    const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
-    console.log(logEntry);
+  const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+  try { console.debug && console.debug(logEntry); } catch(e) {}
     
     try {
       const MAX_LOGS = 500; // Giữ 500 logs gần nhất (đủ để debug, không quá nhiều)
@@ -66,23 +66,27 @@
       
       persistLog('🚀 AuthGuard initialized', 'info');
       
-      // Listen for auth state changes
-      window._firebase.onAuthStateChanged(async (user) => {
-        persistLog(`🔔 Auth state changed: ${user ? user.email : 'logged out'}`, 'info');
-        
+      // Listen for auth processing from the centralized auth module (auth.js)
+      // auth.js will dispatch a 'ctt-auth-processed' event after it finishes
+      // handling onAuthStateChanged; responding to that event avoids registering
+      // a second onAuthStateChanged listener which caused duplicate DB reads.
+      window.addEventListener('ctt-auth-processed', async (ev) => {
+        const user = ev && ev.detail ? ev.detail.user : null;
+        persistLog(`🔔 Auth processed event: ${user ? user.email : 'logged out'}`, 'info');
+
         // Prevent multiple simultaneous checks
         if (this.isCheckingAccess) {
           persistLog('⏳ Already checking access, skipping...', 'info');
           return;
         }
-        
+
         this.isCheckingAccess = true;
         this.currentUser = user;
-        
+
         if (user) {
-          persistLog(`👤 User logged in: ${user.email}`, 'success');
-          
-          // CHỈ LOAD ROLE NẾU CHƯA LOAD HOẶC USER KHÁC
+          persistLog(`👤 User present in processed event: ${user.email}`, 'success');
+
+          // Only load role if not loaded or different user
           if (!this.roleLoaded || this.lastUid !== user.uid) {
             persistLog(`🔄 Loading role for new/changed user`, 'info');
             try {
@@ -99,13 +103,13 @@
             persistLog(`✅ Role already loaded: ${this.userRole}`, 'success');
           }
         } else {
-          persistLog('👤 No user logged in', 'info');
+          persistLog('👤 No user present in processed event', 'info');
           this.userRole = 'user';
           this.roleLoaded = false;
           this.lastUid = null;
         }
-        
-        // CHỈ check access SAU KHI role đã load xong
+
+        // Only check access after role is loaded
         this.checkPageAccess();
         this.isCheckingAccess = false;
       });
@@ -705,21 +709,21 @@
     }
   };
   
-  console.log('✅ AuthGuard object created:', window.AuthGuard);
+  try { console.debug && console.debug('AuthGuard object created', window.AuthGuard); } catch(e) {}
   
   // Auto-initialize when Firebase is ready - DÙNG PERSIST LOG
   window.addEventListener('firebase-ready', () => {
-    console.log('🔥🔥🔥 FIREBASE-READY EVENT RECEIVED! 🔥🔥🔥');
+    try { console.debug && console.debug('firebase-ready event received for AuthGuard'); } catch(e) {}
     persistLog('🔥 Firebase ready event received, initializing AuthGuard...', 'info');
     window.AuthGuard.init();
   });
   
   // Also try immediate initialization if Firebase is already available - DÙNG PERSIST LOG
   if (window._firebase) {
-    console.log('🔥🔥🔥 FIREBASE ALREADY AVAILABLE, INIT NOW! 🔥🔥🔥');
+    try { console.debug && console.debug('Firebase already available at AuthGuard init'); } catch(e) {}
     persistLog('🔥 Firebase already available, initializing AuthGuard immediately...', 'info');
     window.AuthGuard.init();
   } else {
-    console.log('⏳ Waiting for Firebase to be ready...');
+    try { console.debug && console.debug('AuthGuard waiting for firebase-ready'); } catch(e) {}
   }
 })();
