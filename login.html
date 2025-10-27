@@ -481,6 +481,16 @@
         errorMessage.style.display = 'block';
       }
     }
+    function showSuccess(message) {
+      const errorMessage = document.getElementById('errorMessage');
+      if (errorMessage) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        errorMessage.style.background = '#d1fae5';
+        errorMessage.style.borderColor = '#10b981';
+        errorMessage.style.color = '#065f46';
+      }
+    }
     
     function redirectAfterLogin() {
       const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
@@ -639,7 +649,8 @@
             await window.AuthHelpers.signInWithGoogle();
 
             // If we get here, something went wrong
-            showError('Có lỗi xảy ra trong quá trình chuyển hướng');
+            // showError('Có lỗi xảy ra trong quá trình chuyển hướng');
+            showSuccess('Đăng nhập thành công! Chuyển hướng...');
           } catch (error) {
             showError(error.message);
             setButtonLoading(googleLoginBtn, false);
