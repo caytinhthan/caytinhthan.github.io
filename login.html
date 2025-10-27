@@ -481,16 +481,6 @@
         errorMessage.style.display = 'block';
       }
     }
-    function showSuccess(message) {
-      const errorMessage = document.getElementById('errorMessage');
-      if (errorMessage) {
-        errorMessage.textContent = message;
-        errorMessage.style.display = 'block';
-        errorMessage.style.background = '#d1fae5';
-        errorMessage.style.borderColor = '#10b981';
-        errorMessage.style.color = '#065f46';
-      }
-    }
     
     function redirectAfterLogin() {
       const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
@@ -649,8 +639,7 @@
             await window.AuthHelpers.signInWithGoogle();
 
             // If we get here, something went wrong
-            // showError('Có lỗi xảy ra trong quá trình chuyển hướng');
-            showSuccess('Đăng nhập thành công...');
+            showError('Có lỗi xảy ra trong quá trình chuyển hướng');
           } catch (error) {
             showError(error.message);
             setButtonLoading(googleLoginBtn, false);
@@ -677,43 +666,18 @@
       }
     });
     
-    // Theme initialization and class switching (MATCH index.html)
+    // Theme initialization - CHỈ ĐỌC từ localStorage, không có toggle
     document.addEventListener('DOMContentLoaded', () => {
       const currentTheme = localStorage.getItem('theme');
       if (currentTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        document.documentElement.classList.add('theme-night');
-        document.documentElement.classList.remove('theme-day');
       } else {
         document.documentElement.removeAttribute('data-theme');
-        document.documentElement.classList.add('theme-day');
-        document.documentElement.classList.remove('theme-night');
       }
-      // Dispatch theme-change event for consistency
-      window.dispatchEvent(new CustomEvent('theme-change', {
-        detail: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
-      }));
     });
   </script>
   <!-- Cute CTA: gentle copy + pastel frame to invite users back to home for theme change -->
-
-  <a href="index.html" class="cta-home-theme" id="ctaHomeTheme" aria-label="Về trang chủ để đổi chế độ sáng/tối"></a>
-
-  <script>
-    // Update CTA text based on current theme (sáng/tối)
-    function updateCtaThemeText() {
-      const cta = document.getElementById('ctaHomeTheme');
-      if (!cta) return;
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      cta.textContent = isDark
-        ? 'Muốn đổi sang SÁNG? Về trang chủ nhé 💡'
-        : 'Muốn đổi sang TỐI? Về trang chủ nhé 🌙';
-    }
-    document.addEventListener('DOMContentLoaded', updateCtaThemeText);
-    // Also update if theme changes dynamically (future-proof)
-    const observer = new MutationObserver(updateCtaThemeText);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  </script>
+  <a href="index.html" class="cta-home-theme" aria-label="Về trang chủ để đổi chế độ sáng/tối">Muốn đổi sáng/tối không? Về trang chủ nhé 💖</a>
 
   <style>
     .cta-home-theme{

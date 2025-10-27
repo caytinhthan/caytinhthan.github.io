@@ -3,9 +3,8 @@
   // Helper để log persistently - SMART LIMIT để tránh lag
   function persistLog(message, type = 'info') {
     const timestamp = new Date().toISOString();
-  const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
-  // Use debug-level console output to reduce noise in normal debugging sessions
-  try { console.debug && console.debug(logEntry); } catch(e) {}
+    const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+    console.log(logEntry);
     
     try {
       const MAX_LOGS = 500; // Giữ 500 logs gần nhất (đủ để debug, không quá nhiều)
@@ -18,7 +17,7 @@
       if (logs.length > MAX_LOGS) {
         const keepLogs = logs.slice(-MAX_LOGS); // Giữ 500 logs cuối
         localStorage.setItem('auth_debug_logs', JSON.stringify(keepLogs));
-        console.warn(`🧹 Auto-cleanup: Removed ${logs.length - MAX_LOGS} old logs`);
+        //console.warn(`🧹 Auto-cleanup: Removed ${logs.length - MAX_LOGS} old logs`);
       } else {
         localStorage.setItem('auth_debug_logs', JSON.stringify(logs));
       }
@@ -174,11 +173,6 @@
         }
         
         this.isProcessingAuth = false;
-        // Notify other modules (e.g., AuthGuard) that auth processing is complete so
-        // they can react without registering a separate onAuthStateChanged listener.
-        try {
-          window.dispatchEvent(new CustomEvent('ctt-auth-processed', { detail: { user } }));
-        } catch (e) { /* ignore if CustomEvent unsupported */ }
       });
     },
     
@@ -281,16 +275,16 @@
     // Check if user exists in database - DÙNG .once() thay vì .on()
     checkUserExistsInDB: async function(uid) {
       try {
-          persistLog('🔍 Checking if user exists in DB: ' + String(uid), 'info');
-          const userRef = window._firebase.ref(`users/${uid}`);
-          const snapshot = await userRef.once('value');
-          const exists = snapshot.exists();
-          persistLog('📊 User exists in DB: ' + String(exists), 'info');
-          return exists;
-        } catch (error) {
-          persistLog('💥 Error checking user in DB: ' + (error && error.message ? error.message : String(error)), 'error');
-          return false; // Default to false on error
-        }
+        console.log('🔍 Checking if user exists in DB:', uid);
+        const userRef = window._firebase.ref(`users/${uid}`);
+        const snapshot = await userRef.once('value');
+        const exists = snapshot.exists();
+        console.log('📊 User exists in DB:', exists);
+        return exists;
+      } catch (error) {
+        console.error('💥 Error checking user in DB:', error);
+        return false; // Default to false on error
+      }
     },
 
     // Create or update user profile (CHỈ cho ĐĂNG KÝ) - THÊM LOGS
@@ -589,12 +583,12 @@
     // Email/password sign in (CHỈ cho ĐĂNG NHẬP)
     signInWithEmail: async function(email, password) {
       try {
-        persistLog('🔐 Email login attempt for: ' + String(email), 'info');
+        console.log('🔐 Email login for:', email);
         const result = await window._firebase.signInWithEmailAndPassword(email, password);
         // onAuthStateChanged sẽ kiểm tra user có tồn tại trong DB không
         return result.user;
       } catch (error) {
-        persistLog('💥 Email login error: ' + (error && error.message ? error.message : String(error)), 'error');
+        console.error('💥 Email login error:', error);
         throw error;
       }
     },
@@ -640,32 +634,10 @@
     setUserOnlineStatus: function(uid, isOnline) {
       try {
         const userRef = window._firebase.ref(`users/${uid}`);
-
-        if (isOnline) {
-          // Mark online immediately and register onDisconnect to mark offline
-          try {
-            userRef.update({ isOnline: true, lastActive: Date.now() });
-          } catch (e) { /* ignore */ }
-
-          // Register onDisconnect to ensure server marks the user offline if the
-          // client loses connection unexpectedly (tab close, crash, network down)
-          try {
-            // onDisconnect().update returns a Promise-like object in compat SDK
-            userRef.onDisconnect().update({ isOnline: false, lastActive: Date.now() });
-          } catch (e) {
-            // Some environments may not support onDisconnect; ignore safely
-          }
-
-          return Promise.resolve(true);
-        } else {
-          // Explicitly set offline (e.g., user signed out or switched tab)
-          try {
-            // Cancel any pending onDisconnect so server won't flip state after we intentionally set offline
-            try { if (userRef && userRef.onDisconnect) userRef.onDisconnect().cancel(); } catch (e) {}
-          } catch(e){}
-
-          return userRef.update({ isOnline: false, lastActive: Date.now() }).catch(()=>{});
-        }
+        return userRef.update({
+          isOnline: isOnline,
+          lastActive: Date.now()
+        });
       } catch (error) {
         // Silent fail
       }
@@ -673,19 +645,26 @@
     
     // Setup online status handler
     setupOnlineStatusHandler: function(uid) {
-      // Use visibilitychange to mark offline when the user hides the page/tab.
-      // We no longer use beforeunload or a periodic heartbeat; onDisconnect
-      // registered in setUserOnlineStatus will let the server mark the user
-      // offline automatically if the client disconnects unexpectedly.
-      document.addEventListener('visibilitychange', () => {
-        try {
-          if (document.hidden) {
-            this.setUserOnlineStatus(uid, false);
-          } else {
-            this.setUserOnlineStatus(uid, true);
-          }
-        } catch (e) { /* ignore */ }
+      // Set offline when page unloads
+      window.addEventListener('beforeunload', () => {
+        this.setUserOnlineStatus(uid, false);
       });
+      
+      // Handle visibility change
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.setUserOnlineStatus(uid, false);
+        } else {
+          this.setUserOnlineStatus(uid, true);
+        }
+      });
+      
+      // Heartbeat to keep online status
+      setInterval(() => {
+        if (this.currentUser && this.currentUser.uid === uid) {
+          this.setUserOnlineStatus(uid, true);
+        }
+      }, 30000); // Every 30 seconds
     },
     
     // Show loading state on button

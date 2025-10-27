@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="assets/main.css" />
     <link rel="stylesheet" href="assets/header.css" />
     <link rel="stylesheet" href="assets/tree.css" />
-    <link rel="stylesheet" href="assets/chat.css" />
     <link rel="stylesheet" href="assets/modals.css" />
     <link rel="stylesheet" href="assets/leaves.css" />
   </head>
@@ -163,13 +162,16 @@
           <div class="info-card">
             <div class="info-icon">💌</div>
             <div class="info-content">
-              <h3>Gửi thông điệp yêu thương</h3>
               <p>
-                Trước khi viết lên cây tinh thần, chúng mình mong bạn luôn nhớ
-                rằng: đây là cây của những lời động viên, yêu thương và niềm
-                tin. Mỗi lời bạn để lại sẽ trở thành ánh sáng nhỏ sưởi ấm trái
-                tim một ai đó. Hãy chọn màu sắc riêng cho chiếc lá ứng với vấn
-                đề bạn muốn gửi lời động viên nhé:
+                Trước khi đặt bút viết lên chiếc lá của mình, mong bạn hãy nhớ rằng Cây tinh thần này được sinh ra để lưu giữ những lời động viên, sẻ chia tích cực từ mọi người. Mỗi chiếc lá mà bạn để lại không chỉ là một lời nhắn gửi,mà còn là một phần nhỏ góp vào hành trình xây dựng cộng đồng biết yêu thương và sẻ chia. Biết đâu, thông điệp của bạn sẽ lan tỏa năng lượng tích cực, giúp ai đó được an ủi, đồng cảm và thêm niềm tin để bước tiếp.<br>
+                Hãy chọn màu sắc cho chiếc lá mang thông điệp bạn muốn gửi gắm nhé:<br>
+                💸 Tài chính → Xanh lá<br>
+                💕 Tình yêu → Hồng<br>
+                📚 Học tập → Vàng<br>
+                💼 Công việc → Xanh dương<br>
+                🤝 Mối quan hệ → Tím<br>
+                🌈 Khác → Xanh pastel<br>
+                Và nếu bạn đang cảm thấy không ổn, hay mang trong lòng những nỗi niềm khó nói muốn được giãi bày, hãy chọn lá nâu 🍂 — chiếc lá héo mang theo những tâm sự và nỗi lòng của bạn, để Cây tinh thần được lắng nghe bạn, và để bạn cũng nhận lại sự thấu hiểu, đồng cảm từ cộng đồng xung quanh và cùng biến chiếc lá nâu ấy xanh trở lại.
               </p>
             </div>
           </div>
@@ -286,11 +288,10 @@
         </div>        
 
         <div class="picker picker-section" id="leafPicker">
-          <div class="picker-row">
+	  <div class="picker-row">
             <label>Hình dáng lá</label>
-            <select id="leafShape">
+            <select id="leafShape" disabled>
               <option value="normal">Lá bình thường</option>
-              <option value="withered">Lá héo úa</option>
             </select>
           </div>
 
@@ -318,6 +319,28 @@
             </div>
           </div>
 
+          <div class="picker-row">
+            <label>Màu sắc lá</label>
+            <select id="leafPalette" class="color-select">
+              <option value="0" style="background:#7BC97B;color:#222;">💸 Xanh lá (Tài chính)</option>
+              <option value="1" style="background:#FFEB80;color:#222;">📚 Vàng (Học tập)</option>
+              <option value="2" style="background:#FF80C7;color:#222;">❤️ Đỏ (Tình yêu)</option>
+              <option value="3" style="background:#FFB3D9;color:#222;">💖 Hồng (Tình cảm)</option>
+              <option value="4" style="background:#C780FF;color:#fff;">🤝 Tím (Mối quan hệ)</option>
+              <option value="5" style="background:#80C7FF;color:#222;">💼 Xanh dương (Công việc)</option>
+              <option value="6" style="background:#A0522D;color:#fff;">🍂 Lá héo úa (Tâm sự)</option>
+            </select>
+            <div class="color-legend" style="font-size:12px;margin-top:4px;line-height:1.6;">
+              <span style="background:#7BC97B;padding:2px 6px;border-radius:4px;">💸 Tài chính</span>
+              <span style="background:#FFEB80;padding:2px 6px;border-radius:4px;">📚 Học tập</span>
+              <span style="background:#FF80C7;padding:2px 6px;border-radius:4px;">❤️ Tình yêu</span>
+              <span style="background:#FFB3D9;padding:2px 6px;border-radius:4px;">💖 Tình cảm</span>
+              <span style="background:#C780FF;color:#fff;padding:2px 6px;border-radius:4px;">🤝 Mối quan hệ</span>
+              <span style="background:#80C7FF;padding:2px 6px;border-radius:4px;">💼 Công việc</span>
+              <span style="background:#A0522D;color:#fff;padding:2px 6px;border-radius:4px;">🍂 Tâm sự</span>
+            </div>
+          </div>
+
           <div class="preview" id="leafPreview">
             <div class="preview-label">Xem trước:</div>
             <div
@@ -334,11 +357,12 @@
               <div class="preview-image-wrap" style="position:relative;">
                 <img
                   id="previewLeafImage"
-                  class="preview-image fill-frame modal-leaf-image"
-                  src="assets/leaves/leaf_normal.png"
+                  class="preview-image modal-leaf-image"
+                  src="assets/leaves/normal/leaf_normal_green.png"
                   alt="Preview"
-                  width="140"
-                  height="140"
+                  width="80"
+                  height="80"
+                  style="max-width:80px;max-height:80px;"
                 />
               </div>
             </div>
@@ -516,7 +540,7 @@
               class="btn pink"
               style="vertical-align: middle"
             >
-              💖 Thả yêu thương
+              Tưới nước💧
             </button>
           </div>
 
@@ -714,7 +738,6 @@
 
         // Set up dropdown first so elements are accessible
         dropdownMenu.style.display = "block";
-        dropdownMenu.style.visibility = "hidden";
 
         const themeToggle = document.getElementById("themeToggle");
         const helpModalBtn = document.getElementById("helpModalBtn");
@@ -725,12 +748,7 @@
         if (hamburger) {
           hamburger.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (dropdownMenu.classList.contains("show")) {
-              dropdownMenu.classList.remove("show");
-            } else {
-              dropdownMenu.style.visibility = "visible";
-              dropdownMenu.classList.add("show");
-            }
+            dropdownMenu.classList.toggle("show");
           });
         }
 

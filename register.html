@@ -216,7 +216,7 @@
       background: #475569;
     }
     
-    .divider span {
+     .divider span {
       background: rgba(255, 255, 255, 0.95);
       padding: 0 16px;
       transition: background 0.3s ease;
@@ -533,7 +533,7 @@
 
   <script src="src/firebase-init.js"></script>
   <script src="src/auth.js"></script>
-  <script src="src/modals.js"></script>
+  <script src="src/modals.js" defer></script>
   <script>
     // Page transition function
     function navigateToPage(url) {
@@ -845,45 +845,20 @@
       }
     });
     
-    // Theme initialization and class switching (MATCH index.html)
+    // Theme initialization - CHỈ ĐỌC từ localStorage, không có toggle
     document.addEventListener('DOMContentLoaded', () => {
       const currentTheme = localStorage.getItem('theme');
       if (currentTheme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
-        document.documentElement.classList.add('theme-night');
-        document.documentElement.classList.remove('theme-day');
       } else {
         document.documentElement.removeAttribute('data-theme');
-        document.documentElement.classList.add('theme-day');
-        document.documentElement.classList.remove('theme-night');
       }
-      // Dispatch theme-change event for consistency
-      window.dispatchEvent(new CustomEvent('theme-change', {
-        detail: { theme: currentTheme === 'dark' ? 'dark' : 'light' }
-      }));
     });
   </script>
   <!-- Shared terms/privacy modals are injected by src/modals.js -->
 
   <!-- Cute CTA: gentle copy + pastel frame to invite users back to home for theme change -->
-
-  <a href="index.html" class="cta-home-theme" id="ctaHomeTheme" aria-label="Về trang chủ để đổi chế độ sáng/tối"></a>
-
-  <script>
-    // Update CTA text based on current theme (sáng/tối)
-    function updateCtaThemeText() {
-      const cta = document.getElementById('ctaHomeTheme');
-      if (!cta) return;
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      cta.textContent = isDark
-        ? 'Muốn đổi sang SÁNG? Về trang chủ nhé 💡'
-        : 'Muốn đổi sang TỐI? Về trang chủ nhé 🌙';
-    }
-    document.addEventListener('DOMContentLoaded', updateCtaThemeText);
-    // Also update if theme changes dynamically (future-proof)
-    const observer = new MutationObserver(updateCtaThemeText);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  </script>
+  <a href="index.html" class="cta-home-theme" aria-label="Về trang chủ để đổi chế độ sáng/tối">Muốn đổi sáng/tối không? Về trang chủ nhé 💖</a>
 
   <style>
     .cta-home-theme{

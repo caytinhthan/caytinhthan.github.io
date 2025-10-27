@@ -25,7 +25,7 @@ export function createHeader(options = {}) {
       <div class="header-left">
         <a href="index.html" class="logo">
           <span class="logo-icon">🌱</span>
-          <span class="logo-text">Cây Tinh Thần</span>
+          <span class="logo-text">Cây Tình Thần</span>
         </a>
       </div>
       

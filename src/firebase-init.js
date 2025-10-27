@@ -82,32 +82,6 @@
         getRedirectResult: auth.getRedirectResult.bind(auth)
       };
       
-      // Lấy role và gán vào window._firebase.userRole mỗi khi đăng nhập
-      window._firebase.auth.onAuthStateChanged(async (user) => {
-        if (user) {
-          try {
-            const snap = await window._firebase.db.ref('users/' + user.uid + '/role').once('value');
-            window._firebase.userRole = snap.val() || 'user';
-            console.log('[ROLE]', user.uid, 'role:', window._firebase.userRole);
-            // If admin, update all leaves' canDrag
-            if (window._firebase.userRole === 'admin') {
-              setTimeout(() => {
-                try {
-                  document.querySelectorAll('.leaf').forEach(g => {
-                    g.dataset.canDrag = '1';
-                  });
-                  console.log('[ADMIN] All leaves set canDrag=1');
-                } catch (e) { console.warn('Failed to set canDrag for admin', e); }
-              }, 200);
-            }
-          } catch (e) {
-            window._firebase.userRole = 'user';
-          }
-        } else {
-          window._firebase.userRole = null;
-        }
-      });
-
       // Dispatch ready event
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('firebase-ready'));

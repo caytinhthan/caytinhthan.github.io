@@ -13,18 +13,14 @@
 /* Các loại lá (rút gọn) */
 .leaf-default {
   /* default canonical leaf */
-  background-image: url('leaves/leaf_normal.png');
+  background-image: url('leaves/normal/leaf_normal_green.png');
 }
 
 /* Recovered / healthy */
 .leaf-fine {
-  background-image: url('leaves/leaf_fine.png');
+  background-image: url('leaves/special/leaf_fine.png');
 }
 
-/* Dry / withered */
-.leaf-dry-brown {
-  background-image: url('leaves/leaf_withered.png');
-}
 /* Preview styling */
 .preview-leaf {
   display: flex;

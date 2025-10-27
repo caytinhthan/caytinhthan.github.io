@@ -39,11 +39,9 @@
       ".read": true,
       ".indexOn": ["authorId", "ts"],
       "$leafId": {
-        ".write": "auth !== null && ( (!data.exists() && newData.hasChildren(['id', 'text', 'author', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation']) && newData.child('authorId').val() === auth.uid) || (data.exists() && (data.child('authorId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')) )",
-        ".validate": "newData.hasChildren(['id', 'text', 'author', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation'])",
-        "id": {
-          ".validate": "newData.isString() && newData.val().length > 0"
-        },
+        ".write": "auth !== null && ((!data.exists() && newData.hasChildren(['id', 'text', 'author', 'authorId', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation', 'isWithered', 'percentX', 'percentY', 'wasWithered']) && newData.child('authorId').val() === auth.uid) || (data.exists() && (data.child('authorId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')))",
+        ".validate": "newData.hasChildren(['id', 'text', 'author', 'authorId', 'ts', 'position', 'shapeKey', 'paletteIdx', 'scale', 'rotation', 'isWithered', 'percentX', 'percentY', 'wasWithered']) && newData.child('id').val() === $leafId",
+
         "text": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
         },
@@ -57,10 +55,10 @@
           ".validate": "newData.isNumber() && newData.val() <= now"
         },
         "position": {
-          ".validate": "newData.hasChildren(['x', 'y']) && newData.child('x').isNumber() && newData.child('y').isNumber()"
+          ".validate": "newData.hasChildren(['x','y']) && newData.child('x').isNumber() && newData.child('y').isNumber()"
         },
         "shapeKey": {
-          ".validate": "newData.isString()"
+          ".validate": "newData.isString() && (newData.val() === 'normal' || newData.val() === 'fine' || newData.val() === 'withered')"
         },
         "paletteIdx": {
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10"
@@ -70,11 +68,21 @@
         },
         "rotation": {
           ".validate": "newData.isNumber() && newData.val() >= -360 && newData.val() <= 360"
+        },
+        "wasWithered": {
+          ".validate": "newData.isBoolean() || newData.val() === null"
+        },
+        "percentX": {
+          ".validate": "newData.isNumber() || newData.val() === null"
+        },
+        "percentY": {
+          ".validate": "newData.isNumber() || newData.val() === null"
+        },
+        "isWithered": {
+          ".validate": "newData.isBoolean() || newData.val() === null"
         }
       }
     },
-
-    
 
     "statistics": {
       ".read": "auth !== null",
@@ -108,9 +116,8 @@
     "$other": {
       ".read": false,
       ".write": false
-    }
+    },
 
-    ,
     "encouragements": {
       ".read": true,
       "$leafId": {

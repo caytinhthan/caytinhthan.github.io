@@ -204,6 +204,7 @@
   transition: all 0.3s ease;
   z-index: 1001;
   margin-top: 8px;
+  pointer-events: none;
 }
 
 /* Remove desktop override since it's now properly positioned */
@@ -212,6 +213,7 @@
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .dropdown-item {
@@ -753,12 +755,14 @@
   transform: translateY(-10px);
   transition: all 0.3s ease;
   z-index: 2000;
+  pointer-events: none;
 }
 
 .dropdown-menu.show {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .dropdown-item {

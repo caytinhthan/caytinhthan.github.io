@@ -1,3 +1,24 @@
+/* Hiển thị màu nền cho option trong select màu lá (nhiều trình duyệt không hỗ trợ style trực tiếp option, nên dùng hiệu ứng cho select) */
+.color-select {
+  background: #f6f6f6;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+.color-select option[value="0"] { background: #7BC97B; color: #222; }
+.color-select option[value="1"] { background: #FFEB80; color: #222; }
+.color-select option[value="2"] { background: #FF80C7; color: #222; }
+.color-select option[value="3"] { background: #FFB3D9; color: #222; }
+.color-select option[value="4"] { background: #C780FF; color: #fff; }
+.color-select option[value="5"] { background: #80C7FF; color: #222; }
+.color-select option[value="6"] { background: #A0522D; color: #fff; }
+
+/* Đảm bảo legend màu hiển thị đẹp */
+.color-legend span {
+  display: inline-block;
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
 :root{
   --glass: rgba(255,255,255,.65);
   --border: rgba(255,255,255,.15);
@@ -819,8 +840,7 @@ html, body {
 }
 
 /* Trạng thái kéo thả lá */
-.leaf.grab { cursor: grab; } /* giữ lại cho tham chiếu, sẽ override bằng rule mới */
-[data-mode="drag"] .leaf.grab { cursor: grab; }
+.leaf.grab { cursor: grab; }
 .leaf.grabbing { cursor: grabbing; }
 
 /* 4. Tooltip tối ưu */
@@ -1134,14 +1154,6 @@ html, body {
   justify-content: center;
   /* allow rotated image to extend outside the frame so corners aren't clipped */
   overflow: visible;
-}
-.preview-image-wrap .preview-image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(1) rotate(0deg);
-  transform-origin: center center;
-  will-change: transform;
 }
 
 .preview-label { font-weight: 600; margin-right: 12px; color: var(--muted); }

@@ -954,24 +954,15 @@
         return;
       }
       
-      // Load total leaves & withered leaves
+      // Load total leaves
       const leavesPromise = window._firebase.ref('leaves').once('value')
         .then((snapshot) => {
           const leaves = snapshot.val() || {};
           const totalLeaves = Object.keys(leaves).length;
           document.getElementById('totalLeaves').textContent = totalLeaves;
-          // Đếm số lá bị héo
-          let witheredCount = 0;
-          Object.values(leaves).forEach(l => {
-            if (l && (l.isWithered === true || l.isWithered === '1')) witheredCount++;
-          });
-          document.getElementById('witheredLeaves').textContent = witheredCount;
-          console.debug(`🌿 Total leaves: ${totalLeaves}, 🍂 Withered: ${witheredCount}`);
+          console.debug(`🌿 Total leaves: ${totalLeaves}`);
         })
-        .catch(err => {
-          document.getElementById('witheredLeaves').textContent = '0';
-          console.error('Error loading leaves:', err);
-        });
+        .catch(err => console.error('Error loading leaves:', err));
 
       const usersPromise = window._firebase.ref('users').once('value')
         .then((snapshot) => {
