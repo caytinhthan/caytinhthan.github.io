@@ -33,9 +33,9 @@
       }
       
       // Load Firebase scripts in order
-      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.3.0/firebase-app-compat.js');
-      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.3.0/firebase-database-compat.js');
-      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.3.0/firebase-auth-compat.js');
+      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js');
+      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.4.0/firebase-database-compat.js');
+      await loadFirebaseScript('https://www.gstatic.com/firebasejs/12.4.0/firebase-auth-compat.js');
       
       // Initialize Firebase app
       const app = firebase.initializeApp(firebaseConfig);
