@@ -562,57 +562,9 @@
         update();
       })();
       
-      // Check for redirect result on page load và auth state
-      async function checkAuthAndRedirect() {
-        try {
-          console.log('📍 Current page:', window.location.href);
-          
-          // Check current auth state first
-          const currentUser = window._firebase.auth.currentUser;
-          if (currentUser) {
-            console.log('✅ User already logged in:', currentUser.email);
-            console.log('🔄 Redirecting to index.html from login page');
-            window.location.href = 'index.html';
-            return;
-          }
-          
-          // Check for redirect result
-          const redirectResult = await window.AuthHelpers.checkRedirectResult(false); // false = LOGIN
-          if (redirectResult) {
-            console.log('🎯 Login redirect result user:', redirectResult.email);
-            console.log('🔄 Redirecting to index.html after Google login');
-            window.location.href = 'index.html';
-            return;
-          }
-          
-          console.log('❌ No current user or redirect result');
-        } catch (error) {
-          console.error('💥 Auth check error:', error);
-          // Sometimes redirect-based auth completes and onAuthStateChanged will fire shortly after.
-          // Wait a short moment and re-check currentUser before showing an error to avoid a noisy
-          // "redirect failed" message when the login actually succeeded.
-          try {
-            await new Promise(resolve => setTimeout(resolve, 600));
-            const maybeUser = window._firebase && window._firebase.auth && window._firebase.auth.currentUser;
-            if (maybeUser) {
-              console.log('ℹ️ Auth state present after redirect; suppressing transient redirect error.');
-              return;
-            }
-          } catch (e) {
-            // ignore
-          }
-          // Otherwise show the error
-          showError('Lỗi đăng nhập: ' + (error && error.message ? error.message : String(error)));
-        }
-      }
       
-      // Check auth state when Firebase is ready
-      window.addEventListener('firebase-ready', checkAuthAndRedirect);
       
-      // Also check immediately if Firebase is already ready
-      if (window._firebase) {
-        checkAuthAndRedirect();
-      }
+
       
       if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {

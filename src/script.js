@@ -5,6 +5,9 @@
   const rand  = (min,max)=> Math.random()*(max-min)+min;
   const uuid  = ()=> (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
   
+  // Global variables 
+  let justAddedLeafId = null;
+  let justAddedTimeout = null;
   // Remove module import - use inline fallback sanitization
   const sanitizeLeafMessage = (text) => String(text).replace(/[<>]/g, '').substring(0, 500);
   const sanitizeDisplayName = (name) => String(name).replace(/[<>]/g, '').substring(0, 50);
@@ -411,7 +414,18 @@
     try {
       const g = leaves.querySelector(`.leaf[data-id="${leafId}"]`);
       if (!g) return;
-
+      // Phát âm thanh tưới cây
+      try {
+      const sound = document.getElementById('wateringSound');
+      if (sound) {
+        sound.currentTime = 0; // Tua về đầu để phát lại nếu đang phát dở
+        sound.play().catch(e => console.warn("Audio play failed:", e)); // Play âm thanh
+      } else {
+        console.warn("Watering sound element not found");
+      }
+    } catch (e) {
+      console.error("Error playing watering sound:", e);
+    }
       // leaf pulse — apply to inner image so we don't override the group's SVG transform
       const innerImg = g.querySelector('image');
       if (innerImg) {
@@ -1508,6 +1522,17 @@ const incomingPaletteIdx = Number.isFinite(data.paletteIdx) ? Number(data.palett
         waterLeafBtn.onclick = async () => {
           if (!isAuthenticated()) { promptLoginFlow(); return; }
           try {
+            // --- CODE ÂM THANH  ---
+            try {
+              const sound = document.getElementById('wateringSound');
+              if (sound) {
+                sound.volume = 0.7;
+                sound.currentTime = 0;
+                sound.play().catch(e => console.warn("Audio play failed:", e));
+              }
+            } 
+            catch (e) { console.error("Error playing watering sound:", e); }
+            // --- HẾT PHẦN ÂM THANH ---
             // Play watering animation (uses assets/leaves/special/watering_can.png)
             playWateringEffect(g.dataset.id, WATERING_DURATION_MS);
 
@@ -1531,8 +1556,16 @@ const incomingPaletteIdx = Number.isFinite(data.paletteIdx) ? Number(data.palett
                       swapped = true;
                       // Swap the image after preload but do NOT alter width/height/x/y attributes.
                       // Keeping attributes stable avoids reflow/jump issues on hover/unhover.
-                      try { img.setAttribute('href', specialPath); } catch(e){ try { img.setAttribute('xlink:href', specialPath); } catch(err){} }
-                    } catch(e){ console.warn('Failed to swap watered image after preload', e); }
+                      try { 
+                        img.setAttribute('href', specialPath); 
+                      } catch(e){ 
+                        try { 
+                          img.setAttribute('xlink:href', specialPath); 
+                        } 
+                        catch(err){} 
+                      }
+                    } 
+                    catch(e){ console.warn('Failed to swap watered image after preload', e); }
                     // remove transitioning visual state and reset transforms after a short settle
                     setTimeout(()=>{
                       try { img.classList.remove('transitioning-special'); } catch(e){}
@@ -1697,6 +1730,18 @@ const incomingPaletteIdx = Number.isFinite(data.paletteIdx) ? Number(data.palett
       if (ownerRecoverBtn) {
         ownerRecoverBtn.onclick = async () => {
           if (!confirm('Bạn xác nhận đã ổn và muốn chuyển lá về trạng thái khỏe mạnh?')) return;
+
+          // --- CODE ÂM THANH  ---
+          try {
+            const sound = document.getElementById('wateringSound');
+            if (sound) {
+              sound.volume = 0.7;
+              sound.currentTime = 0;
+              sound.play().catch(e => console.warn("Audio play failed:", e));
+            }
+          }
+          catch (e) { console.error("Error playing watering sound:", e); }
+          // --- HẾT PHẦN ÂM THANH ---
           // Update dataset and DB
           // remove the isWithered dataset key entirely to avoid ambiguous empty-string values
           try { delete g.dataset.isWithered; } catch(e) { g.dataset.isWithered = ''; }

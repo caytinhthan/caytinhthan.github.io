@@ -83,31 +83,42 @@
     },
     
     // Initialize auth state listener - THÊM DEBOUNCE
-    initAuthListener: function() {
+    initAuthListener: async function() {
       if (!window._firebase) {
         persistLog('Firebase not initialized', 'error');
         return;
       }
       
-      // Handle redirect result first (for mobile OAuth)
-      window._firebase.getRedirectResult()
-        .then(async (result) => {
-          if (result && result.user) {
-            persistLog(`✅ Redirect result: ${result.user.email}`, 'success');
-            
-            // Check if this was a registration flow
-            const authFlow = sessionStorage.getItem('auth_flow');
-            sessionStorage.removeItem('auth_flow');
-            
-            if (authFlow === 'register') {
-              persistLog('📝 Creating profile for new registration', 'info');
-              await this.createUserProfile(result.user);
-            }
-          }
-        })
-        .catch((error) => {
-          persistLog(`⚠️ Redirect result error: ${error.message}`, 'error');
-        });
+      try {
+    persistLog('🔍 initAuthListener: Checking for redirect result first...', 'info');
+    // Xác định xem có phải luồng đăng ký không
+    const isRegistrationFlow = sessionStorage.getItem('auth_flow') === 'register';
+    sessionStorage.removeItem('auth_flow'); // Xóa cờ đi
+
+    // Gọi checkRedirectResult chỉ MỘT LẦN ở đây
+    const userFromRedirect = await this.checkRedirectResult(isRegistrationFlow);
+
+    if (userFromRedirect) {
+      persistLog(`✅ Redirect processed user: ${userFromRedirect.email}. Redirecting to index.html...`, 'success');
+      this.currentUser = userFromRedirect; // Cập nhật currentUser ngay
+      this.lastProcessedUid = userFromRedirect.uid; // Đánh dấu đã xử lý
+      this.updateAuthUI(userFromRedirect); // Cập nhật UI tạm thời
+      this.setUserOnlineStatus(userFromRedirect.uid, true); // Đặt online
+      this.setupOnlineStatusHandler(userFromRedirect.uid);
+      this._ensureActivityTracking();
+      this._maybeUpdateDBLastActive(true);
+
+      // Chuyển hướng NGAY LẬP TỨC sau khi xử lý redirect thành công
+      window.location.href = 'index.html';
+      return; // Dừng hàm ở đây, không cần onAuthStateChanged nữa cho lần load này
+    } else {
+      persistLog('ℹ️ initAuthListener: No redirect result found, proceeding with onAuthStateChanged.', 'info');
+    }
+  } catch (error) {
+    persistLog(`💥 Error during initial redirect check: ${error.message}`, 'error');
+    // Không dừng lại, vẫn tiếp tục gắn onAuthStateChanged
+  }
+  // --- HẾT XỬ LÝ REDIRECT ---
       
       window._firebase.onAuthStateChanged(async (user) => {
         // PREVENT DUPLICATE PROCESSING
@@ -128,40 +139,34 @@
         this.currentUser = user;
         
         if (user) {
-          persistLog(`✅ User authenticated: ${user.email}`, 'success');
-          
-          // Check và update user profile MỘT LẦN
-          try {
-            const userRef = window._firebase.ref(`users/${user.uid}`);
-            
-            // DÙNG .once() THAY VÌ .on() để tránh loop vô tận!
-            const snapshot = await userRef.once('value');
-            
-            if (!snapshot.exists()) {
-              persistLog('Creating new user profile in DB', 'info');
-              await this.createUserProfile(user);
-            } else {
-              persistLog('Updating existing user profile', 'info');
-              await this.updateUserProfile(user);
-            }
-            
-            this.lastProcessedUid = user.uid; // Mark as processed
-            this.updateAuthUI(user);
-            this.setUserOnlineStatus(user.uid, true);
-            this.setupOnlineStatusHandler(user.uid);
-              // Start activity tracking for session persistence
-              this._ensureActivityTracking();
-              this._maybeUpdateDBLastActive(true);
-            
-            // Redirect về trang chủ nếu đang ở trang login/register
-            const currentPage = window.location.pathname;
-            if (currentPage.includes('login.html') || currentPage.includes('register.html')) {
-              persistLog('🔄 Redirecting to index.html', 'info');
-              setTimeout(() => {
-                window.location.href = 'index.html';
-              }, 500); // Delay nhỏ để đảm bảo DB write hoàn tất
-            }
-          } catch (error) {
+      persistLog(`✅ onAuthStateChanged: User authenticated: ${user.email}`, 'success');
+      try {
+        const userRef = window._firebase.ref(`users/${user.uid}`);
+        const snapshot = await userRef.once('value');
+
+        if (!snapshot.exists()) {
+          // Trường hợp này không nên xảy ra nếu redirect đăng ký đã chạy đúng
+          persistLog('⚠️ onAuthStateChanged: User exists but no profile found! Creating profile...', 'warn');
+          await this.createUserProfile(user);
+        } else {
+          persistLog('🔄 onAuthStateChanged: Updating existing user profile', 'info');
+          await this.updateUserProfile(user);
+        }
+
+        this.lastProcessedUid = user.uid;
+        this.updateAuthUI(user);
+        this.setUserOnlineStatus(user.uid, true);
+        this.setupOnlineStatusHandler(user.uid);
+        this._ensureActivityTracking();
+        this._maybeUpdateDBLastActive(true);
+
+        // Chuyển hướng nếu đang ở login/register (phòng trường hợp onAuthStateChanged chạy trước redirect)
+        const currentPage = window.location.pathname;
+        if (currentPage.includes('login.html') || currentPage.includes('register.html')) {
+          persistLog('🔄 onAuthStateChanged: Redirecting to index.html', 'info');
+          setTimeout(() => { window.location.href = 'index.html'; }, 300);
+        }
+      } catch (error) {
             persistLog(`Error in auth flow: ${error.message}`, 'error');
           }
         } else {
@@ -549,35 +554,33 @@
 
     // Check for redirect result (ĐĂNG NHẬP HOẶC ĐĂNG KÝ) - SỬA LẠI VỚI ERROR HANDLING
     checkRedirectResult: async function(isRegistration = false) {
-      try {
+      
         persistLog(`🔍 Checking redirect result... ${isRegistration ? '(REGISTRATION)' : '(LOGIN)'}`, 'info');
         const result = await window._firebase.getRedirectResult();
         
         if (result && result.user) {
-          persistLog(`✅ Redirect result found: ${result.user.email}`, 'success');
-          persistLog(`📝 User info: uid=${result.user.uid}, email=${result.user.email}`, 'info');
-          
-          // Nếu là registration, tạo user profile
-          if (isRegistration) {
-            persistLog('➕ Creating user profile for new registration...', 'info');
-            await this.createUserProfile(result.user);
-          }
-          
-          return result.user;
-        } else {
-          persistLog('❌ No redirect result', 'info');
-          return null;
-        }
-      } catch (error) {
-        // Log the error but avoid user-facing alert popups which can be noisy on redirect flows.
-        persistLog(`💥 Redirect result error: ${error.code} - ${error.message}`, 'error');
+    persistLog(`✅ Redirect result found: ${result.user.email}`, 'success');
+    persistLog(`📝 User info: uid=${result.user.uid}, email=${result.user.email}`, 'info');
 
-        // For debugging, expose last redirect error to localStorage (non-blocking)
-        try { localStorage.setItem('last_redirect_error', JSON.stringify({ code: error.code, message: error.message })); } catch(e){}
+    // Nếu là registration VÀ user chưa có profile -> tạo profile
+    // Nếu là login HOẶC user đã có profile -> update profile
+    const userExists = await this.checkUserExistsInDB(result.user.uid);
 
-        // Don't show an alert here: onAuthStateChanged will still handle successful sign-ins
-        return null;
-      }
+    if (isRegistration && !userExists) {
+      persistLog('➕ Creating user profile for new registration via redirect...', 'info');
+      await this.createUserProfile(result.user);
+    } else {
+      // Update profile cho login redirect HOẶC nếu user đăng ký bằng Google nhưng profile đã tồn tại
+       persistLog('🔄 Updating user profile after redirect (login or existing user)...', 'info');
+       await this.updateUserProfile(result.user); // Gọi update để track visit và lastActive
+    }
+
+    return result.user;
+  } else {
+    persistLog('❌ No redirect result', 'info');
+    return null;
+  }
+      
     },
     
     // Email/password sign in (CHỈ cho ĐĂNG NHẬP)
