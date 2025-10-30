@@ -476,59 +476,72 @@
     }
 
     function updateProfileStats(userData, userId) {
-      // Calculate days since joining
+      // 1. Tính toán ngày tham gia (Giữ nguyên logic cũ)
       const joinDate = new Date(userData.createdAt || Date.now());
       const daysSinceJoin = Math.floor((Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
       
-      // Update join date display
+      // Cập nhật UI ngay
       document.getElementById('joinDate').textContent = joinDate.toLocaleDateString('vi-VN');
+      document.getElementById('daysActive').textContent = daysSinceJoin;
       
-      // Fetch and count user's leaves from database
-      const leavesRef = window._firebase.ref('leaves');
-      leavesRef.once('value', (snapshot) => {
-        const allLeaves = snapshot.val() || {};
-        let userLeaves = 0;
-        let healthyLeaves = 0;
-        let messages = 0;
+      // 2. Định nghĩa references
+      // Query 1: Lấy tất cả lá của user này (dùng index 'authorId')
+      const leavesRef = window._firebase.ref('leaves').orderByChild('authorId').equalTo(userId);
+      // Query 2: Lấy tất cả lời động viên (read: true)
+      const encouragementsRef = window._firebase.ref('encouragements');
+
+      // 3. Dùng Promise.all để lấy cả 2 dữ liệu cùng lúc
+      Promise.all([
+        leavesRef.once('value'),
+        encouragementsRef.once('value')
+      ])
+      .then(([leavesSnapshot, encouragementsSnapshot]) => {
         
-        // Get user identifiers
-        const userEmail = userData.email || '';
-        const displayName = userData.displayName || userEmail.split('@')[0];
+        const userLeavesData = leavesSnapshot.val() || {};
+        const allEncouragementsData = encouragementsSnapshot.val() || {}; // Tất cả lời động viên
+
+        const userLeavesArray = Object.values(userLeavesData); // Mảng chỉ chứa lá của mày
+
+        // --- Bắt đầu tính toán Stats ---
+
+        // Tổng số lá đã tạo (Fix 1)
+        const totalLeavesCount = userLeavesArray.length;
         
-        Object.values(allLeaves).forEach(leaf => {
-          // Check if leaf belongs to current user by multiple criteria
-          const isUserLeaf = leaf.userId === userId || 
-                           leaf.author === displayName || 
-                           leaf.author === userEmail.split('@')[0] ||
-                           leaf.author === userEmail;
-                           
-          if (isUserLeaf) {
-            userLeaves++;
-            
-            // Check if leaf is healthy (created within last 30 days)
-            if (leaf.ts && (Date.now() - leaf.ts) < (30 * 24 * 60 * 60 * 1000)) {
-              healthyLeaves++;
-            }
-            
-            // Count messages (any leaf with text content)
-            if (leaf.text && leaf.text.trim()) {
-              messages++;
+        let healthyLeavesCount = 0;
+        let comfortMessagesReceivedCount = 0; // Biến mới để đếm lời động viên
+
+        // Loop qua mảng lá CHỈ CỦA MÀY
+        userLeavesArray.forEach(leaf => {
+          
+          // Đếm lá khỏe mạnh (Logic cũ)
+          if (leaf.ts && (Date.now() - leaf.ts) < (30 * 24 * 60 * 60 * 1000)) {
+            healthyLeavesCount++;
+          }
+          
+          // SỬA (Fix 2): Đếm lời động viên nhận được
+          const leafId = leaf.id;
+          if (allEncouragementsData[leafId]) { // Nếu lá này có trong node /encouragements
+            const encouragementsForThisLeaf = allEncouragementsData[leafId];
+            if (typeof encouragementsForThisLeaf === 'object') {
+              // Đếm số lượng key (encId) bên trong và cộng dồn
+              comfortMessagesReceivedCount += Object.keys(encouragementsForThisLeaf).length;
             }
           }
         });
-        
-        // Update stats display
-        document.getElementById('totalLeaves').textContent = userLeaves;
-        document.getElementById('healthyLeaves').textContent = healthyLeaves;
-        document.getElementById('comfortMessages').textContent = messages;
-        document.getElementById('daysActive').textContent = daysSinceJoin;
-      }).catch(error => {
-        console.warn('Error fetching leaves data:', error);
-        // Show default values if error
+
+        // 4. Cập nhật UI
+        document.getElementById('totalLeaves').textContent = totalLeavesCount;
+        document.getElementById('healthyLeaves').textContent = healthyLeavesCount;
+        // Gán số lời động viên đếm được vào đúng ô
+        document.getElementById('comfortMessages').textContent = comfortMessagesReceivedCount; 
+
+      })
+      .catch(error => {
+        // Fallback nếu lỗi
+        console.warn('Error fetching profile stats:', error);
         document.getElementById('totalLeaves').textContent = '0';
         document.getElementById('healthyLeaves').textContent = '0';
         document.getElementById('comfortMessages').textContent = '0';
-        document.getElementById('daysActive').textContent = daysSinceJoin;
       });
     }
 
